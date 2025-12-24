@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Türkçe karakter ve encoding problemi olmaması için -->
+    <meta charset="utf-8">
+    <title>Mail AI Assistant</title>
+</head>
+
+<body>
+
+    <!-- Sayfanın ana başlığı -->
+    <h2>Mail AI Assistant – Onay Ekranı</h2>
+
+    <!-- Eğer backend tarafı 'mail' göndermişse -->
+    {% if mail %}
+
+        <hr>
+
+        <!-- Gelen mailin temel bilgileri -->
+        <p><b>Gönderen:</b> {{ mail.from }}</p>
+        <p><b>Konu:</b> {{ mail.subject }}</p>
+
+        <!-- Gelen mailin içeriği -->
+        <h3> Gelen Mail</h3>
+
+        <!-- <pre> etiketi mail formatını bozmadan gösterir -->
+        <pre>{{ mail.body }}</pre>
+
+        <!-- AI tarafından yazılan cevap -->
+        <h3> AI Cevap Taslağı (Düzenlenebilir)</h3>
+
+        <!--
+        Bu form:
+        - textarea içeriğini
+        - /ui/update/{mail_id} endpoint'ine gönderir
+        -->
+        <form method="post" action="/ui/update/{{ mail._id }}">
+            <textarea
+                name="reply_draft"
+                rows="10"
+                cols="100"
+            >{{ mail.reply_draft }}</textarea>
+
+            <br><br>
+
+            <!-- Kullanıcı düzenlemeyi kaydeder -->
+            <button type="submit">
+                 Değişiklikleri Kaydet
+            </button>
+        </form>
+
+        <br>
+
+        <!-- Maili onayla -->
+        <!-- Bu işlem maili n8n'e gönderilmeye hazır hale getirir -->
+        <form method="post" action="/ui/approve/{{ mail._id }}">
+            <button type="submit">
+                Onayla ve Gönder
+            </button>
+        </form>
+
+        <br>
+
+        <!-- Maili iptal et -->
+        <!-- Bu mail bir daha gönderilmez -->
+        <form method="post" action="/ui/cancel/{{ mail._id }}">
+            <button type="submit">
+                 İptal Et
+            </button>
+        </form>
+
+    {% else %}
+
+        <!-- Bekleyen mail yoksa -->
+        <p>📭 Bekleyen mail yok</p>
+
+    {% endif %}
+
+    <hr>
+
+    <!-- Daha önce gönderilen mailler -->
+    <h3>📤 Daha Önce Gönderilen Mailler</h3>
+
+    {% if sent_mails and sent_mails|length > 0 %}
+
+        <!-- Basit bir tablo -->
+        <table border="1" cellpadding="5" cellspacing="0">
+            <tr>
+                <th>Alıcı</th>
+                <th>Konu</th>
+                <th>Gönderilen Cevap</th>
+                <th>Tarih</th>
+            </tr>
+
+            {% for mail in sent_mails %}
+            <tr>
+                <td>{{ mail.to }}</td>
+                <td>{{ mail.subject }}</td>
+                <td>
+                    <!-- Mail cevabının formatı bozulmasın -->
+                    <pre>{{ mail.reply_draft }}</pre>
+                </td>
+                <td>{{ mail.created_at }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+    {% else %}
+
+        <!-- Henüz hiç mail gönderilmediyse -->
+        <p>Henüz gönderilmiş mail yok.</p>
+
+    {% endif %}
+
+</body>
+</html>
