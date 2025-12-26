@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>📂 Gönderilen & İptal Edilenler</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Tarih</th>
+            <th>Kime</th>
+            <th>Konu</th>
+            <th>Durum</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for mail in mails %}
+        <tr>
+            <td>{{ mail.created_at.strftime('%d.%m %H:%M') }}</td>
+            <td>{{ mail.from }}</td> <td>{{ mail.subject }}</td>
+            <td>
+                {% if mail.status == 'SENT' %}
+                    <span class="badge badge-sent">GÖNDERİLDİ</span>
+                {% else %}
+                    <span class="badge badge-cancel">İPTAL</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

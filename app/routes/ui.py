@@ -1,129 +1,140 @@
-# FastAPI'nin router yapısını kullanıyoruz.
-# UI (arayüz) ile ilgili endpointleri ayrı bir dosyada toplamak için.
-from fastapi import APIRouter, Request, Form
-
-# HTML sayfası döndürmek için HTMLResponse,
-# işlem sonrası başka sayfaya yönlendirmek için RedirectResponse kullanıyoruz.
+import os
+from fastapi import APIRouter, Request, Form, Depends, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
-
-# FastAPI'nin Jinja2 template sistemi.
-# HTML dosyalarını render etmek için kullanılır.
 from fastapi.templating import Jinja2Templates
-
-# MongoDB'deki mails collection'ına erişiyoruz.
-from app.database import mails_col
-
-# MongoDB ObjectId tipini kullanabilmek için.
 from bson import ObjectId
+from datetime import datetime
 
+# Veritabanı ve Mail servisi
+from app.database import mails_col
+from app.services.mail_sender import send_gmail_via_user
 
-# Bu dosyaya ait router tanımı.
-# main.py içinde app.include_router(ui.router) şeklinde eklenecek.
 router = APIRouter()
-
-# HTML template dosyalarının bulunduğu klasörü tanımlıyoruz.
 templates = Jinja2Templates(directory="app/templates")
 
+# --- GİRİŞ / LOGIN MEKANİZMASI ---
+
+@router.get("/", response_class=HTMLResponse)
+@router.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    """Giriş sayfasını gösterir"""
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@router.post("/login")
+async def login(request: Request, username: str = Form(...), password: str = Form(...)):
+    """Giriş bilgilerini .env ile doğrular"""
+    # .env'deki bilgileri alıyoruz
+    correct_email = os.getenv("EMAIL")
+    correct_pass = os.getenv("EMAIL_PASSWORD")
+
+    if username == correct_email and password == correct_pass:
+        # Not: Gerçek bir sistemde burada 'session' veya 'cookie' set edilmelidir.
+        # Şimdilik basit tutmak adına doğrulanınca direkt dashboard'a yönlendiriyoruz.
+        return RedirectResponse(url="/ui", status_code=303)
+    else:
+        return templates.TemplateResponse("login.html", {
+            "request": request, 
+            "error": "Email veya şifre hatalı!"
+        })
+
+# --- DASHBOARD (LİSTE) SAYFASI ---
 
 @router.get("/ui", response_class=HTMLResponse)
-def approval_ui(request: Request):
-    """
-    Kullanıcının tarayıcıdan açtığı ana ekran.
-
-    Bu ekran iki bölümden oluşur:
-    1) Üstte: Onay bekleyen mail (varsa)
-    2) Altta: Daha önce gönderilmiş mailler tablosu
-    """
-
-    # 1️⃣ ONAY BEKLEYEN MAIL
-    # MongoDB'de status'u WAITING_APPROVAL olan
-    # EN ESKİ maili alıyoruz.
-    # Bu bir kuyruk (queue) mantığıdır.
-    waiting_mail = mails_col.find_one(
+def dashboard(request: Request):
+    """Onay bekleyen TÜM mailleri listeler (Yeni > Eski)"""
+    waiting_mails = list(mails_col.find(
         {"status": "WAITING_APPROVAL"},
-        sort=[("created_at", 1)]
-    )
-
-    # Eğer bekleyen mail varsa:
-    # MongoDB _id alanı ObjectId olduğu için
-    # HTML tarafında kullanabilmek adına string'e çeviriyoruz.
-    if waiting_mail:
-        waiting_mail["_id"] = str(waiting_mail["_id"])
-
-    # 2️⃣ DAHA ÖNCE GÖNDERİLEN MAILLER
-    # Kullanıcı "az önce ne gönderdim?" diye bakabilsin diye
-    # status'u SENT olan mailleri alıyoruz.
-    sent_mails = list(
-        mails_col.find(
-            {"status": "SENT"},
-            sort=[("created_at", -1)]  # En yeni en üstte
-        ).limit(10)  # UI şişmesin diye son 10 mail
-    )
-
-    # Gönderilen maillerin ObjectId'lerini de string'e çeviriyoruz.
-    for mail in sent_mails:
+        sort=[("created_at", -1)] 
+    ))
+    
+    for mail in waiting_mails:
         mail["_id"] = str(mail["_id"])
 
-    # approval.html dosyasını render ediyoruz.
-    # mail -> bekleyen mail
-    # sent_mails -> gönderilmiş mailler tablosu
-    return templates.TemplateResponse(
-        "approval.html",
-        {
-            "request": request,       # FastAPI bunu zorunlu ister
-            "mail": waiting_mail,     # Üstte gösterilecek mail
-            "sent_mails": sent_mails  # Alttaki tablo
-        }
-    )
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request, 
+        "mails": waiting_mails
+    })
 
+# --- EDİTÖR SAYFASI ---
+
+@router.get("/ui/editor/{mail_id}", response_class=HTMLResponse)
+def editor(request: Request, mail_id: str):
+    """Seçilen tek bir maili düzenleme ekranı"""
+    try:
+        mail = mails_col.find_one({"_id": ObjectId(mail_id)})
+    except:
+        return RedirectResponse(url="/ui")
+    
+    if not mail:
+        return RedirectResponse(url="/ui")
+        
+    mail["_id"] = str(mail["_id"])
+    
+    return templates.TemplateResponse("editor.html", {
+        "request": request, 
+        "mail": mail
+    })
+
+# --- ARŞİV SAYFASI ---
+
+@router.get("/ui/history", response_class=HTMLResponse)
+def history(request: Request):
+    """Gönderilmiş veya İptal edilmiş son 50 mail"""
+    old_mails = list(mails_col.find(
+        {"status": {"$in": ["SENT", "CANCELED"]}},
+        sort=[("created_at", -1)]
+    ).limit(50))
+    
+    for mail in old_mails:
+        mail["_id"] = str(mail["_id"])
+
+    return templates.TemplateResponse("history.html", {
+        "request": request, 
+        "mails": old_mails
+    })
+
+# --- EYLEMLER (GÖNDER / KAYDET / İPTAL) ---
 
 @router.post("/ui/update/{mail_id}")
-def update_reply(mail_id: str, reply_draft: str = Form(...)):
-    """
-    Kullanıcı AI tarafından yazılan cevabı
-    textarea üzerinden düzenlediğinde buraya gelir.
-    """
-
-    # Belirtilen mailin reply_draft alanını güncelliyoruz.
+def update_draft(mail_id: str, reply_draft: str = Form(...)):
+    """Sadece taslağı kaydeder"""
     mails_col.update_one(
-        {"_id": ObjectId(mail_id)},           # Hangi mail?
-        {"$set": {"reply_draft": reply_draft}}  # Yeni cevap
+        {"_id": ObjectId(mail_id)},
+        {"$set": {"reply_draft": reply_draft}}
     )
-
-    # Güncellemeden sonra tekrar UI ekranına dön.
-    # Aynı mail kullanıcıya tekrar gösterilir.
-    return RedirectResponse(url="/ui", status_code=303)
-
+    return RedirectResponse(url=f"/ui/editor/{mail_id}", status_code=303)
 
 @router.post("/ui/approve/{mail_id}")
-def approve_and_next(mail_id: str):
-    """
-    Kullanıcı 'Onayla ve Gönder' dediğinde:
-    - Mail APPROVED olur
-    - n8n bu maili alıp gönderecektir
-    """
+def approve_mail(mail_id: str, reply_draft: str = Form(...)):
+    """Maili gönderir ve Arşive atar"""
+    mail = mails_col.find_one({"_id": ObjectId(mail_id)})
+    if not mail:
+        return RedirectResponse(url="/ui", status_code=303)
 
-    mails_col.update_one(
-        {"_id": ObjectId(mail_id)},
-        {"$set": {"status": "APPROVED"}}
+    is_sent, msg = send_gmail_via_user(
+        user_email=mail["user_email"],
+        to_email=mail["from"],
+        subject=f"RE: {mail['subject']}",
+        body=reply_draft
     )
 
-    # Sonraki maili göstermek için tekrar UI'ya dön.
+    status = "SENT" if is_sent else "ERROR"
+    mails_col.update_one(
+        {"_id": ObjectId(mail_id)},
+        {"$set": {
+            "status": status, 
+            "reply_draft": reply_draft,
+            "handled_at": datetime.utcnow()
+        }}
+    )
+    
     return RedirectResponse(url="/ui", status_code=303)
 
-
 @router.post("/ui/cancel/{mail_id}")
-def cancel_and_next(mail_id: str):
-    """
-    Kullanıcı bu maili göndermek istemezse:
-    - Status CANCELED olur
-    - Bir daha UI'da görünmez
-    """
-
+def cancel_mail(mail_id: str):
+    """Maili iptal eder"""
     mails_col.update_one(
         {"_id": ObjectId(mail_id)},
-        {"$set": {"status": "CANCELED"}}
+        {"$set": {"status": "CANCELED", "handled_at": datetime.utcnow()}}
     )
-
-    # UI'ya geri dön → sıradaki mail gelir.
     return RedirectResponse(url="/ui", status_code=303)

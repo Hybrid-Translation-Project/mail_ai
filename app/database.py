@@ -11,8 +11,12 @@ client = MongoClient(MONGO_URI)
 # Kullanılacak database seçilir
 db = client[DB_NAME]
 
-# Gelen maillerin tutulduğu collection
+#Gelen maillerin tutulduğu collection
 mails_col = db.mails
 
-# Kişi profillerinin tutulacağı collection (ileride)
+#Kişi profillerinin tutulacağı collection
 contacts_col = db.contacts
+
+#Kullanıcıların (şifreli parolalarının) tutulacağı collection
+# Mail listener ve sender servisleri şifreyi buradan okuyacak.
+users_col = db.users

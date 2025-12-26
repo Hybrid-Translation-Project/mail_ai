@@ -3,3 +3,10 @@ uvicorn
 pymongo
 python-dotenv
 requests
+torch
+torchvision
+torchaudio
+python-multipart
+cryptography 
+apscheduler
+jinja2
