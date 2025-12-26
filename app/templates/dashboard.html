@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+        <h2 style="margin: 0;">📥 Gelen Kutusu</h2>
+        <p style="color: #a0a0a0; margin: 5px 0 0 0;">AI tarafından hazırlanan ve onay bekleyen mailler.</p>
+    </div>
+    <div style="text-align: right; font-size: 0.85rem; color: #666; background: #1e1e1e; padding: 5px 10px; border-radius: 4px; border: 1px solid #333;">
+        Otomatik yenileme: <span id="countdown" style="color: #bb86fc; font-weight: bold;">15</span> sn
+    </div>
+</div>
+
+{% if mails %}
+<table>
+    <thead>
+        <tr>
+            <th style="width: 15%;">Tarih</th>
+            <th style="width: 20%;">Kimden</th>
+            <th style="width: 30%;">Konu</th>
+            <th style="width: 15%;">AI Durumu</th>
+            <th style="width: 20%;">İşlem</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for mail in mails %}
+        <tr>
+            <td>{{ mail.created_at.strftime('%d.%m %H:%M') }}</td>
+            <td style="font-weight: 500;">{{ mail.from }}</td>
+            <td>{{ mail.subject }}</td>
+            <td><span class="badge badge-wait">Hazırlandı</span></td>
+            <td>
+                <a href="/ui/editor/{{ mail._id }}" class="btn btn-primary btn-sm">İncele</a>
+                <form action="/ui/cancel/{{ mail._id }}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-danger btn-sm" title="Çöpe At">🗑️</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% else %}
+<div class="mail-card" style="text-align: center; margin-top: 40px; padding: 50px; border: 2px dashed #333;">
+        <div style="font-size: 4rem; margin-bottom: 10px;">📭</div>
+        <h3 style="margin: 10px 0;">Bekleyen mail yok!</h3>
+        <p style="color: #666;">Sistem arka planda dinlemeye devam ediyor...</p>
+        <div style="margin-top: 25px;">
+            <button onclick="window.location.reload()" class="btn btn-sm" style="background-color: #333; color: #fff;">🔄 Şimdi Kontrol Et</button>
+        </div>
+    </div>
+{% endif %}
+<script src="/static/dashboard.js"></script>
+{% endblock %}

@@ -7,7 +7,7 @@ def create_contact(data: dict):
 
     return {
         # Kişinin mail adresi (unique gibi düşünebilirsin)
-        "email": data["email"],
+        "email": data["email"].strip().lower(),
 
         # Kişinin adı (opsiyonel ama UI için çok faydalı)
         "name": data.get("name"),

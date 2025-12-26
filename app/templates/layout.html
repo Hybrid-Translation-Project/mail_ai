@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mail AI Asistanı</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">📧 Mail AI</div>
+        <nav>
+            <a href="/ui" class="nav-link">📥 Gelen Kutusu</a>
+            <a href="/ui/history" class="nav-link">📂 Geçmiş / Arşiv</a>
+            <a href="#" class="nav-link">⚙️ Ayarlar</a>
+        </nav>
+    </div>
+    
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

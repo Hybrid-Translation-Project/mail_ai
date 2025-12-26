@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<a href="/ui" class="btn btn-sm" style="background:#333; margin-bottom: 20px;">← Listeye Dön</a>
+
+<div class="mail-card">
+    <h3 style="margin-top:0;">📩 Gelen Mail</h3>
+    <p><strong>Kimden:</strong> {{ mail.from }}</p>
+    <p><strong>Konu:</strong> {{ mail.subject }}</p>
+    <hr style="border-color: #333;">
+    <p style="white-space: pre-wrap;">{{ mail.body }}</p>
+</div>
+
+<div class="mail-card">
+    <h3>🤖 AI Cevap Taslağı</h3>
+    <form action="/ui/update/{{ mail._id }}" method="post" id="replyForm">
+        <textarea name="reply_draft" rows="10">{{ mail.reply_draft }}</textarea>
+        
+        <div style="margin-top: 20px; display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-primary">💾 Taslağı Kaydet</button>
+            
+            <button type="submit" formaction="/ui/approve/{{ mail._id }}" class="btn btn-success">
+                🚀 Onayla ve Gönder
+            </button>
+            
+            <button type="submit" formaction="/ui/cancel/{{ mail._id }}" class="btn btn-danger">
+                🚫 İptal Et (Sil)
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
