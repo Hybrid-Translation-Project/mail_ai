@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h3>📂 {{ contact_name }} - Mail Geçmişi</h3>
+            <div class="list-group mt-3">
+                {% for mail in history %}
+                <div class="list-group-item list-group-item-action mb-2 shadow-sm border-start border-primary border-4">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ mail.subject }}</h6>
+                        <small>{{ mail.created_at.strftime('%d.%m.%Y') }}</small>
+                    </div>
+                    <p class="mb-1 small text-truncate">{{ mail.body }}</p>
+                    <small class="text-success">AI Taslağı: {{ mail.status }}</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-light shadow border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">🧠 AI Şirket Notları</h5>
+                    <p class="small text-muted italic">LLaMA tarafından bu şirket hakkında yapılan çıkarımlar:</p>
+                    <ul class="list-group list-group-flush small">
+                        {% for note in ai_notes %}
+                        <li class="list-group-item bg-transparent">📍 {{ note }}</li>
+                        {% endfor %}
+                    </ul>
+                    <button class="btn btn-sm btn-outline-danger mt-3 w-100">🧠 Hafızayı Yenile</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

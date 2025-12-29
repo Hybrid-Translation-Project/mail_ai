@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="/static/css/home.css">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="welcome-section mb-4">
+        <h1>Merhaba Serhat, 👋</h1>
+        <p class="text-muted">İşte bugünün özeti ve AI asistanının notları.</p>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon mail-bg">📥</div>
+                <div class="stat-info">
+                    <h3>{{ stats.pending_mails }}</h3>
+                    <span>Bekleyen Mail</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon task-bg">⏳</div>
+                <div class="stat-info">
+                    <h3>{{ stats.pending_tasks }}</h3>
+                    <span>Onay Bekleyen İş</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon contact-bg">👥</div>
+                <div class="stat-info">
+                    <h3>{{ stats.total_contacts }}</h3>
+                    <span>Kayıtlı Şirket</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="content-block">
+                <div class="block-header">
+                    <h4>🔥 Kritik Program</h4>
+                    <a href="/ui/tasks" class="btn btn-sm btn-outline-primary">Tümünü Gör</a>
+                </div>
+                <div class="task-list">
+                    {% if urgent_tasks %}
+                        {% for task in urgent_tasks %}
+                        <div class="task-item">
+                            <div class="task-date">{{ task.due_date or 'Yakında' }}</div>
+                            <div class="task-desc"><strong>{{ task.title }}</strong> - {{ task.sender }}</div>
+                            <span class="badge badge-urgent">ACİL</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted p-3">Şu an acil bir görev bulunmuyor.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="content-block ai-insight-block">
+                <h4>🤖 AI Asistanı</h4>
+                <div class="ai-note">
+                    <p>"Serhat A.Ş. ile 3 gündür iletişim yok. Bir takip maili hazırlamamı ister misin?"</p>
+                    <button class="btn btn-sm btn-primary">Mail Hazırla</button>
+                </div>
+                <div class="ai-note mt-3">
+                    <p>"Bugün saat 15:00'te Zoom toplantın olduğunu hatırlatmak isterim."</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/home.js"></script>
+{% endblock %}

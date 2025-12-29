@@ -4,28 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Mail Asistanı - Giriş</title>
-    <link rel="stylesheet" href="/static/login.css">
+    <link rel="stylesheet" href="/static/css/login.css">
     <style>
-       
+        /* CSS dosyan yoksa veya ekleme yapmak istersen burayı kullanabilirsin */
+        .error {
+            color: #ff5252;
+            background: rgba(255, 82, 82, 0.1);
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div class="login-card">
         <h2>📧 Mail Asistanı</h2>
+        <p style="color: #888; font-size: 0.85rem; margin-bottom: 20px; text-align: center;">
+            Devam etmek için panel yetkilerinizi doğrulayın.
+        </p>
+        
         <form action="/login" method="post">
             <div class="input-group">
                 <label>E-posta Adresi</label>
                 <input type="email" name="username" required placeholder="ornek@gmail.com">
             </div>
+            
             <div class="input-group">
-                <label>Şifre (Uygulama Şifresi)</label>
-                <input type="password" name="password" required placeholder="••••••••">
+                <label>Panel Giriş Şifresi</label>
+                <input type="password" name="password" required placeholder="Panel şifrenizi girin">
             </div>
-            <button type="submit" class="login-btn">Giriş Yap</button>
+            
+            <button type="submit" class="login-btn">Güvenli Giriş Yap</button>
+            
             {% if error %}
-                <p class="error">{{ error }}</p>
+                <p class="error">⚠️ {{ error }}</p>
             {% endif %}
         </form>
+
+        <div style="margin-top: 25px; text-align: center; font-size: 0.8rem; color: #555;">
+            Şifrenizi unuttuysanız <code>setup.py</code> dosyasını yeniden çalıştırın.
+        </div>
     </div>
 </body>
 </html>

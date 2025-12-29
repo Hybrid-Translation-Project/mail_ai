@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="/static/css/writer.css">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3>📝 AI Mail Yazarı</h3>
+    <div class="card mt-3 shadow">
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Kime / Hangi Branch?</label>
+                <input type="text" class="form-control" placeholder="Örn: Serhat (A Firması)">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Ne Hakkında? (Kısa Talimat)</label>
+                <textarea class="form-control" rows="3" placeholder="Örn: Toplantıyı yarına ertelemek istediğimi nazikçe söyle."></textarea>
+            </div>
+            <button class="btn btn-primary">🪄 Taslak Oluştur</button>
+            <hr>
+            <label class="form-label text-success font-weight-bold">AI Önerisi:</label>
+            <div class="p-3 bg-light border rounded mb-3" id="draft-output">
+                Henüz taslak oluşturulmadı...
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-success">✅ Onayla ve Gönder</button>
+                <button class="btn btn-outline-warning">🔄 Yeniden Yaz (Regenerate)</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/static/js/search.js"></script>
+{% endblock %}

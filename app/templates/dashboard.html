@@ -1,4 +1,8 @@
-{% extends "layout.html" %}
+{% extends "base.html" %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+{% endblock %}
 
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -11,44 +15,66 @@
     </div>
 </div>
 
+{% set pending_tasks = tasks|selectattr("status", "equalto", "WAITING_APPROVAL")|list|length if tasks else 0 %}
+{% if pending_tasks > 0 %}
+<div class="alert-pulse" style="background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; color: #ffc107; padding: 12px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+    <span>⚠️ <strong>AI Bildirimi:</strong> Onayını bekleyen <strong>{{ pending_tasks }} yeni görev/teklif</strong> var!</span>
+    <a href="/ui/tasks" class="btn btn-sm btn-warning" style="font-weight: bold; color: #000;">İncele ve Karar Ver</a>
+</div>
+{% endif %}
+
 {% if mails %}
-<table>
-    <thead>
-        <tr>
-            <th style="width: 15%;">Tarih</th>
-            <th style="width: 20%;">Kimden</th>
-            <th style="width: 30%;">Konu</th>
-            <th style="width: 15%;">AI Durumu</th>
-            <th style="width: 20%;">İşlem</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for mail in mails %}
-        <tr>
-            <td>{{ mail.created_at.strftime('%d.%m %H:%M') }}</td>
-            <td style="font-weight: 500;">{{ mail.from }}</td>
-            <td>{{ mail.subject }}</td>
-            <td><span class="badge badge-wait">Hazırlandı</span></td>
-            <td>
-                <a href="/ui/editor/{{ mail._id }}" class="btn btn-primary btn-sm">İncele</a>
-                <form action="/ui/cancel/{{ mail._id }}" method="post" style="display:inline;">
-                    <button type="submit" class="btn btn-danger btn-sm" title="Çöpe At">🗑️</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="table-responsive" style="background: #1a1a1a; border-radius: 8px; border: 1px solid #333;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead style="background: #252525; border-bottom: 1px solid #333;">
+            <tr>
+                <th style="padding: 15px; text-align: left; width: 15%;">Tarih</th>
+                <th style="padding: 15px; text-align: left; width: 20%;">Kimden</th>
+                <th style="padding: 15px; text-align: left; width: 30%;">Konu</th>
+                <th style="padding: 15px; text-align: center; width: 15%;">AI Durumu</th>
+                <th style="padding: 15px; text-align: center; width: 20%;">İşlem</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mail in mails %}
+            <tr style="border-bottom: 1px solid #222;">
+                <td style="padding: 15px; font-size: 0.9rem; color: #888;">{{ mail.created_at.strftime('%d.%m %H:%M') }}</td>
+                <td style="padding: 15px; font-weight: 500;">
+                    <a href="/ui/contact/{{ mail.from }}" style="color: #fff; text-decoration: none; border-bottom: 1px dashed #444;">{{ mail.from }}</a>
+                </td>
+                <td style="padding: 15px;">{{ mail.subject }}</td>
+                <td style="padding: 15px; text-align: center;">
+                    <span class="badge" style="background: #bb86fc; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">TASLAK HAZIR</span>
+                </td>
+                <td style="padding: 15px; text-align: center;">
+                    <div style="display: flex; gap: 8px; justify-content: center;">
+                        <a href="/ui/editor/{{ mail._id }}" class="btn btn-primary btn-sm" style="text-decoration: none;">İncele</a>
+                        
+                        <form action="/ui/mail/delete/{{ mail._id }}" method="post" style="display:inline;" onsubmit="return confirm('Bu maili veritabanından kalıcı olarak silmek istediğine emin misin?');">
+                            <button type="submit" class="btn btn-danger btn-sm" title="Tamamen Sil">🗑️</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
 {% else %}
-<div class="mail-card" style="text-align: center; margin-top: 40px; padding: 50px; border: 2px dashed #333;">
-        <div style="font-size: 4rem; margin-bottom: 10px;">📭</div>
-        <h3 style="margin: 10px 0;">Bekleyen mail yok!</h3>
-        <p style="color: #666;">Sistem arka planda dinlemeye devam ediyor...</p>
-        <div style="margin-top: 25px;">
-            <button onclick="window.location.reload()" class="btn btn-sm" style="background-color: #333; color: #fff;">🔄 Şimdi Kontrol Et</button>
-        </div>
+<div style="text-align: center; margin-top: 40px; padding: 60px; border: 2px dashed #333; border-radius: 12px; background: #1a1a1a;">
+    <div style="font-size: 4rem; margin-bottom: 15px; opacity: 0.5;">📭</div>
+    <h3 style="margin: 10px 0; color: #fff;">Bekleyen mail yok!</h3>
+    <p style="color: #666;">Sistem arka planda yeni mailleri dinlemeye devam ediyor...</p>
+    <div style="margin-top: 25px;">
+        <button onclick="window.location.reload()" class="btn btn-sm" style="background-color: #333; color: #fff; border: 1px solid #444; padding: 8px 20px;">🔄 Şimdi Kontrol Et</button>
     </div>
+</div>
 {% endif %}
-<script src="/static/dashboard.js"></script>
+
+<style>
+   
+</style>
+
+<script src="/static/js/search.js"></script>
 {% endblock %}

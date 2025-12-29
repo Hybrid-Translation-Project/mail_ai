@@ -1,22 +1,37 @@
 # MongoDB istemcisi
 from pymongo import MongoClient
+import sys
 
 # Bağlantı bilgilerini config dosyasından alıyoruz
 from app.config import MONGO_URI, DB_NAME
 
-# MongoDB’ye bağlantı açılır
-# Bu bağlantı uygulama boyunca kullanılır
-client = MongoClient(MONGO_URI)
+try:
+    # MongoDB’ye bağlantı açılır
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    
+    # Bağlantıyı test et (Hata varsa hemen yakalayalım)
+    client.server_info()
+    
+    # Kullanılacak database seçilir
+    db = client[DB_NAME]
 
-# Kullanılacak database seçilir
-db = client[DB_NAME]
+    # --- KOLEKSİYONLAR ---
+    
+    # Gelen maillerin tutulduğu collection
+    mails_col = db.mails
 
-#Gelen maillerin tutulduğu collection
-mails_col = db.mails
+    # Kişi profillerinin tutulacağı collection (Şirket Branch yapısının temeli)
+    contacts_col = db.contacts
 
-#Kişi profillerinin tutulacağı collection
-contacts_col = db.contacts
+    # Kullanıcıların (şifreli parolalarının) tutulacağı collection
+    users_col = db.users
 
-#Kullanıcıların (şifreli parolalarının) tutulacağı collection
-# Mail listener ve sender servisleri şifreyi buradan okuyacak.
-users_col = db.users
+    # AI tarafından maillerden çıkarılan görevlerin (To-Do) tutulduğu collection
+    tasks_col = db.tasks
+
+    print("MongoDB bağlantısı başarıyla kuruldu ve koleksiyonlar hazır.")
+
+except Exception as e:
+    print(f" MongoDB Bağlantı Hatası: {e}")
+    print("İpucu: MongoDB servisinin çalıştığından veya URI bilgisinin doğru olduğundan emin ol.")
+    sys.exit(1)

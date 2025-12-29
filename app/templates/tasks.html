@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="/static/css/tasks.css">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>✅ AI Görev ve Karar Merkezi</h2>
+        {% set pending_count = tasks|selectattr("status", "equalto", "WAITING_APPROVAL")|list|length %}
+        {% if pending_count > 0 %}
+            <span class="badge bg-danger p-2 animate-pulse">🔔 {{ pending_count }} Onay Bekleyen İş Var</span>
+        {% endif %}
+    </div>
+
+    <div class="card shadow-sm mb-5 border-warning" style="background: #1e1e1e; border-left: 5px solid #ffc107;">
+        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">⚠️ Onay Bekleyen Öneriler</h5>
+            <small>AI bu maillerden senin için görev/toplantı ihtimali çıkardı</small>
+        </div>
+        <div class="card-body p-0">
+            <div class="list-group list-group-flush">
+                {% set has_pending = false %}
+                {% for task in tasks if task.status == 'WAITING_APPROVAL' %}
+                    {% set has_pending = true %}
+                    <div class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center p-3">
+                        <div style="flex-grow: 1;">
+                            <h6 class="mb-1 text-warning">{{ task.title }}</h6>
+                            <p class="mb-0 small text-muted">
+                                📅 <strong>Tarih:</strong> {{ task.due_date or 'Belirtilmedi' }} | 
+                                👤 <strong>Kimden:</strong> {{ task.sender }}
+                            </p>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <form action="/ui/task/approve/{{ task._id }}" method="post" class="m-0">
+                                <button type="submit" class="btn btn-sm btn-success px-3">✔️ Onayla</button>
+                            </form>
+                            <form action="/ui/task/reject/{{ task._id }}" method="post" class="m-0">
+                                <button type="submit" class="btn btn-sm btn-outline-warning px-3">❌ Reddet</button>
+                            </form>
+                            <form action="/ui/task/delete/{{ task._id }}" method="post" class="m-0" onsubmit="return confirm('Bu görevi tamamen silmek istediğine emin misin?');">
+                                <button type="submit" class="btn btn-sm btn-danger px-2" title="Görevi Sil">🗑️</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                {% if not has_pending %}
+                    <div class="p-4 text-center text-muted italic">
+                        Şu an onay bekleyen yeni bir öneri bulunmuyor.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center mb-3 justify-content-between">
+        <h4 class="mb-0">📅 Kesinleşmiş İş Programı</h4>
+    </div>
+    
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-dark table-hover mb-0">
+            <thead class="table-secondary text-dark">
+                <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>Görev / Etkinlik</th>
+                    <th>İlgili Kişi/Şirket</th>
+                    <th>Planlanan Tarih</th>
+                    <th>İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set has_confirmed = false %}
+                {% for task in tasks if task.status == 'CONFIRMED' %}
+                    {% set has_confirmed = true %}
+                    <tr>
+                        <td><i class="fas fa-check-circle text-success"></i></td>
+                        <td><strong>{{ task.title }}</strong></td>
+                        <td><span class="badge bg-secondary">{{ task.sender }}</span></td>
+                        <td>{{ task.due_date }}</td>
+                        <td>
+                            <form action="/ui/task/delete/{{ task._id }}" method="post" class="d-inline" onsubmit="return confirm('Tamamlanmış bu görevi listeden silmek istiyor musun?');">
+                                <button type="submit" class="btn btn-sm btn-link text-danger p-0" style="text-decoration: none;">Sil</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+
+                {% if not has_confirmed %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">Henüz onaylanmış bir görev bulunmuyor.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

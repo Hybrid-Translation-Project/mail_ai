@@ -1,0 +1,33 @@
+ .alert-pulse {
+    animation: pulse-border 2s infinite;
+}
+    
+@keyframes pulse-border {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); }
+    70% { transform: scale(1.01); box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+}
+
+.btn-sm { 
+    padding: 5px 10px; 
+    border-radius: 4px; 
+    font-size: 0.85rem; 
+    cursor: pointer; 
+    border: none; 
+}
+    
+.btn-primary { 
+    background: #bb86fc; 
+    color: #000; 
+}
+    
+.btn-danger { 
+    background: #cf6679; 
+    color: #fff; 
+}
+    
+.btn-warning { 
+    background: #ffc107; 
+    color: #000; 
+    text-decoration: none; 
+}

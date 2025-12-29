@@ -1,0 +1,26 @@
+.contact-card .card {
+    transition: transform 0.3s, box-shadow 0.3s;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #1e1e1e, #252525);
+}
+    
+.contact-card:hover .card {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    border-color: #0d6efd;
+}
+    
+#contactSearch {
+    border-radius: 20px;
+    padding-left: 20px;
+    border: 2px solid #333;
+}
+.btn-outline-danger {
+    color: #ff4d4d;
+    border: 1px solid #ff4d4d;
+    background: transparent;
+}
+.btn-outline-danger:hover {
+    background: #ff4d4d;
+    color: white;
+}

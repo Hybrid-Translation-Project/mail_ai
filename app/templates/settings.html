@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="/static/css/settings.css">
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>⚙️ Sistem ve Hesap Ayarları</h2>
+    </div>
+
+    <form action="/ui/settings/update" method="post">
+        <div class="settings-card">
+            <h3><i class="fas fa-user-shield"></i> Panel Güvenliği</h3>
+            <div class="form-group">
+                <label>E-posta Adresiniz</label>
+                <input type="email" value="{{ user_email }}" disabled style="opacity: 0.6; cursor: not-allowed;">
+                <p class="helper-text">E-posta adresi sistem kurulumunda sabitlenmiştir.</p>
+            </div>
+            <div class="form-group">
+                <label>Yeni Panel Giriş Şifresi</label>
+                <input type="password" name="new_panel_password" placeholder="Değiştirmek istemiyorsanız boş bırakın">
+                <p class="helper-text">Bu şifre, sadece bu web paneline giriş yaparken kullanılır.</p>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <h3><i class="fab fa-google"></i> Gmail API / Uygulama Bağlantısı</h3>
+            <div class="form-group">
+                <label>Gmail Uygulama Şifresi (16 Haneli)</label>
+                <input type="password" name="gmail_app_password" placeholder="•••• •••• •••• ••••">
+                <p class="helper-text">Google hesabınızdan aldığınız özel uygulama şifresidir. Veritabanında şifreli (AES-256) olarak saklanır.</p>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <h3><i class="fas fa-robot"></i> AI Motoru (Ollama) Yapılandırması</h3>
+            <div class="form-group">
+                <label>Ollama API URL</label>
+                <input type="text" name="ollama_url" value="http://localhost:11434">
+            </div>
+            <div class="form-group">
+                <label>Kullanılacak Model</label>
+                <select name="ollama_model">
+                    <option value="llama3.2" selected>Llama 3.2 (Önerilen)</option>
+                    <option value="llama3.1">Llama 3.1</option>
+                    <option value="gemma2">Gemma 2</option>
+                    <option value="mistral">Mistral</option>
+                </select>
+                <p class="helper-text">Bilgisayarınızda yüklü olan Ollama modelini seçin.</p>
+            </div>
+        </div>
+
+        <div style="text-align: right; margin-bottom: 50px;">
+            <button type="submit" class="save-btn">
+                <i class="fas fa-save"></i> Değişiklikleri Kaydet
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
