@@ -1,0 +1,76 @@
+/* setup_web.css */
+body {
+    background-color: #121212; /* Koyu tema */
+    color: #e0e0e0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.setup-card {
+    background: #1e1e1e;
+    padding: 40px;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid #333;
+}
+
+h2 {
+    text-align: center;
+    color: #bb86fc; /* Accent rengi */
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px; /* Elemanlar arası dikey boşluk */
+    width: 100%;
+}
+
+.form-group label {
+    display: block; /* Label'ı üst satıra zorlar */
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #a0a0a0;
+}
+
+.form-group input, 
+.form-group textarea {
+    width: 100% !important; /* Genişliği sabitler */
+    padding: 12px;
+    background: #2c2c2c !important;
+    border: 1px solid #444 !important;
+    color: white !important;
+    border-radius: 8px;
+    box-sizing: border-box; /* Padding'in kutuyu taşırmasını önler */
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 15px;
+    background: #bb86fc;
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.3s;
+}
+
+.submit-btn:hover {
+    background: #a370f7;
+}
+
+.alert {
+    background: rgba(207, 102, 121, 0.2);
+    color: #cf6679;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #cf6679;
+}

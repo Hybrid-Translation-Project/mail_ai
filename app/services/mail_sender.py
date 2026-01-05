@@ -17,11 +17,15 @@ def send_gmail_via_user(user_email: str, to_email: str, subject: str, body: str)
             print(f"Hata: {user_email} kullanıcısı veritabanında bulunamadı.")
             return False, "Kullanıcı bulunamadı."
 
-        # Şifre alanını esnek kontrol et
-        enc_pass = user.get("password") or user.get("encrypted_password")
+        # DÜZELTME: Veritabanında 'app_password' olarak kayıtlı, doğrusunu çekiyoruz.
+        enc_pass = user.get("app_password")
         
         if not enc_pass:
-            return False, "Veritabanında şifre alanı bulunamadı."
+            # Yedek kontrol (Eski kayıtlardan kalma ihtimaline karşı)
+            enc_pass = user.get("encrypted_password")
+            
+        if not enc_pass:
+            return False, "Veritabanında uygulama şifresi bulunamadı."
 
         # Şifreyi güvenlik modülü ile çöz
         try:
@@ -48,7 +52,7 @@ def send_gmail_via_user(user_email: str, to_email: str, subject: str, body: str)
         server.sendmail(user_email, to_email, msg.as_string())
         server.quit()
         
-        print(f" Mail başarıyla gönderildi: {to_email}")
+        print(f"✅ Mail başarıyla gönderildi: {to_email}")
         return True, "Başarılı"
 
     except smtplib.SMTPAuthenticationError:

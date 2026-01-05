@@ -126,3 +126,46 @@ textarea {
 .badge-wait { background-color: #ff9800; color: #000; }
 .badge-sent { background-color: var(--success); color: #000; }
 .badge-cancel { background-color: var(--danger); color: #000; }
+
+/* Dashboard üzerindeki soluk alt başlıkları düzeltir */
+.dashboard-header p, 
+header p, 
+.text-muted {
+    color: #a0a0a0 !important; /* Koyu gri yerine daha açık ve okunur bir gri */
+    opacity: 0.8;
+}
+
+/* "Kritik Program" altındaki email ve tarihlerin görünürlüğü için */
+.task-item span, 
+.task-info small {
+    color: #b0b0b0 !important;
+}
+/* Her şeyi zorla görünür yap */
+.dashboard-header p, 
+.dashboard-header span,
+header p,
+header span,
+.text-muted,
+p {
+    color: #ffffff !important; /* Gri yerine direkt BEYAZ yapıyoruz */
+    opacity: 1 !important;
+}
+
+/* Kritik programdaki alt bilgiler */
+.task-item small, 
+.task-info span {
+    color: #cccccc !important;
+}
+/* Alt başlıkları ve sönük yazıları beyaz/gri arası bir renk yapar */
+.dashboard-header p, 
+header p, 
+.text-muted {
+    color: #e0e0e0 !important; /* Direkt parlak gri yapıyoruz */
+    opacity: 1 !important;
+}
+
+/* Görev listesindeki tarih ve epostaları beyazlatır */
+.task-info span, 
+.task-item small {
+    color: #cccccc !important;
+}

@@ -1,14 +1,58 @@
-.writer-container {
-    max-width: 800px;
-    margin: auto;
-    background: #1a1a1a;
-    padding: 30px;
-    border-radius: 15px;
+/* history.css, contacts.css vb. için ortak */
+.list-container {
+    background: var(--card-bg);
+    border-radius: 16px;
+    overflow: hidden;
 }
-    
-textarea#mailContent {
-    background: #111;
-    color: #00ff00; /* Retro hacker/kod yazım havası */
-    font-family: 'Courier New', Courier, monospace;
-    border: 1px solid #333;
+
+.contact-card {
+    border: 1px solid rgba(255,255,255,0.05);
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.editor-box {
+    background: #0f172a;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--primary);
+}
+/* Arama ve Genel Textboxlar için Stil */
+input[type="text"], 
+input[type="search"],
+.search-input {
+    width: 100%;
+    max-width: 400px; /* Çok genişlememesi için limit */
+    padding: 12px 20px;
+    margin: 15px 0;
+    background-color: #1e293b; /* Koyu lacivert/gri arka plan */
+    border: 1px solid #334155; /* Hafif belirgin çerçeve */
+    border-radius: 10px; /* Yuvarlak köşeler */
+    color: #f8fafc; /* Beyaz yazı rengi */
+    font-size: 15px;
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Hafif derinlik */
+}
+
+/* Textbox'a tıklandığında (Focus durumu) */
+input[type="text"]:focus, 
+input[type="search"]:focus {
+    border-color: #3b82f6; /* Odaklandığında mavi çerçeve */
+    background-color: #1e293b;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* Mavi parlama efekti */
+}
+
+/* Yazı yazılmadığında görünen ipucu metni (Placeholder) */
+input::placeholder {
+    color: #94a3b8; /* Silik gri placeholder */
+    font-style: italic;
+}
+
+/* Rehber sayfasındaki arama ikonuyla beraber kullanıyorsan */
+.search-container {
+    position: relative;
+    display: inline-block;
 }

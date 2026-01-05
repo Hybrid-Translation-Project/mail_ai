@@ -1,0 +1,21 @@
+/* history.css, contacts.css vb. için ortak */
+.list-container {
+    background: var(--card-bg);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.contact-card {
+    border: 1px solid rgba(255,255,255,0.05);
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.editor-box {
+    background: #0f172a;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--primary);
+}

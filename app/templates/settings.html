@@ -10,53 +10,60 @@
         <h2>⚙️ Sistem ve Hesap Ayarları</h2>
     </div>
 
-    <form action="/ui/settings/update" method="post">
+    <form action="/ui/settings/update-profile" method="post">
         <div class="settings-card">
-            <h3><i class="fas fa-user-shield"></i> Panel Güvenliği</h3>
+            <h3><i class="fas fa-user-circle"></i> Profil Bilgileri</h3>
             <div class="form-group">
-                <label>E-posta Adresiniz</label>
-                <input type="email" value="{{ user_email }}" disabled style="opacity: 0.6; cursor: not-allowed;">
-                <p class="helper-text">E-posta adresi sistem kurulumunda sabitlenmiştir.</p>
+                <label>Tam Adınız</label>
+                <input type="text" name="full_name" value="{{ user.full_name }}" required>
             </div>
             <div class="form-group">
-                <label>Yeni Panel Giriş Şifresi</label>
-                <input type="password" name="new_panel_password" placeholder="Değiştirmek istemiyorsanız boş bırakın">
-                <p class="helper-text">Bu şifre, sadece bu web paneline giriş yaparken kullanılır.</p>
-            </div>
-        </div>
-
-        <div class="settings-card">
-            <h3><i class="fab fa-google"></i> Gmail API / Uygulama Bağlantısı</h3>
-            <div class="form-group">
-                <label>Gmail Uygulama Şifresi (16 Haneli)</label>
-                <input type="password" name="gmail_app_password" placeholder="•••• •••• •••• ••••">
-                <p class="helper-text">Google hesabınızdan aldığınız özel uygulama şifresidir. Veritabanında şifreli (AES-256) olarak saklanır.</p>
-            </div>
-        </div>
-
-        <div class="settings-card">
-            <h3><i class="fas fa-robot"></i> AI Motoru (Ollama) Yapılandırması</h3>
-            <div class="form-group">
-                <label>Ollama API URL</label>
-                <input type="text" name="ollama_url" value="http://localhost:11434">
+                <label>E-posta İmzanız</label>
+                <textarea name="signature" style="width: 100%; height: 100px; background: #252525; border: 1px solid #444; color: white; border-radius: 6px; padding: 10px;">{{ user.signature }}</textarea>
+                <p class="helper-text">Onayladığınız taslakların sonuna bu imza otomatik eklenir.</p>
             </div>
             <div class="form-group">
-                <label>Kullanılacak Model</label>
-                <select name="ollama_model">
-                    <option value="llama3.2" selected>Llama 3.2 (Önerilen)</option>
-                    <option value="llama3.1">Llama 3.1</option>
-                    <option value="gemma2">Gemma 2</option>
-                    <option value="mistral">Mistral</option>
-                </select>
-                <p class="helper-text">Bilgisayarınızda yüklü olan Ollama modelini seçin.</p>
+                <label>Doğrulama: Panel Şifreniz</label>
+                <input type="password" name="current_password" placeholder="Değişiklikleri kaydetmek için panel şifrenizi girin" required>
             </div>
-        </div>
-
-        <div style="text-align: right; margin-bottom: 50px;">
-            <button type="submit" class="save-btn">
-                <i class="fas fa-save"></i> Değişiklikleri Kaydet
-            </button>
+            <button type="submit" class="save-btn"><i class="fas fa-user-check"></i> Profili Güncelle</button>
         </div>
     </form>
+
+    <form action="/ui/settings/update-password" method="post" class="mt-4">
+        <div class="settings-card">
+            <h3><i class="fas fa-lock"></i> Panel Giriş Şifresi</h3>
+            <div class="form-group">
+                <label>Mevcut Şifre</label>
+                <input type="password" name="old_password" required>
+            </div>
+            <div class="form-group">
+                <label>Yeni Şifre</label>
+                <input type="password" name="new_password" required>
+            </div>
+            <button type="submit" class="save-btn" style="background-color: #f39c12;"><i class="fas fa-key"></i> Şifreyi Değiştir</button>
+        </div>
+    </form>
+
+    <form action="/ui/settings/update-api-key" method="post" class="mt-4">
+        <div class="settings-card">
+            <h3><i class="fab fa-google"></i> Gmail Bağlantısı</h3>
+            <div class="form-group">
+                <label>Gmail Uygulama Şifresi (16 Haneli)</label>
+                <input type="password" name="new_app_password" placeholder="•••• •••• •••• ••••" required>
+            </div>
+            <div class="form-group">
+                <label>Doğrulama: Panel Şifreniz</label>
+                <input type="password" name="master_password" required>
+            </div>
+            <button type="submit" class="save-btn" style="background-color: #e74c3c;"><i class="fas fa-sync"></i> API Anahtarını Güncelle</button>
+        </div>
+    </form>
+
+    <div class="settings-card mt-4" style="opacity: 0.7;">
+        <h3><i class="fas fa-robot"></i> AI Motoru Bilgisi</h3>
+        <p style="font-size: 0.9rem;">Model: <strong>Llama 3.2 (Fine-Tuned)</strong></p>
+        <p class="helper-text">AI modeli sistem tarafından optimize edilmiştir, manuel değişiklik önerilmez.</p>
+    </div>
 </div>
 {% endblock %}

@@ -1,63 +1,55 @@
 import os
 import sys
-import webbrowser # Tarayıcıyı otomatik açmak için
+import webbrowser
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from fastapi.staticfiles import StaticFiles
 
-# Bu satır, app/main.py içindeyken bir üst klasörü (ana dizini) Python yoluna ekler.
+# --- DİZİN AYARLARI ---
+# current_dir: /app klasörü
 current_dir = os.path.dirname(os.path.abspath(__file__))
+# root_dir: Projenin en ana dizini
 root_dir = os.path.dirname(current_dir)
+
 if root_dir not in sys.path:
     sys.path.append(root_dir)
 
-# .env dosyasının yolunu ana dizin olarak belirliyoruz
 ENV_PATH = os.path.join(root_dir, ".env")
-
-# --- KURULUM KONTROLÜ ---
-if not os.path.exists(ENV_PATH):
-    print("Yapılandırma dosyası (.env) bulunamadı. Kurulum başlatılıyor...")
-    try:
-        import setup  # Artık ana dizindeki setup.py'yi bulabilir
-        setup.run_setup()
-    except Exception as e:
-        print(f"Hata: Kurulum başlatılamadı! Detay: {e}")
-        sys.exit(1)
 
 # .env dosyasını ana dizinden yükle
 load_dotenv(ENV_PATH)
 
-# --- İTHALATLAR (load_dotenv'den sonra yapılmalı) ---
-try:
-    from app.routes import ui 
-    from app.services.mail_listener import check_all_inboxes
-except ImportError as e:
-    print(f"Modül yükleme hatası: {e}")
-    sys.exit(1)
+# --- İTHALATLAR ---
+from app.routes import ui 
+from app.services.mail_listener import check_all_inboxes
 
-# --- Zamanlayıcı (Scheduler) Kurulumu ---
+# --- Zamanlayıcı (Scheduler) ---
 scheduler = BackgroundScheduler()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # --- SUNUCU BAŞLARKEN ---
-    print("AI Mail Asistanı Başlatılıyor...")
+    print("🚀 AI Mail Asistanı Sunucusu Başlatılıyor...")
     
-    # Mail kontrol görevini başlat
-    scheduler.add_job(check_all_inboxes, 'interval', seconds=60)
-    scheduler.start()
-    print("Mail Dinleyicisi Aktif! (Periyot: 60 saniye)")
+    # Sadece sistem kuruluysa mail dinleyiciyi başlat
+    if os.path.exists(ENV_PATH):
+        scheduler.add_job(check_all_inboxes, 'interval', seconds=60)
+        scheduler.start()
+        print("📥 Mail Dinleyicisi Aktif! (Periyot: 60 saniye)")
+    else:
+        print("⚠️ Yapılandırma bulunamadı. Web üzerinden kurulum bekleniyor...")
     
-    # Uygulama başladığında tarayıcıda Dashboard'u otomatik aç
-    webbrowser.open("http://127.0.0.1:8000/login")
+    # Uygulama başladığında tarayıcıyı aç
+    webbrowser.open("http://127.0.0.1:8000/")
     
     yield
     
     # --- SUNUCU KAPANIRKEN ---
-    print("Sistem Kapanıyor...")
-    scheduler.shutdown()
+    if scheduler.running:
+        scheduler.shutdown()
+    print("🛑 Sistem Kapanıyor...")
 
 # FastAPI Uygulaması
 app = FastAPI(
@@ -65,22 +57,27 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Statik Dosyalar (Yolu ana dizine göre düzelttik)
-static_path = os.path.join(current_dir, "static")
+# --- STATİK DOSYALAR (DÜZELTİLDİ) ---
+# Eğer static klasörün en dışarıdaysa (app klasörü dışında):
+static_path = os.path.join(root_dir, "static")
+
+# Eğer static klasörün app/ klasörü içindeyse (yukarıdaki çalışmazsa):
+if not os.path.exists(static_path):
+    static_path = os.path.join(current_dir, "static")
+
 app.mount("/static", StaticFiles(directory=static_path), name="static")
 
-# UI Router'ını sisteme dahil ediyoruz
+# Rotaları dahil et
 app.include_router(ui.router)
 
-@app.get("/")
+@app.get("/health")
 def health():
     return {
         "status": "OK", 
-        "message": "AI Mail Asistanı Aktif",
-        "env_loaded": os.path.exists(ENV_PATH)
+        "configured": os.path.exists(ENV_PATH)
     }
 
 if __name__ == "__main__":
     import uvicorn
-    # Uygulamayı ana dizinden çalıştırıyormuş gibi başlatıyoruz
-    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)
+    # uvicorn.run("app.main:app"...) yerine direkt app nesnesini veriyoruz
+    uvicorn.run(app, host="127.0.0.1", port=8000)

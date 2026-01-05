@@ -1,0 +1,8 @@
+.view-container { max-width: 900px; margin: 30px auto; }
+    .mail-header { background: #1e1e1e; padding: 20px; border-radius: 8px 8px 0 0; border: 1px solid #333; }
+    .mail-body { background: #252525; padding: 30px; border-radius: 0 0 8px 8px; border: 1px solid #333; border-top: none; color: #e0e0e0; white-space: pre-wrap; line-height: 1.6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .meta-row { display: flex; justify-content: space-between; color: #aaa; font-size: 0.9rem; margin-bottom: 5px; }
+    .status-badge { padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+    .sent { background: rgba(40, 167, 69, 0.2); color: #28a745; }
+    .canceled { background: rgba(220, 53, 69, 0.2); color: #dc3545; }
+    .waiting { background: rgba(255, 193, 7, 0.2); color: #ffc107; }

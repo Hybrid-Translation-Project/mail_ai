@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="/static/css/history.css">
+{% endblock %}
+
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h2>📂 Gönderilen & İptal Edilenler</h2>
@@ -12,7 +16,7 @@
             <tr>
                 <th style="padding: 15px; text-align: left;">Tarih</th>
                 <th style="padding: 15px; text-align: left;">Kime / Muhatap</th>
-                <th style="padding: 15px; text-align: left;">Konu</th>
+                <th style="padding: 15px; text-align: left;">Konu (İncelemek için tıkla)</th>
                 <th style="padding: 15px; text-align: center;">Durum</th>
                 <th style="padding: 15px; text-align: center;">İşlem</th>
             </tr>
@@ -22,7 +26,13 @@
             <tr style="border-bottom: 1px solid #222;">
                 <td style="padding: 15px; color: #888; font-size: 0.9rem;">{{ mail.created_at.strftime('%d.%m %H:%M') }}</td>
                 <td style="padding: 15px; font-weight: 500;">{{ mail.from }}</td>
-                <td style="padding: 15px;">{{ mail.subject }}</td>
+                
+                <td style="padding: 15px;">
+                    <a href="/ui/view/{{ mail._id }}" style="color: #fff; text-decoration: none; font-weight: bold; display: block;">
+                        {{ mail.subject }} <span style="font-size: 0.8em; color: #bb86fc;">🔗</span>
+                    </a>
+                </td>
+
                 <td style="padding: 15px; text-align: center;">
                     {% if mail.status == 'SENT' %}
                         <span style="background: rgba(40, 167, 69, 0.2); color: #28a745; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">GÖNDERİLDİ</span>

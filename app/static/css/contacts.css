@@ -1,26 +1,70 @@
-.contact-card .card {
-    transition: transform 0.3s, box-shadow 0.3s;
-    border-radius: 12px;
-    background: linear-gradient(145deg, #1e1e1e, #252525);
+/* --- ARAMA KUTUSU (Modern Beyaz Tasarım) --- */
+/* Bootstrap form-control sınıfını temel alarak modernleştiriyoruz */
+div.container input.form-control {
+    background-color: #ffffff !important; /* İstediğin gibi beyaz tutuyoruz */
+    border: 1px solid #dee2e6 !important; /* İnce, modern bir çerçeve */
+    color: #212529 !important; /* Koyu metin rengi */
+    border-radius: 10px !important; /* Köşeleri yumuşattık */
+    padding: 12px 20px !important;
+    height: auto !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important; /* Hafif bir derinlik ekledik */
+    transition: all 0.3s ease !important;
 }
-    
-.contact-card:hover .card {
+
+/* Kutuya Tıklandığında (Mavi Odaklanma Efekti) */
+div.container input.form-control:focus {
+    border-color: #86b7fe !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important; /* Bootstrap tarzı şık parlama */
+    outline: none !important;
+}
+
+/* Placeholder (İpucu Metni) */
+div.container input.form-control::placeholder {
+    color: #adb5bd !important;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+/* --- REHBER KARTLARI (Karanlık Tema ile Uyumlu) --- */
+/* Kartlar sidebar ile uyumlu koyu tonda kalmaya devam ediyor */
+.card {
+    background-color: #1e1e1e !important; /* styles.css'deki --card-bg ile uyumlu */
+    border: 1px solid #333 !important;
+    border-radius: 16px !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    overflow: hidden;
+}
+
+.card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-    border-color: #0d6efd;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4) !important;
+    border-color: #bb86fc !important; /* styles.css'deki accent rengi */
 }
-    
-#contactSearch {
-    border-radius: 20px;
-    padding-left: 20px;
-    border: 2px solid #333;
+
+.card-title {
+    color: #bb86fc !important; /* Mor aksan */
+    font-weight: 600;
 }
-.btn-outline-danger {
-    color: #ff4d4d;
-    border: 1px solid #ff4d4d;
-    background: transparent;
+
+.text-muted {
+    color: #a0a0a0 !important;
 }
-.btn-outline-danger:hover {
-    background: #ff4d4d;
-    color: white;
+
+/* Alt Çizgi Stilini Yumuşat */
+.card hr {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    opacity: 0.5;
+}
+
+/* --- BUTONLAR --- */
+.btn-outline-primary {
+    border-color: #bb86fc !important;
+    color: #bb86fc !important;
+    border-radius: 8px !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: #bb86fc !important;
+    color: #000 !important;
 }

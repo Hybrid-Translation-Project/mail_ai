@@ -1,41 +1,25 @@
-.animate-pulse {
-    animation: pulse-red 2s infinite;
+.card-pending {
+    border-left: 5px solid #fbbf24;
+    background: #1e293b;
 }
 
-@keyframes pulse-red {
-     0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
-}
-    
-.status-badge {
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-}
-.btn-outline-danger {
-    color: #ff4d4d;
-    border: 1px solid #ff4d4d;
-    background: transparent;
-}
-.btn-outline-danger:hover {
-    background: #ff4d4d;
-    color: white;
+.badge-category {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
 }
 
-.list-group-item {
-    transition: background 0.3s;
+table {
+    border-collapse: separate;
+    border-spacing: 0 10px;
 }
 
-.list-group-item:hover {
-    background-color: rgba(255, 255, 255, 0.05) !important;
+tr {
+    background: #1e293b;
+    border-radius: 10px;
 }
 
-.btn-danger {
-    background-color: #cf6679;
-    border: none;
-}
-    
-.btn-danger:hover {
-    background-color: #ff4d4d;
+td {
+    padding: 15px !important;
+    vertical-align: middle;
 }

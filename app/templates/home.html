@@ -2,13 +2,23 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="/static/css/home.css">
+    <style>
+        .category-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .urgency-high { color: #ff4757; font-weight: bold; }
+        .urgency-mid { color: #ffa502; }
+        .animate-flicker { animation: flicker 1.5s infinite alternate; }
+        @keyframes flicker {
+            0% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="welcome-section mb-4">
-        <h1>Merhaba Serhat, 👋</h1>
-        <p class="text-muted">İşte bugünün özeti ve AI asistanının notları.</p>
+        <h1>Merhaba {{ user.full_name if user else 'Kullanıcı' }}, 👋</h1>
+        <p class="text-muted">İşte bugünün özeti ve AI asistanının {{ user.company_name if user else 'şirketin' }} için notları.</p>
     </div>
 
     <div class="row mb-4">
@@ -51,14 +61,36 @@
                 <div class="task-list">
                     {% if urgent_tasks %}
                         {% for task in urgent_tasks %}
-                        <div class="task-item">
-                            <div class="task-date">{{ task.due_date or 'Yakında' }}</div>
-                            <div class="task-desc"><strong>{{ task.title }}</strong> - {{ task.sender }}</div>
-                            <span class="badge badge-urgent">ACİL</span>
+                        <div class="task-item d-flex align-items-center justify-content-between p-3 border-bottom">
+                            <div class="d-flex align-items-center">
+                                <div class="task-date me-3 text-center" style="min-width: 80px;">
+                                    <small class="d-block text-muted">{{ task.due_date or 'Yakında' }}</small>
+                                </div>
+                                <div class="task-info">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="category-dot 
+                                            {% if task.category == 'Teklif' %}bg-success
+                                            {% elif task.category == 'Şikayet' %}bg-danger
+                                            {% elif task.category == 'Ödeme' %}bg-info
+                                            {% else %}bg-secondary{% endif %}">
+                                        </span>
+                                        <strong>{{ task.title }}</strong>
+                                        {% if task.urgency_score and task.urgency_score >= 80 %}
+                                            <span class="animate-flicker">🔥</span>
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted">{{ task.sender }}</small>
+                                </div>
+                            </div>
+                            <div class="task-status">
+                                <span class="badge {% if task.urgency_score and task.urgency_score >= 80 %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                    {% if task.urgency_score and task.urgency_score >= 80 %}KRİTİK{% else %}ÖNEMLİ{% endif %}
+                                </span>
+                            </div>
                         </div>
                         {% endfor %}
                     {% else %}
-                        <p class="text-muted p-3">Şu an acil bir görev bulunmuyor.</p>
+                        <p class="text-muted p-3 text-center">Şu an acil bir görev bulunmuyor.</p>
                     {% endif %}
                 </div>
             </div>
@@ -68,11 +100,11 @@
             <div class="content-block ai-insight-block">
                 <h4>🤖 AI Asistanı</h4>
                 <div class="ai-note">
-                    <p>"Serhat A.Ş. ile 3 gündür iletişim yok. Bir takip maili hazırlamamı ister misin?"</p>
-                    <button class="btn btn-sm btn-primary">Mail Hazırla</button>
+                    <p>"{{ user.company_name if user else 'Şirket' }} verilerine göre bugün bekleyen <strong>{{ stats.pending_mails }}</strong> önemli mailin var. İncelemek ister misin?"</p>
+                    <a href="/ui" class="btn btn-sm btn-primary">Gelen Kutusuna Git</a>
                 </div>
                 <div class="ai-note mt-3">
-                    <p>"Bugün saat 15:00'te Zoom toplantın olduğunu hatırlatmak isterim."</p>
+                    <p>"En son <strong>{{ stats.total_contacts }}</strong> farklı şirketle etkileşim kurduk. Şirket hafızası güncel görünüyor."</p>
                 </div>
             </div>
         </div>

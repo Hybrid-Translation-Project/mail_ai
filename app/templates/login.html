@@ -5,46 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Mail Asistanı - Giriş</title>
     <link rel="stylesheet" href="/static/css/login.css">
-    <style>
-        /* CSS dosyan yoksa veya ekleme yapmak istersen burayı kullanabilirsin */
-        .error {
-            color: #ff5252;
-            background: rgba(255, 82, 82, 0.1);
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            margin-top: 15px;
-            text-align: center;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="login-card">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <i class="fas fa-robot" style="font-size: 3rem; color: #38bdf8;"></i>
+        </div>
         <h2>📧 Mail Asistanı</h2>
         <p style="color: #888; font-size: 0.85rem; margin-bottom: 20px; text-align: center;">
             Devam etmek için panel yetkilerinizi doğrulayın.
         </p>
+
+        {% if request.query_params.get('msg') %}
+            <div class="success">
+                <i class="fas fa-check-circle"></i> {{ request.query_params.get('msg') }}
+            </div>
+        {% endif %}
         
         <form action="/login" method="post">
             <div class="input-group">
-                <label>E-posta Adresi</label>
+                <label><i class="fas fa-envelope"></i> E-posta Adresi</label>
                 <input type="email" name="username" required placeholder="ornek@gmail.com">
             </div>
             
             <div class="input-group">
-                <label>Panel Giriş Şifresi</label>
+                <label><i class="fas fa-lock"></i> Panel Giriş Şifresi</label>
                 <input type="password" name="password" required placeholder="Panel şifrenizi girin">
             </div>
             
-            <button type="submit" class="login-btn">Güvenli Giriş Yap</button>
+            <button type="submit" class="login-btn">
+                <i class="fas fa-sign-in-alt"></i> Güvenli Giriş Yap
+            </button>
             
             {% if error %}
                 <p class="error">⚠️ {{ error }}</p>
             {% endif %}
         </form>
 
-        <div style="margin-top: 25px; text-align: center; font-size: 0.8rem; color: #555;">
-            Şifrenizi unuttuysanız <code>setup.py</code> dosyasını yeniden çalıştırın.
+        <div style="margin-top: 25px; text-align: center; font-size: 0.8rem; color: #555; border-top: 1px solid #333; padding-top: 15px;">
+            <p>Sistemi sıfırlamak veya yeni hesap kurmak için <code>.env</code> dosyasını silip sayfayı yenileyin.</p>
         </div>
     </div>
 </body>

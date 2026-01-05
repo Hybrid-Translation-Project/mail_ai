@@ -1,33 +1,52 @@
 {% extends "base.html" %}
+
 {% block content %}
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col-md-8">
-            <h3>📂 {{ contact_name }} - Mail Geçmişi</h3>
+            <h3>📂 {{ contact.name if contact.name else contact.email }} - Mail Geçmişi</h3>
+            
             <div class="list-group mt-3">
                 {% for mail in history %}
-                <div class="list-group-item list-group-item-action mb-2 shadow-sm border-start border-primary border-4">
+                <a href="/ui/view/{{ mail._id }}" class="list-group-item list-group-item-action mb-2 shadow-sm border-start border-primary border-4" style="background: #2a2a2a; color: #fff; border: 1px solid #444; transition: all 0.2s;">
                     <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1">{{ mail.subject }}</h6>
-                        <small>{{ mail.created_at.strftime('%d.%m.%Y') }}</small>
+                        <h6 class="mb-1 text-primary">{{ mail.subject }}</h6>
+                        <small class="text-muted">{{ mail.created_at.strftime('%d.%m.%Y') }}</small>
                     </div>
-                    <p class="mb-1 small text-truncate">{{ mail.body }}</p>
-                    <small class="text-success">AI Taslağı: {{ mail.status }}</small>
-                </div>
+                    <p class="mb-1 small text-truncate" style="color: #ccc;">{{ mail.body }}</p>
+                    <small class="text-success">
+                        Durum: 
+                        {% if mail.status == 'SENT' %} Gönderildi
+                        {% elif mail.status == 'CANCELED' %} İptal/Ret
+                        {% else %} {{ mail.status }} {% endif %}
+                    </small>
+                </a>
                 {% endfor %}
+                
+                {% if not history %}
+                    <div class="alert alert-secondary mt-3" role="alert">
+                        Bu kişiyle henüz bir mail geçmişi bulunmuyor.
+                    </div>
+                {% endif %}
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card bg-light shadow border-0">
+            <div class="card shadow border-0" style="background: #1e1e1e; border: 1px solid #333;">
                 <div class="card-body">
                     <h5 class="card-title text-danger">🧠 AI Şirket Notları</h5>
                     <p class="small text-muted italic">LLaMA tarafından bu şirket hakkında yapılan çıkarımlar:</p>
+                    
                     <ul class="list-group list-group-flush small">
-                        {% for note in ai_notes %}
-                        <li class="list-group-item bg-transparent">📍 {{ note }}</li>
-                        {% endfor %}
+                        {% if contact and contact.ai_notes %}
+                            {% for note in contact.ai_notes %}
+                            <li class="list-group-item bg-transparent text-white border-secondary">📍 {{ note }}</li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="list-group-item bg-transparent text-muted">Henüz bir not çıkarılmamış.</li>
+                        {% endif %}
                     </ul>
+                    
                     <button class="btn btn-sm btn-outline-danger mt-3 w-100">🧠 Hafızayı Yenile</button>
                 </div>
             </div>
@@ -35,4 +54,3 @@
     </div>
 </div>
 {% endblock %}
-
