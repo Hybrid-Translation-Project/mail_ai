@@ -32,12 +32,12 @@ Gelen e-postaları yapay zeka ile analiz eden, yanıt taslakları hazırlayan, s
 graph TD
     subgraph "Backend Core (Ana Sistem)"
         A[FastAPI Server] -->|Veri| DB[(MongoDB)]
-        A -->|AI Metin| O[Ollama / Llama 3.2]
+        A -->|AI Metin| O["Ollama / Llama 3.2"]
         A -->|AI Ses| W[Faster-Whisper]
         
         subgraph "Bağlantı Katmanı"
-            A -->|Hesap 1| ACC1[Gmail 1 (SMTP/IMAP)]
-            A -->|Hesap 2| ACC2[Gmail 2 (SMTP/IMAP)]
+            A -->|Hesap 1| ACC1["Gmail 1 (SMTP/IMAP)"]
+            A -->|Hesap 2| ACC2["Gmail 2 (SMTP/IMAP)"]
             ACC1 & ACC2 -.->|Birleştirilmiş| U_INBOX[Unified Inbox]
         end
     end
@@ -60,14 +60,14 @@ graph TD
         INPUT -- "AI Prompt" --> OLLAMA_GEN[AI Taslak Üret]
 
         TYPE & VOICE_FLOW & OLLAMA_GEN --> MERGE[Editör Alanı]
-        MERGE --> AS[Auto-Save (1 sn)]
+        MERGE --> AS["Auto-Save (1 sn)"]
         AS --> DB_DRAFT[Veritabanı: DRAFT]
         DB_DRAFT --> LIST((Taslaklar Sayfası))
         LIST --> PRE_SEND[Onay Modalı] --> SEND2[Maili Gönder]
     end
 
     subgraph "Akış 3: Sesli Komut Modülü"
-        MIC[Mikrofon] -->|Ses Verisi| LOCK[Buton Kilitle (Processing)]
+        MIC[Mikrofon] -->|Ses Verisi| LOCK["Buton Kilitle (Processing)"]
         LOCK --> W
         W -->|Metin Çıktısı| FILTER{Analiz & Filtre}
         
