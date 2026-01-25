@@ -1,21 +1,175 @@
-/* history.css, contacts.css vb. için ortak */
-.list-container {
-    background: var(--card-bg);
-    border-radius: 16px;
-    overflow: hidden;
+/* GENEL DÜZEN */
+.back-btn-wrapper {
+    margin-bottom: 20px;
 }
 
-.contact-card {
-    border: 1px solid rgba(255,255,255,0.05);
-    background: #1e293b;
+.back-btn {
+    background: #333;
+    color: white;
+    text-decoration: none;
+    padding: 5px 15px;
+    border-radius: 4px;
+    display: inline-block;
+    transition: background 0.2s;
+}
+
+.back-btn:hover {
+    background: #444;
+    color: #fff;
+}
+
+.editor-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+/* KART TASARIMI */
+.mail-card {
+    background: #1e1e1e;
     padding: 20px;
-    border-radius: 12px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    color: #fff;
+}
+
+.sticky-panel {
+    position: sticky;
+    top: 20px;
+}
+
+/* METİN ALANLARI */
+.mail-meta {
+    color: #bbb;
+    margin-bottom: 5px;
+}
+
+.mail-body {
+    white-space: pre-wrap;
+    color: #eee;
+    line-height: 1.6;
+}
+
+.editor-textarea {
+    width: 100%;
+    background: #252525;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    resize: vertical;
+}
+
+.editor-textarea:focus {
+    outline: none;
+    border-color: #0d6efd;
+}
+
+/* BUTONLAR */
+.action-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 15px;
 }
 
-.editor-box {
-    background: #0f172a;
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid var(--primary);
+.ai-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 15px;
 }
+
+.btn-ai-action {
+    flex: 1;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #fff;
+    transition: opacity 0.2s;
+}
+
+.btn-ai-action:hover {
+    opacity: 0.9;
+}
+
+.btn-regenerate { background: #444; }
+.btn-approve { background: #155724; border: 1px solid #1e7e34; color: #d4edda; }
+.btn-reject { background: #721c24; border: 1px solid #bd2130; color: #f8d7da; }
+
+.editor-actions {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.btn-save { background: #333; color: #ccc; border: 1px solid #555; }
+.btn-send { background: #28a745; color: white; border: none; }
+.btn-cancel { background: #dc3545; color: white; border: none; grid-column: span 2; }
+
+/* DURUM GÖSTERGESİ */
+.save-status {
+    font-size: 0.8rem;
+    color: #888;
+    transition: color 0.3s;
+}
+.save-status.saving { color: #ffc107; }
+.save-status.saved { color: #28a745; }
+.save-status.error { color: #dc3545; }
+
+/* VERSİYON GEÇMİŞİ */
+.version-section {
+    margin-top: 25px;
+    border-top: 1px solid #444;
+    padding-top: 15px;
+}
+
+.version-title {
+    color: #bbb;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.version-list {
+    background: #252525;
+    border-radius: 4px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.version-item {
+    padding: 10px;
+    border-bottom: 1px solid #333;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.version-item:hover {
+    background-color: #2c2c2c;
+}
+
+.version-item:last-child {
+    border-bottom: none;
+}
+
+.version-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.version-preview {
+    color: #aaa;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.badge-ai { background-color: #0d6efd; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
+.badge-user { background-color: #ffc107; color: black; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }

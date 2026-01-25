@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-white mb-1"><i class="fas fa-users-cog text-primary"></i> Bağlı Hesaplar</h2>
+            <p class="text-muted small mb-0">Sisteme bağlı olan mail adreslerini buradan yönetebilir, yeni hesap ekleyebilirsin.</p>
+        </div>
+        <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addAccountModal">
+            <i class="fas fa-plus"></i> Yeni Hesap Ekle
+        </button>
+    </div>
+
+    <div class="row">
+        {% for acc in accounts %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 bg-dark text-white border-secondary shadow-sm" style="border: 1px solid #333;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div style="overflow: hidden;">
+                            <h5 class="card-title text-white fw-bold text-truncate" title="{{ acc.email }}">{{ acc.email }}</h5>
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success" style="font-size: 0.7rem;">
+                                <i class="fas fa-check-circle"></i> Aktif
+                            </span>
+                        </div>
+                        <i class="fab fa-google text-white fs-3 opacity-50"></i>
+                    </div>
+                    
+                    <hr class="border-secondary my-3">
+                    
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-1"><i class="fas fa-pen-nib"></i> Kullanılan İmza:</small>
+                        <div class="p-2 rounded bg-secondary bg-opacity-10 text-white small fst-italic border border-secondary text-truncate">
+                            {{ acc.signature }}
+                        </div>
+                    </div>
+
+                    <form action="/ui/accounts/delete/{{ acc._id }}" method="post" onsubmit="return confirm('⚠️ DİKKAT:\n\nBu hesabı sistemden kaldırmak üzeresin.\nBu hesaba ait geçmiş mailler veritabanında kalacak ama yeni mail gelmeyecek.\n\nEmin misin?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger w-100 hover-shadow">
+                            <i class="fas fa-trash-alt"></i> Bağlantıyı Kes
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="text-center p-5 border border-secondary rounded bg-dark">
+                <i class="fas fa-mail-bulk fs-1 text-muted mb-3"></i>
+                <h4 class="text-white">Henüz bağlı hesap yok.</h4>
+                <p class="text-muted">Sağ üstteki "Yeni Hesap Ekle" butonunu kullanarak ilk mail adresini bağlayabilirsin.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="modal fade" id="addAccountModal" tabindex="-1" aria-labelledby="addAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title" id="addAccountModalLabel">📧 Yeni Mail Hesabı Bağla</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form action="/ui/accounts/add" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Mail Adresi (Gmail)</label>
+                        <input type="email" name="email" class="form-control bg-black text-white border-secondary" placeholder="ornek@gmail.com" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Uygulama Şifresi (16 Haneli)</label>
+                        <input type="password" name="app_password" class="form-control bg-black text-white border-secondary" placeholder="xxxx xxxx xxxx xxxx" required>
+                        <div class="form-text text-muted" style="font-size: 0.7rem;">
+                            <i class="fas fa-lock"></i> Google Hesabım > Güvenlik > 2 Adımlı Doğrulama > Uygulama Şifreleri kısmından alabilirsin. Şifreniz veritabanında şifrelenerek (encrypted) saklanır.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Bu Hesap İçin İmza</label>
+                        <textarea name="signature" class="form-control bg-black text-white border-secondary" rows="3" required placeholder="Saygılarımla,&#10;İsim Soyad&#10;Şirket Adı">Saygılarımla,&#13;&#10;İsim Soyad</textarea>
+                        <div class="form-text text-muted" style="font-size: 0.7rem;">
+                            * Bu hesaba gelen maillere cevap yazarken otomatik olarak bu imza kullanılacaktır.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Hesabı ve İmzayı Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

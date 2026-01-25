@@ -5,58 +5,95 @@
 {% endblock %}
 
 {% block content %}
-<a href="/ui" class="btn btn-sm" style="background:#333; margin-bottom: 20px; color: white; text-decoration: none; padding: 5px 15px; border-radius: 4px; display: inline-block;">
-    ← Listeye Dön
-</a>
+<div class="back-btn-wrapper">
+    <a href="/ui" class="back-btn">← Gelen Kutusuna Dön</a>
+</div>
 
-<div class="row" style="display: flex; gap: 20px; align-items: flex-start;">
-    <div class="col-md-7" style="flex: 2;">
-        <div class="mail-card" style="background: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333;">
-            <h3 style="margin-top:0; color: #fff;">📩 Gelen Mail</h3>
-            <p style="color: #bbb;"><strong>Kimden:</strong> {{ mail.from }}</p>
-            <p style="color: #bbb;"><strong>Konu:</strong> {{ mail.subject }}</p>
-            <hr style="border-color: #333;">
-            <div style="white-space: pre-wrap; color: #eee; line-height: 1.6;">{{ mail.body }}</div>
+<div class="row editor-container">
+    
+    <div class="col-md-7">
+        <div class="mail-card">
+            <h3 class="mt-0 text-white">📩 Gelen Mail</h3>
+            <p class="mail-meta"><strong>Kimden:</strong> {{ mail.from }}</p>
+            <p class="mail-meta"><strong>Konu:</strong> {{ mail.subject }}</p>
+            <hr class="border-secondary">
+            
+            <div class="mail-body" style="background-color: #ffffff; color: #000000; padding: 20px; border-radius: 5px; overflow: auto; max-height: 600px;">
+                {{ mail.body | safe }}
+            </div>
         </div>
     </div>
 
-    <div class="col-md-5" style="flex: 1.5;">
-        <div class="mail-card" style="background: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333; position: sticky; top: 20px;">
+    <div class="col-md-5">
+        <div class="mail-card sticky-panel">
             
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin: 0; color: #fff;">🤖 AI Cevap Paneli</h3>
-                
-                <button type="button" onclick="handleAction('regenerate', '{{ mail._id }}')" class="btn" title="AI Taslağını Yenile" style="background: #444; color: #fff; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 0.85rem;">
-                    🔄 Yeniden Oluştur
-                </button>
+            <div class="action-header">
+                <h3 class="m-0 text-white">🤖 AI Cevap Paneli</h3>
+                <div class="text-end">
+                    <span id="saveStatus" class="save-status">✅ Güncel</span>
+                </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                <button type="button" onclick="handleAction('approve', '{{ mail._id }}')" class="btn" style="background: #155724; color: #d4edda; border: 1px solid #1e7e34; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: 500;">
-                    ✅ Kabul Et
+            <div class="ai-actions">
+                <button type="button" onclick="handleAction('regenerate', '{{ mail._id }}')" class="btn-ai-action btn-regenerate" title="AI Taslağını Yenile">
+                    🔄 Yenile
                 </button>
-                <button type="button" onclick="handleAction('reject', '{{ mail._id }}')" class="btn" style="background: #721c24; color: #f8d7da; border: 1px solid #bd2130; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: 500;">
+                <button type="button" onclick="handleAction('approve', '{{ mail._id }}')" class="btn-ai-action btn-approve">
+                    ✅ Onayla
+                </button>
+                <button type="button" onclick="handleAction('reject', '{{ mail._id }}')" class="btn-ai-action btn-reject">
                     ❌ Reddet
                 </button>
             </div>
 
             <form action="/ui/update/{{ mail._id }}" method="post" id="replyForm">
-                <textarea name="reply_draft" rows="12" style="width: 100%; background: #252525; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 10px; font-family: inherit; font-size: 1rem; resize: vertical;">{{ mail.reply_draft }}</textarea>
+                <textarea id="replyDraft" name="reply_draft" rows="12" data-mail-id="{{ mail._id }}" class="editor-textarea">{{ mail.reply_draft }}</textarea>
                 
-                <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <button type="submit" class="btn" style="background: #007bff; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: 500;">
-                        💾 Taslağı Kaydet
+                <div class="editor-actions">
+                    <button type="button" onclick="forceSave()" class="btn btn-save">
+                        💾 Şimdi Kaydet
                     </button>
                     
-                    <button type="submit" formaction="/ui/approve/{{ mail._id }}" class="btn" style="background: #28a745; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: 500;">
-                        🚀 Onayla ve Gönder
+                    <button type="submit" formaction="/ui/approve/{{ mail._id }}" class="btn btn-send">
+                        🚀 Gönder
                     </button>
                     
-                    <button type="submit" formaction="/ui/cancel/{{ mail._id }}" class="btn" style="background: #dc3545; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; grid-column: span 2; font-weight: 500;">
-                        🚫 Bu Maili Arşive At
+                    <button type="submit" formaction="/ui/cancel/{{ mail._id }}" class="btn btn-cancel">
+                        🚫 Arşive At
                     </button>
                 </div>
             </form>
+
+            {% if mail.draft_history and mail.draft_history|length > 0 %}
+            <div class="version-section">
+                <h5 class="version-title">🕒 Versiyon Geçmişi</h5>
+                <div class="version-list">
+                    
+                    {% for version in mail.draft_history|reverse %}
+                    <div class="version-item" 
+                         onclick="restoreVersion(this.dataset.content)" 
+                         data-content="{{ version.body | e }}">
+                        
+                        <div class="version-header">
+                            <span>
+                                {% if version.source == 'AI' %}
+                                <span class="badge-ai">🤖 AI</span>
+                                {% else %}
+                                <span class="badge-user">👤 Sen</span>
+                                {% endif %}
+                            </span>
+                            <small class="text-muted">{{ version.saved_at }}</small>
+                        </div>
+                        <div class="version-preview">
+                            {{ version.body[:40] }}...
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+            {% endif %}
+
         </div>
     </div>
 </div>

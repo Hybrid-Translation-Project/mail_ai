@@ -7,8 +7,8 @@
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <div>
-        <h2 style="margin: 0;">📥 Gelen Kutusu</h2>
-        <p style="color: #a0a0a0; margin: 5px 0 0 0;">AI tarafından hazırlanan ve onay bekleyen mailler.</p>
+        <h2 style="margin: 0;">📥 Gelen Kutusu (Birleşik)</h2>
+        <p style="color: #a0a0a0; margin: 5px 0 0 0;">Tüm hesaplarından toplanan ve AI tarafından işlenen mailler.</p>
     </div>
     <div style="text-align: right; font-size: 0.85rem; color: #666; background: #1e1e1e; padding: 5px 10px; border-radius: 4px; border: 1px solid #333;">
         Otomatik yenileme: <span id="countdown" style="color: #bb86fc; font-weight: bold;">15</span> sn
@@ -28,10 +28,9 @@
     <table style="width: 100%; border-collapse: collapse;">
         <thead style="background: #252525; border-bottom: 1px solid #333;">
             <tr>
-                <th style="padding: 15px; text-align: left; width: 15%;">Tarih</th>
+                <th style="padding: 15px; text-align: left; width: 10%;">Tarih</th>
                 <th style="padding: 15px; text-align: left; width: 20%;">Kimden</th>
-                <th style="padding: 15px; text-align: left; width: 30%;">Konu</th>
-                <th style="padding: 15px; text-align: center; width: 15%;">AI Durumu</th>
+                <th style="padding: 15px; text-align: left; width: 35%;">Konu & Hedef Hesap</th> <th style="padding: 15px; text-align: center; width: 15%;">AI Durumu</th>
                 <th style="padding: 15px; text-align: center; width: 20%;">İşlem</th>
             </tr>
         </thead>
@@ -39,13 +38,26 @@
             {% for mail in mails %}
             <tr style="border-bottom: 1px solid #222;">
                 <td style="padding: 15px; font-size: 0.9rem; color: #888;">{{ mail.created_at.strftime('%d.%m %H:%M') }}</td>
+                
                 <td style="padding: 15px; font-weight: 500;">
                     <a href="/ui/contact/{{ mail.from }}" style="color: #fff; text-decoration: none; border-bottom: 1px dashed #444;">{{ mail.from }}</a>
                 </td>
-                <td style="padding: 15px;">{{ mail.subject }}</td>
+                
+                <td style="padding: 15px;">
+                    <div style="margin-bottom: 4px;">
+                        <span style="font-size: 0.7rem; background: #333; color: #bbb; padding: 2px 6px; border-radius: 4px; border: 1px solid #444;">
+                            <i class="fas fa-inbox" style="color: #bb86fc; margin-right: 3px;"></i> {{ mail.user_email }}
+                        </span>
+                    </div>
+                    <div style="font-size: 1rem; color: #e0e0e0;">
+                        {{ mail.subject }}
+                    </div>
+                </td>
+                
                 <td style="padding: 15px; text-align: center;">
                     <span class="badge" style="background: #bb86fc; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">TASLAK HAZIR</span>
                 </td>
+                
                 <td style="padding: 15px; text-align: center;">
                     <div style="display: flex; gap: 8px; justify-content: center;">
                         <a href="/ui/editor/{{ mail._id }}" class="btn btn-primary btn-sm" style="text-decoration: none;">İncele</a>
@@ -65,7 +77,7 @@
 <div style="text-align: center; margin-top: 40px; padding: 60px; border: 2px dashed #333; border-radius: 12px; background: #1a1a1a;">
     <div style="font-size: 4rem; margin-bottom: 15px; opacity: 0.5;">📭</div>
     <h3 style="margin: 10px 0; color: #fff;">Bekleyen mail yok!</h3>
-    <p style="color: #666;">Sistem arka planda yeni mailleri dinlemeye devam ediyor...</p>
+    <p style="color: #666;">Tüm bağlı hesapların kontrol ediliyor...</p>
     <div style="margin-top: 25px;">
         <button onclick="window.location.reload()" class="btn btn-sm" style="background-color: #333; color: #fff; border: 1px solid #444; padding: 8px 20px;">🔄 Şimdi Kontrol Et</button>
     </div>

@@ -56,3 +56,114 @@ input::placeholder {
     position: relative;
     display: inline-block;
 }
+/* Kart Tasarımı */
+.writer-card {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+}
+
+/* Form Etiketleri */
+.form-label {
+    color: #bbb;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+/* Input ve Select Kutuları (Karanlık Mod) */
+.form-control, .form-select {
+    background-color: #121212;
+    border: 1px solid #333;
+    color: #e0e0e0;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: #000;
+    border-color: #0d6efd;
+    color: #fff;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-text {
+    color: #6c757d;
+}
+
+/* Yükleniyor Animasyonu (Spinner) */
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+@keyframes spin { 
+    to { transform: rotate(360deg); } 
+}
+/* Save Status Colors */
+        .save-status { font-size: 0.85rem; color: #888; font-weight: 500; transition: color 0.3s; }
+        .save-status.saving { color: #ffc107; } /* Yellow */
+        .save-status.saved { color: #28a745; } /* Green */
+        .save-status.error { color: #dc3545; } /* Red */
+
+        /* 🎤 Floating Microphone Button Style (Jarvis) */
+        .voice-btn-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+
+        #voiceBtn {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #2c3e50, #34495e); /* Dark aesthetic */
+            border: 2px solid #3498db;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            color: #fff;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        #voiceBtn:hover {
+            transform: scale(1.1);
+            background: #3498db;
+            box-shadow: 0 0 20px rgba(52, 152, 219, 0.6);
+        }
+
+        /* Active Listening State (Pulse Animation) */
+        #voiceBtn.listening {
+            background: #e74c3c; /* Red */
+            border-color: #c0392b;
+            animation: pulse-red 1.5s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        /* Visual Feedback: Highlight the active textbox */
+        .voice-focus {
+            border-color: #3498db !important;
+            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25) !important;
+        }
+/* Processing (Meşgul) Durumu */
+#voiceBtn.processing {
+    background: #6c757d; /* Gri */
+    border-color: #545b62;
+    transform: scale(0.95); /* Hafif küçülür */
+    pointer-events: none;   /* Tıklamayı CSS ile de engelle */
+}

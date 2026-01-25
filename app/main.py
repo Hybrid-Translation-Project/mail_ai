@@ -8,21 +8,20 @@ from dotenv import load_dotenv
 from fastapi.staticfiles import StaticFiles
 
 # --- DİZİN AYARLARI ---
-# current_dir: /app klasörü
-current_dir = os.path.dirname(os.path.abspath(__file__))
-# root_dir: Projenin en ana dizini
-root_dir = os.path.dirname(current_dir)
+# Bu dosyanın bulunduğu dizin (Proje Kök Dizini)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
+# Eğer proje kök dizini sistem yolunda yoksa ekle (Import hatalarını önler)
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
 
-ENV_PATH = os.path.join(root_dir, ".env")
+ENV_PATH = os.path.join(BASE_DIR, ".env")
 
-# .env dosyasını ana dizinden yükle
+# .env dosyasını yükle
 load_dotenv(ENV_PATH)
 
-# --- İTHALATLAR ---
-from app.routes import ui 
+# UI ve YENİ VOICE (Ses) Rotalarını içeri alıyoruz
+from app.routes import ui, voice 
 from app.services.mail_listener import check_all_inboxes
 
 # --- Zamanlayıcı (Scheduler) ---
@@ -31,17 +30,26 @@ scheduler = BackgroundScheduler()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # --- SUNUCU BAŞLARKEN ---
-    print("🚀 AI Mail Asistanı Sunucusu Başlatılıyor...")
+    print("🚀 AI Mail Asistanı Sunucusu Başlatılıyor...", flush=True)
     
-    # Sadece sistem kuruluysa mail dinleyiciyi başlat
+    # .env kontrolü ve Mail Dinleyici Başlatma
     if os.path.exists(ENV_PATH):
-        scheduler.add_job(check_all_inboxes, 'interval', seconds=60)
+        print("🔄 Başlangıç mail kontrolü yapılıyor...", flush=True)
+        
+        # 1. Hemen kontrol et (Beklemeden)
+        try:
+            check_all_inboxes()
+        except Exception as e:
+            print(f"⚠️ Başlangıç kontrolünde hata (Önemli değil): {e}", flush=True)
+
+        # 2. Periyodik kontrolü başlat (15 saniyede bir)
+        scheduler.add_job(check_all_inboxes, 'interval', seconds=15)
         scheduler.start()
-        print("📥 Mail Dinleyicisi Aktif! (Periyot: 60 saniye)")
+        print("📥 Multi-Account Mail Dinleyicisi Aktif! (Periyot: 15 sn)", flush=True)
     else:
-        print("⚠️ Yapılandırma bulunamadı. Web üzerinden kurulum bekleniyor...")
+        print("⚠️ Yapılandırma bulunamadı. Web üzerinden kurulum bekleniyor (/setup)...", flush=True)
     
-    # Uygulama başladığında tarayıcıyı aç
+    # Uygulama başladığında tarayıcıyı otomatik aç
     webbrowser.open("http://127.0.0.1:8000/")
     
     yield
@@ -49,7 +57,7 @@ async def lifespan(app: FastAPI):
     # --- SUNUCU KAPANIRKEN ---
     if scheduler.running:
         scheduler.shutdown()
-    print("🛑 Sistem Kapanıyor...")
+    print("🛑 Sistem Kapanıyor...", flush=True)
 
 # FastAPI Uygulaması
 app = FastAPI(
@@ -57,27 +65,29 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# --- STATİK DOSYALAR (DÜZELTİLDİ) ---
-# Eğer static klasörün en dışarıdaysa (app klasörü dışında):
-static_path = os.path.join(root_dir, "static")
-
-# Eğer static klasörün app/ klasörü içindeyse (yukarıdaki çalışmazsa):
+# --- STATİK DOSYALAR (CSS/JS) ---
+# app/static klasörünü "/static" adıyla dışarı açıyoruz
+# Bu sayede voice.js ve writer.js dosyalarına erişebiliyoruz.
+static_path = os.path.join(BASE_DIR, "app", "static")
 if not os.path.exists(static_path):
-    static_path = os.path.join(current_dir, "static")
+    # Yedek kontrol (Eğer app klasörü içinde değilse direkt root'ta arar)
+    static_path = os.path.join(BASE_DIR, "static")
 
 app.mount("/static", StaticFiles(directory=static_path), name="static")
 
-# Rotaları dahil et
-app.include_router(ui.router)
+# --- ROTALARI SİSTEME DAHİL ET ---
+app.include_router(ui.router)    # Arayüz Rotaları
+app.include_router(voice.router) # 🎙️ YENİ: Sesli Komut Rotaları (Bunu eklemezsek ses çalışmaz!)
 
 @app.get("/health")
 def health():
     return {
         "status": "OK", 
-        "configured": os.path.exists(ENV_PATH)
+        "configured": os.path.exists(ENV_PATH),
+        "voice_module": "Active" # Ses modülünün aktif olduğunu belirtelim
     }
 
 if __name__ == "__main__":
     import uvicorn
-    # uvicorn.run("app.main:app"...) yerine direkt app nesnesini veriyoruz
+    # host="0.0.0.0" yaparak ağdaki diğer cihazlardan da erişebilirsin
     uvicorn.run(app, host="127.0.0.1", port=8000)

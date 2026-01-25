@@ -9,6 +9,8 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
     <link rel="stylesheet" href="/static/css/styles.css">
     
     {% block extra_css %}{% endblock %}
@@ -23,6 +25,9 @@
             <div class="nav-section">ANA MENÜ</div>
             <a href="/ui/dashboard" class="nav-link"><i class="fas fa-home"></i> Komuta Merkezi</a>
             <a href="/ui" class="nav-link"><i class="fas fa-inbox"></i> Gelen Kutusu</a>
+            
+            <a href="/ui/drafts" class="nav-link"><i class="fas fa-file-signature"></i> Taslaklar</a>
+            
             <a href="/ui/history" class="nav-link"><i class="fas fa-history"></i> Geçmiş / Arşiv</a>
             
             <div class="nav-section">AI YÖNETİM</div>
@@ -31,7 +36,9 @@
             <a href="/ui/writer" class="nav-link"><i class="fas fa-pen-nib"></i> AI Mail Yazarı</a>
             
             <div class="nav-section">SİSTEM</div>
-            <a href="/ui/settings" class="nav-link"><i class="fas fa-cog"></i> Hesap Ayarları</a>
+            <a href="/ui/accounts" class="nav-link"><i class="fas fa-users-cog"></i> Bağlı Hesaplar</a>
+            
+            <a href="/ui/settings" class="nav-link"><i class="fas fa-cog"></i> Genel Ayarlar</a>
             <a href="/login" class="nav-link logout-link"><i class="fas fa-sign-out-alt"></i> Güvenli Çıkış</a>
         </nav>
 

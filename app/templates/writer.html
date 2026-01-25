@@ -6,31 +6,127 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h3>📝 AI Mail Yazarı</h3>
-    <div class="card mt-3 shadow">
-        <div class="card-body">
-            <div class="mb-3">
-                <label class="form-label">Kime / Hangi Branch?</label>
-                <div class="search-section">
-                    <input type="text" placeholder="Şirket veya kişi ara..." class="search-input">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>📝 AI Mail Writer</h3>
+        <span id="saveStatus" class="save-status"></span>
+    </div>
+
+    <form action="/ui/writer/send" method="POST" id="mailForm">
+        
+        <input type="hidden" id="draftId" name="draft_id" value="{{ draft._id if draft else '' }}">
+
+        <div class="card writer-card shadow">
+            <div class="card-body">
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label"><i class="fas fa-paper-plane text-primary"></i> Sender Account</label>
+                        <select class="form-select" name="sender_email" id="senderEmail" required onchange="manualSave()">
+                            {% for acc in accounts %}
+                            <option value="{{ acc.email }}" 
+                                {% if draft and draft.user_email == acc.email %}selected{% endif %}>
+                                {{ acc.email }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text text-muted" style="font-size: 0.7rem;">
+                            * Mail will be sent from this account using its signature.
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label"><i class="fas fa-user text-success"></i> To (Recipient)</label>
+                        <input type="email" name="to_email" id="toEmail" class="form-control" 
+                               placeholder="example@company.com" 
+                               value="{{ draft.to if draft else '' }}" required>
+                    </div>
                 </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Ne Hakkında? (Kısa Talimat)</label>
-                <textarea class="form-control" rows="3" placeholder="Örn: Toplantıyı yarına ertelemek istediğimi nazikçe söyle."></textarea>
-            </div>
-            <button class="btn btn-primary">🪄 Taslak Oluştur</button>
-            <hr>
-            <label class="form-label text-success font-weight-bold">AI Önerisi:</label>
-            <div class="p-3 bg-light border rounded mb-3" id="draft-output">
-                Henüz taslak oluşturulmadı...
-            </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-success">✅ Onayla ve Gönder</button>
-                <button class="btn btn-outline-warning">🔄 Yeniden Yaz (Regenerate)</button>
+
+                <div class="mb-3">
+                    <label class="form-label">Subject</label>
+                    <input type="text" name="subject" id="subject" class="form-control" 
+                           placeholder="e.g.: Project Proposal" 
+                           value="{{ draft.subject if draft else '' }}" required>
+                </div>
+
+                <hr class="border-secondary my-4">
+
+                <div class="mb-3">
+                    <label class="form-label text-warning"><i class="fas fa-magic"></i> AI Instructions (Prompt)</label>
+                    <div class="input-group">
+                        <textarea id="aiPrompt" class="form-control" rows="2" placeholder="e.g.: Thank the client for accepting our offer and attach the contract. Use formal language."></textarea>
+                        <button type="button" id="btnGenerate" class="btn btn-primary">
+                            🪄 Generate Draft
+                        </button>
+                    </div>
+                    <div class="form-text text-muted" style="font-size: 0.8rem;">
+                        <i class="fas fa-info-circle"></i> Tip: Use the mic to dictate instructions, then say "Create" or wait for auto-generation.
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-success">Mail Content (Editable):</label>
+                    <textarea name="body" id="mailBody" class="form-control" rows="10" 
+                              placeholder="AI generated text will appear here..." required>{{ draft.body | safe if draft else '' }}</textarea>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end">
+                    <button type="button" class="btn btn-outline-warning" onclick="manualSave(true)" id="btnSave">
+                        <i class="fas fa-save"></i> Save as Draft
+                    </button>
+
+                    <a href="/ui/drafts" class="btn btn-outline-secondary">Cancel / Back to List</a>
+                    
+                    <button type="button" class="btn btn-success px-4" id="btnPreSend">
+                        <i class="fas fa-paper-plane"></i> Send Mail
+                    </button>
+                </div>
+
             </div>
         </div>
-    </div>
+    </form>
 </div>
-<script src="/static/js/search.js"></script>
+
+<div class="voice-btn-container">
+    <button id="voiceBtn" title="Hold to Speak / Toggle">
+        <i class="fas fa-microphone"></i>
+    </button>
+</div>
+
+<div class="modal fade" id="confirmSendModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark text-light border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title text-warning"><i class="fas fa-exclamation-triangle"></i> Confirm Send</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Are you sure you want to send this email?</p>
+        <div class="card bg-secondary bg-opacity-10 border-0">
+            <div class="card-body py-2">
+                <small class="text-muted d-block">To:</small>
+                <strong id="confirmTo" class="d-block mb-2 text-white">...</strong>
+                <small class="text-muted d-block">Subject:</small>
+                <strong id="confirmSubject" class="text-white">...</strong>
+            </div>
+        </div>
+        <p class="text-muted small mt-3 mb-0 text-center">
+            <i class="fas fa-microphone"></i> You can say <strong>"Confirm"</strong> to send instantly.
+        </p>
+      </div>
+      <div class="modal-footer border-secondary justify-content-between">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success px-4" id="btnConfirmSend">
+            <i class="fas fa-paper-plane"></i> Yes, Send It!
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script src="/static/js/voice.js"></script>
+    <script src="/static/js/writer.js"></script>
 {% endblock %}

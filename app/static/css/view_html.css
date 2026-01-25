@@ -6,3 +6,19 @@
     .sent { background: rgba(40, 167, 69, 0.2); color: #28a745; }
     .canceled { background: rgba(220, 53, 69, 0.2); color: #dc3545; }
     .waiting { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+     .mail-content-box {
+        background-color: #ffffff;
+        color: #000000;
+        padding: 20px;
+        border-radius: 6px;
+        border: 1px solid #444;
+        overflow-x: auto; /* Geniş mailler taşmasın */
+        min-height: 300px;
+    }
+    /* Mail içindeki linkler mavi görünsün */
+    .mail-content-box a { color: blue; text-decoration: underline; }
+    
+    .status-badge { padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; }
+    .status-badge.sent { background-color: #198754; color: white; }
+    .status-badge.canceled { background-color: #dc3545; color: white; }
+    .status-badge.waiting { background-color: #ffc107; color: black; }

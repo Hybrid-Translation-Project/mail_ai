@@ -1,3 +1,4 @@
+# app/database.py
 # MongoDB istemcisi
 from pymongo import MongoClient
 import sys
@@ -23,13 +24,17 @@ try:
     # Kişi profillerinin tutulacağı collection (Şirket Branch yapısının temeli)
     contacts_col = db.contacts
 
-    # Kullanıcıların (şifreli parolalarının) tutulacağı collection
+    # Panel giriş yetkisi olan ana kullanıcıların tutulacağı collection
     users_col = db.users
+
+    # Bağlı olan mail hesaplarının (Gmail vb.) tutulacağı collection (YENİ EKLENDİ)
+    # Bu koleksiyon; İş, Kişisel vb. tüm ek hesapları tutacak.
+    accounts_col = db.accounts
 
     # AI tarafından maillerden çıkarılan görevlerin (To-Do) tutulduğu collection
     tasks_col = db.tasks
 
-    print("MongoDB bağlantısı başarıyla kuruldu ve koleksiyonlar hazır.")
+    print("MongoDB bağlantısı başarıyla kuruldu ve koleksiyonlar (Accounts dahil) hazır.")
 
 except Exception as e:
     print(f" MongoDB Bağlantı Hatası: {e}")

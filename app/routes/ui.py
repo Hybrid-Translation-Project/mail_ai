@@ -1,16 +1,19 @@
 import os
-from fastapi import APIRouter, Request, Form, Depends, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+import re
+from typing import Optional
+from fastapi import APIRouter, Request, Form, Depends, HTTPException, Body
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from bson import ObjectId
 from datetime import datetime
 from dotenv import load_dotenv, set_key
+from pydantic import BaseModel
 
 # Veritabanı ve Servisler
-from app.database import mails_col, contacts_col, tasks_col, users_col
+from app.database import mails_col, contacts_col, tasks_col, users_col, accounts_col
 from app.services.mail_sender import send_gmail_via_user
 from app.services.reply_generator import generate_reply, generate_decision_reply
-from app.core.security import encrypt_password, verify_master_password, hash_master_password
+from app.core.security import encrypt_password, verify_master_password, hash_master_password, decrypt_password
 
 router = APIRouter()
 
@@ -25,11 +28,50 @@ templates = Jinja2Templates(directory=os.path.join(app_dir, "templates"))
 # Başlangıçta .env'yi oku
 load_dotenv(ENV_PATH, override=True)
 
+# --- VERİ MODELLERİ ---
+
+# Writer (Yeni Mail) için Model
+class WriterDraftRequest(BaseModel):
+    draft_id: Optional[str] = None
+    sender_email: str
+    to_email: str
+    subject: str
+    body: str
+
+# Editor (Cevaplama) için Model
+class ReplyDraftRequest(BaseModel):
+    mail_id: str
+    draft_content: str
+
+# --- YARDIMCI FONKSİYONLAR ---
+
 def is_configured():
     if not os.path.exists(ENV_PATH): return False
     return users_col.find_one({"is_active": True}) is not None
 
-# --- KURULUM ---
+def clean_html(raw_html):
+    """HTML etiketlerini temizler (Taslak önizlemesi için)"""
+    if not raw_html: return ""
+    cleanr = re.compile('<.*?>')
+    cleantext = re.sub(cleanr, '', raw_html)
+    return cleantext.replace('&nbsp;', ' ')
+
+def add_draft_version(mail_id: str, content: str, source: str = "USER"):
+    """Mevcut cevap taslağını tarihçeye ekler (Gelen kutusu cevapları için)"""
+    if not content: return
+    
+    version_entry = {
+        "body": content,
+        "source": source,
+        "saved_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    
+    mails_col.update_one(
+        {"_id": ObjectId(mail_id)},
+        {"$push": {"draft_history": version_entry}}
+    )
+
+# --- KURULUM (SETUP) ---
 @router.get("/setup", response_class=HTMLResponse)
 async def setup_page(request: Request):
     if is_configured(): return RedirectResponse(url="/login")
@@ -54,11 +96,23 @@ async def run_setup(full_name: str = Form(...), company_name: str = Form(...), e
         set_key(ENV_PATH, "DB_NAME", "mail_asistani_db")
         set_key(ENV_PATH, "OLLAMA_MODEL", "llama3.2")
         
-        users_col.update_one({"email": email}, {"$set": {
+        user_data = {
             "full_name": full_name, "company_name": company_name, "email": email,
             "app_password": enc_pass, "master_password": hashed_master,
             "signature": signature, "is_active": True, "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }}, upsert=True)
+        }
+        users_col.update_one({"email": email}, {"$set": user_data}, upsert=True)
+        
+        user = users_col.find_one({"email": email})
+
+        first_account = {
+            "user_id": user["_id"], "email": email, "password": enc_pass,
+            "provider": "gmail", "auth_type": "password", "signature": signature,
+            "is_active": True, "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        if not accounts_col.find_one({"email": email}):
+            accounts_col.insert_one(first_account)
+
         return RedirectResponse(url="/login?msg=Basarili", status_code=303)
     except Exception as e: return RedirectResponse(url=f"/setup?error={str(e)}", status_code=303)
 
@@ -76,6 +130,42 @@ async def login(request: Request, username: str = Form(...), password: str = For
     if username.strip() == env_email and verify_master_password(password, env_master):
         return RedirectResponse(url="/ui/dashboard", status_code=303)
     return templates.TemplateResponse("login.html", {"request": request, "error": "Hatalı Giriş!"})
+
+# --- HESAP YÖNETİMİ ---
+@router.get("/ui/accounts", response_class=HTMLResponse)
+async def accounts_page(request: Request):
+    user = users_col.find_one({"is_active": True})
+    accounts = list(accounts_col.find({"user_id": user["_id"]}))
+    
+    if not accounts and user.get("email") and user.get("app_password"):
+        first_account = {
+            "user_id": user["_id"], "email": user["email"], "password": user["app_password"], 
+            "provider": "gmail", "auth_type": "password",
+            "signature": user.get("signature", "Saygılarımla,"), "is_active": True,
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        accounts_col.insert_one(first_account)
+        accounts = [first_account]
+
+    for acc in accounts: acc["_id"] = str(acc["_id"])
+    return templates.TemplateResponse("accounts.html", {"request": request, "user": user, "accounts": accounts})
+
+@router.post("/ui/accounts/add")
+async def add_account(email: str = Form(...), app_password: str = Form(...), signature: str = Form(...)):
+    user = users_col.find_one({"is_active": True})
+    enc_pass = encrypt_password(app_password)
+    new_account = {
+        "user_id": user["_id"], "email": email, "password": enc_pass,
+        "provider": "gmail", "auth_type": "password", "signature": signature,
+        "is_active": True, "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    accounts_col.insert_one(new_account)
+    return RedirectResponse(url="/ui/accounts?msg=Hesap+Basariyla+Eklendi", status_code=303)
+
+@router.post("/ui/accounts/delete/{account_id}")
+async def delete_account(account_id: str):
+    accounts_col.delete_one({"_id": ObjectId(account_id)})
+    return RedirectResponse(url="/ui/accounts?msg=Hesap+Silindi", status_code=303)
 
 # --- DASHBOARD ---
 @router.get("/ui/dashboard", response_class=HTMLResponse)
@@ -97,7 +187,8 @@ async def tasks_page(request: Request):
     user = users_col.find_one({"is_active": True})
     tasks = list(tasks_col.find().sort([("status", 1), ("urgency_score", -1)]))
     for t in tasks: t["_id"] = str(t["_id"])
-    return templates.TemplateResponse("tasks.html", {"request": request, "tasks": tasks, "user": user})
+    accounts = list(accounts_col.find({"user_id": user["_id"]}))
+    return templates.TemplateResponse("tasks.html", {"request": request, "tasks": tasks, "user": user, "accounts": accounts})
 
 @router.post("/ui/task/approve/{task_id}")
 async def approve_task(task_id: str):
@@ -114,29 +205,152 @@ async def delete_task(task_id: str):
     tasks_col.delete_one({"_id": ObjectId(task_id)})
     return RedirectResponse(url="/ui/tasks?msg=Silindi", status_code=303)
 
-# --- MAİL İŞLEMLERİ ---
+# --- GELEN KUTUSU (Gelen mailler sadece burada kalır) ---
 @router.get("/ui", response_class=HTMLResponse)
 def inbox(request: Request):
     user = users_col.find_one({"is_active": True})
-    waiting_mails = list(mails_col.find({"status": "WAITING_APPROVAL"}).sort("created_at", -1))
+    # 'outbound' (Writer taslakları) olanları Inbox'ta gösterme
+    waiting_mails = list(mails_col.find({
+        "status": "WAITING_APPROVAL",
+        "type": {"$ne": "outbound"}
+    }).sort("created_at", -1))
+    
     for m in waiting_mails: m["_id"] = str(m["_id"])
     return templates.TemplateResponse("dashboard.html", {"request": request, "mails": waiting_mails, "user": user})
 
+# --- TASLAKLAR SAYFASI (Sadece WRITER'dan gelen yarım kalmış mailler) ---
+@router.get("/ui/drafts", response_class=HTMLResponse)
+async def drafts_page(request: Request):
+    user = users_col.find_one({"is_active": True})
+    
+    # Sadece Writer'dan oluşturulmuş (type=outbound) ve gönderilmemiş (status=DRAFT) olanları çek.
+    # Gelen kutusundaki cevap taslaklarını buraya almıyoruz.
+    drafts = list(mails_col.find({
+        "status": "DRAFT",
+        "type": "outbound"
+    }))
+
+    # Önyüz verileri
+    for d in drafts:
+        d["_id"] = str(d["_id"])
+        if "updated_at" not in d: d["updated_at"] = d.get("created_at")
+        
+        # İçerik özeti (HTML temizliği yapılmış)
+        content = d.get("body", "") 
+        clean_content = clean_html(content)
+        d["preview"] = clean_content[:100] if clean_content else "İçerik Yok"
+        
+        d["recipient"] = d.get("to", "Alıcı Yok")
+
+    drafts.sort(key=lambda x: x.get("updated_at") or "", reverse=True)
+
+    return templates.TemplateResponse("drafts.html", {"request": request, "drafts": drafts, "user": user})
+
+# --- WRITER AUTO-SAVE API (YENİ) ---
+@router.post("/save-writer-draft")
+async def save_writer_draft(draft: WriterDraftRequest):
+    """
+    Writer sayfasındaki içeriği kaydeder (Yeni mail veya güncelleme).
+    status='DRAFT', type='outbound' yapar.
+    """
+    try:
+        draft_data = {
+            "user_email": draft.sender_email,
+            "from": draft.sender_email,
+            "to": draft.to_email,
+            "subject": draft.subject,
+            "body": draft.body,
+            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "type": "outbound",  # Bu bir giden mail taslağıdır
+            "status": "DRAFT"    # Henüz gönderilmedi
+        }
+
+        # Eğer ID varsa GÜNCELLE
+        if draft.draft_id and len(draft.draft_id) > 10:
+            mails_col.update_one(
+                {"_id": ObjectId(draft.draft_id)},
+                {"$set": draft_data}
+            )
+            return {"status": "success", "draft_id": draft.draft_id}
+        
+        # ID yoksa YENİ OLUŞTUR
+        else:
+            draft_data["created_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            result = mails_col.insert_one(draft_data)
+            return {"status": "success", "draft_id": str(result.inserted_id)}
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+
+# --- EDITOR AUTO-SAVE API (SADECE CEVAPLAR İÇİN) ---
+@router.post("/save-draft")
+async def api_save_draft(draft: ReplyDraftRequest):
+    """
+    Gelen kutusundaki cevap taslağını günceller.
+    ASLA status='DRAFT' yapmaz, böylece Taslaklar sayfasına düşmez.
+    """
+    try:
+        mails_col.update_one(
+            {"_id": ObjectId(draft.mail_id)},
+            {
+                "$set": {
+                    "reply_draft": draft.draft_content,
+                    "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+            }
+        )
+        return {"status": "success"}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+
+# --- TASLAK SİLME ---
+@router.delete("/delete-draft/{mail_id}")
+async def delete_draft_api(mail_id: str):
+    # Writer taslağını veritabanından tamamen siler
+    try:
+        mails_col.delete_one({"_id": ObjectId(mail_id)})
+        return {"status": "success"}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# --- EDITOR SAYFASI (Gelen Mail Cevaplama) ---
 @router.get("/ui/editor/{mail_id}", response_class=HTMLResponse)
 async def mail_editor(request: Request, mail_id: str):
     user = users_col.find_one({"is_active": True})
     mail = mails_col.find_one({"_id": ObjectId(mail_id)})
     if not mail: return RedirectResponse(url="/ui")
     
-    # Otomatik taslak oluşturma
+    target_email = mail.get("user_email")
+    target_account = accounts_col.find_one({"email": target_email})
+    account_signature = target_account.get("signature", "") if target_account else user.get("signature", "")
+
+    # AI ilk taslağı oluşturur (Veritabanında reply_draft güncellenir ama status değişmez)
     if not mail.get("reply_draft"):
         draft = generate_reply(mail["body"], tone="formal")
-        mails_col.update_one({"_id": ObjectId(mail_id)}, {"$set": {"reply_draft": draft}})
+        mails_col.update_one(
+            {"_id": ObjectId(mail_id)}, 
+            {
+                "$set": {"reply_draft": draft},
+                "$push": {"draft_history": {
+                    "body": draft, 
+                    "source": "AI", 
+                    "saved_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }}
+            }
+        )
         mail["reply_draft"] = draft
+        mail["draft_history"] = [{
+            "body": draft, "source": "AI", "saved_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }]
 
-    return templates.TemplateResponse("editor.html", {"request": request, "mail": mail, "user": user})
+    return templates.TemplateResponse("editor.html", {
+        "request": request, 
+        "mail": mail, 
+        "user": user, 
+        "account_signature": account_signature
+    })
 
-# --- KARAR MEKANİZMASI VE BUTONLAR (GÜNCELLENDİ) ---
+# --- KARAR MEKANİZMASI ---
 @router.post("/ui/task_action/{mail_id}/{action_type}")
 async def task_action(mail_id: str, action_type: str):
     mail = mails_col.find_one({"_id": ObjectId(mail_id)})
@@ -154,10 +368,17 @@ async def task_action(mail_id: str, action_type: str):
     elif action_type == "regenerate":
         new_draft = generate_reply(mail["body"], tone="formal")
     
-    # Kararı (decision) ve yeni taslağı kaydediyoruz
+    add_draft_version(mail_id, new_draft, source="AI")
+
     mails_col.update_one(
         {"_id": ObjectId(mail_id)}, 
-        {"$set": {"reply_draft": new_draft, "decision": decision_val}}
+        {
+            "$set": {
+                "reply_draft": new_draft, 
+                "decision": decision_val,
+                "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+        }
     )
     return RedirectResponse(url=f"/ui/editor/{mail_id}", status_code=303)
 
@@ -166,26 +387,33 @@ async def delete_mail(mail_id: str):
     mails_col.delete_one({"_id": ObjectId(mail_id)})
     return RedirectResponse(url="/ui?msg=Silindi", status_code=303)
 
+# --- MANUEL KAYDETME (EDITOR) ---
 @router.post("/ui/update/{mail_id}")
 async def update_draft(mail_id: str, reply_draft: str = Form(...)):
-    mails_col.update_one({"_id": ObjectId(mail_id)}, {"$set": {"reply_draft": reply_draft}})
+    """Editor sayfasındaki manuel kaydetme"""
+    add_draft_version(mail_id, reply_draft, source="USER")
+    mails_col.update_one(
+        {"_id": ObjectId(mail_id)}, 
+        {"$set": {"reply_draft": reply_draft, "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}}
+    )
     return RedirectResponse(url=f"/ui/editor/{mail_id}?msg=Kaydedildi", status_code=303)
 
-# --- ONAY VE GÖNDERME (GÜNCELLENDİ) ---
+# --- ONAY VE GÖNDERME (EDITOR) ---
 @router.post("/ui/approve/{mail_id}")
 def send_approved_mail(mail_id: str, reply_draft: str = Form(...)):
     mail = mails_col.find_one({"_id": ObjectId(mail_id)})
     user = users_col.find_one({"is_active": True})
+    account = accounts_col.find_one({"email": mail.get("user_email")})
+    signature = account.get("signature", "") if account else user.get("signature", "")
     
-    final_body = f"{reply_draft}\n\n---\n{user.get('signature', '')}"
+    final_body = f"{reply_draft}\n\n---\n{signature}"
+    
     is_sent, error_msg = send_gmail_via_user(mail["user_email"], mail["from"], f"RE: {mail['subject']}", final_body)
     
     if is_sent:
         mails_col.update_one({"_id": ObjectId(mail_id)}, {"$set": {"status": "SENT", "handled_at": datetime.utcnow()}})
         
-        # SADECE KARAR 'REJECT' DEĞİLSE GÖREV OLUŞTUR
         decision = mail.get("decision", "neutral")
-        
         if mail.get("extracted_task") and decision != "reject":
             tasks_col.insert_one({
                 "user_email": mail["user_email"],
@@ -214,21 +442,20 @@ def history(request: Request):
     for m in old_mails: m["_id"] = str(m["_id"])
     return templates.TemplateResponse("history.html", {"request": request, "mails": old_mails, "user": user})
 
-# --- YENİ MAİL GÖRÜNTÜLEME ROTASI (EKLENDİ) ---
 @router.get("/ui/view/{mail_id}", response_class=HTMLResponse)
 async def view_mail(request: Request, mail_id: str):
-    """Geçmiş mailleri sadece görüntülemek için (Read-Only)"""
     user = users_col.find_one({"is_active": True})
     mail = mails_col.find_one({"_id": ObjectId(mail_id)})
     if not mail: return RedirectResponse(url="/ui/history")
-    
     return templates.TemplateResponse("view_mail.html", {"request": request, "mail": mail, "user": user})
 
+# --- REHBER ---
 @router.get("/ui/contacts", response_class=HTMLResponse)
 async def contacts_page(request: Request):
     user = users_col.find_one({"is_active": True})
     contacts = list(contacts_col.find().sort("name", 1))
-    return templates.TemplateResponse("contacts.html", {"request": request, "contacts": contacts, "user": user})
+    accounts = list(accounts_col.find({"user_id": user["_id"]}))
+    return templates.TemplateResponse("contacts.html", {"request": request, "contacts": contacts, "user": user, "accounts": accounts})
 
 @router.get("/ui/contact/{email}", response_class=HTMLResponse)
 async def contact_detail(request: Request, email: str):
@@ -239,12 +466,72 @@ async def contact_detail(request: Request, email: str):
     for h in history: h["_id"] = str(h["_id"])
     return templates.TemplateResponse("contact_detail.html", {"request": request, "contact": contact, "history": history, "user": user})
 
-@router.get("/ui/writer", response_class=HTMLResponse)
-async def writer_page(request: Request):
-    user = users_col.find_one({"is_active": True})
-    return templates.TemplateResponse("writer.html", {"request": request, "user": user})
-
 @router.get("/ui/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
     user = users_col.find_one({"is_active": True})
     return templates.TemplateResponse("settings.html", {"request": request, "user": user})
+
+# --- WRITER (YENİ MAIL OLUŞTURMA) ---
+@router.get("/ui/writer", response_class=HTMLResponse)
+async def writer_page(request: Request, draft_id: Optional[str] = None):
+    """
+    Yeni mail yazma sayfası.
+    Eğer 'draft_id' parametresi varsa, o taslağın verilerini çeker ve sayfaya doldurur.
+    """
+    user = users_col.find_one({"is_active": True})
+    accounts = list(accounts_col.find({"user_id": user["_id"]}))
+    
+    draft = None
+    if draft_id:
+        try:
+            draft = mails_col.find_one({"_id": ObjectId(draft_id)})
+            if draft:
+                draft["_id"] = str(draft["_id"])
+        except:
+            pass
+
+    return templates.TemplateResponse("writer.html", {
+        "request": request, 
+        "user": user, 
+        "accounts": accounts,
+        "draft": draft # Template'de inputları doldurmak için
+    })
+
+@router.post("/ui/writer/generate")
+async def generate_writer_draft(prompt: str = Form(...)):
+    try:
+        draft = generate_reply(prompt, tone="formal") 
+        return {"draft": draft}
+    except Exception as e:
+        return {"draft": f"Hata: {str(e)}"}
+
+@router.post("/ui/writer/send")
+async def send_writer_mail(
+    sender_email: str = Form(...), 
+    to_email: str = Form(...), 
+    subject: str = Form(...), 
+    body: str = Form(...),
+    draft_id: Optional[str] = Form(None) # Gönderilen taslağı silmek için ID
+):
+    user = users_col.find_one({"is_active": True})
+    account = accounts_col.find_one({"email": sender_email})
+    signature = account.get("signature", "") if account else user.get("signature", "")
+    
+    final_body = f"{body}\n\n---\n{signature}"
+    is_sent, msg = send_gmail_via_user(sender_email, to_email, subject, final_body)
+    
+    if is_sent:
+        # Mail başarıyla gönderildi, SENT olarak kaydet
+        mails_col.insert_one({
+            "user_email": sender_email, "from": sender_email, "to": to_email,
+            "subject": subject, "body": body, "status": "SENT",
+            "created_at": datetime.utcnow(), "type": "outbound"
+        })
+
+        # Eğer bu bir taslaktıysa, taslaklar klasöründen sil
+        if draft_id and len(draft_id) > 10:
+            mails_col.delete_one({"_id": ObjectId(draft_id)})
+
+        return RedirectResponse(url="/ui/dashboard?msg=Mail+Gonderildi", status_code=303)
+    else:
+        return RedirectResponse(url=f"/ui/writer?error={msg}", status_code=303)

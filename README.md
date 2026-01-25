@@ -1,134 +1,171 @@
-📧 AI Mail Asistanı: Akıllı Onay & Yönetim Paneli
-Automated AI Mail Handler v1.0
+AI Mail Asistanı
+Automated AI Mail Handler 
 
-Gelen e-postaları yapay zeka ile analiz eden, yanıt taslakları hazırlayan ve kullanıcı onayından sonra SMTP üzerinden gönderen, Python tabanlı tam otomatik bir asistandır.
+Gelen e-postaları yapay zeka ile analiz eden, yanıt taslakları hazırlayan, sesli komutlarla yönetilebilen ve tüm bunları internet bağlantısı olmadan (Offline), verilerinizi dışarı çıkarmadan yapan Python tabanlı akıllı asistan.
 
----
-
-## 👥 Ekip
-
-- **Serhat**
-- **Görkem**
-- **Samet**
-- **Sadık**
 ---
 ## 📋 İçindekiler
 
-- [Proje Durumu](#-proje-durumu)
-- [Tamamlanan Özellikler](#-tamamlanan-özellikler)
-- [Kurulum ve .env Yapılandırması](#-kurulum-ve-.env-Yapılandırması)
-- [Kurulum](#-kurulum)
-- [Kullanım](#-kullanım)
-- [Dosya Yapısı](#-dosya-yapısı)
-- [Mimari](#-mimari)
-
+- [🧠 Algoritma ve Çalışma Mantığı](#-algoritma-ve-çalışma-mantığı)
+- [✨ Özellikler](#-özellikler)
+  - [1. 🔒 Tamamen Yerel ve Güvenli](#1--tamamen-yerel-ve-güvenli-privacy-first)
+  - [2. ⚙️ Web Tabanlı Akıllı Kurulum](#2-️-web-tabanlı-akıllı-kurulum)
+  - [3. 🎙️ Sesli Asistan (Jarvis Modu)](#3-️-sesli-asistan-jarvis-modu)
+  - [4. 📝 Akıllı Editör & Writer Ayrımı](#4--akıllı-editör--writer-ayrımı)
+- [🛠️ Kurulum](#️-kurulum)
+  - [Gereksinimler](#gereksinimler)
+  - [Adım 1: Ortam Kurulumu](#adım-1-depoyu-klonlayın-ve-ortamı-kurun)
+  - [Adım 2: Bağımlılıklar](#adım-2-bağımlılıkları-yükleyin)
+  - [Adım 3: AI Model Kurulumu](#adım-3-ollama-ve-model-kurulumu)
+  - [Adım 4: Başlatma](#adım-4-uygulamayı-başlatın-kurulum-burada-başlar)
+  - [Adım 5: Web Kurulumu](#adım-5-web-kurulumunu-tamamlayın)
+- [🗄️ MongoDB Yapısı](#-veritabanı-yapısı)
+- [📂 Dosya Yapısı](#-dosya-yapısı)
+- [📊 Proje Durumu](#-proje-durumu)
+- [📜 Lisans](#-lisans)
 ---
 
-## 📊 Proje Durumu
 
-| Bileşen | Durum | Açıklama |
-|---------|-------|----------|
-| Setup Wizard (Tkinter)| ✅ Tamamlandı | Otomatik .env ve Key oluşturucu |
-| Mail Dinleyici Servisi | ✅ Tamamlandı | IMAP tabanlı 60sn periyotlu kontrolk |
-| FastAPI Backend| ✅ Tamamlandı | Asenkron API ve Route yönetimi |
-| Web Arayüzü (UI)| ✅ Tamamlandı | Dashboard, Editor ve Arşiv sayfaları |
-| MongoDB Entegrasyonu | ✅ Tamamlandı | Mail statü takibi ve taslak saklama |
-| AI Yanıt Motoru | 🔄 Geliştiriliyor| Taslak oluşturma algoritması|
-
----
-## ✅ Tamamlanan Özellikler
-
-### Akıllı Kurulum & Güvenlik Sihirbazı (setup.py)
-
-- **Kullanıcının teknik dosya işlemleriyle uğraşmasını engeller**
-  - Otomatik Şifreleme: cryptography kullanarak sisteme özel ENCRYPTION_KEY üretir ve hassas uygulama şifrelerini AES-256 ile korur.
-  - Görsel Arayüz: Tkinter tabanlı modern ve kullanıcı dostu yapılandırma ekranı.
-  - Sıfır Konfigürasyon: İlk çalıştırmada .env dosyasını otomatik oluşturur, veritabanı ve AI motoru bağlantılarını hazırlar.
-  - Master Password: Panelinize erişimi korumak için kurulum anında kişisel bir giriş şifresi (Panel Şifresi) belirleme imkanı.
-
-### 2. Gelişmiş Yönetim Paneli
-  - Komuta Merkezi (Dashboard): Onay bekleyen mailleri, acil görevleri ve sistem istatistiklerini anlık olarak takip edebileceğiniz modern arayüz.
-  - Akıllı Editör: AI tarafından hazırlanan taslakları gerçek zamanlı inceleme, düzenleme veya farklı tonlarda (resmi/samimi) yeniden oluşturma özelliği.
-  - Karar Merkezi: AI'nın maillerden çıkardığı toplantı, randevu veya iş teklifi önerilerini tek tıkla onaylayıp "Görevler" listesine ekleme.
-  - Gelişmiş Arşiv: Gönderilen veya iptal edilen tüm işlemleri tarih bazlı saklayan ve yönetilebilen (silme/temizleme destekli) geçmiş sistemi.
-
-  ### 3. Akıllı Hesap & Sistem Yönetimi
-  - Dinamik Ayarlar: Terminale dokunmadan panel üzerinden bağlı mail adresini, panel giriş şifresini veya Google API anahtarını güncelleme yeteneği.
-  - Güvenli Doğrulama: Kritik sistem değişiklikleri ve API anahtarı güncellemeleri için çift katmanlı (Panel şifresi onaylı) doğrulama mekanizması.
-  - Ollama Entegrasyonu: Kullanılan AI modelini ve API adresini arayüz üzerinden anlık olarak değiştirebilme esnekliği.
-
-## 🗺️ Eksikler ve Hedefler (Roadmap)
-
-### 🔴 Kritik (Yüksek Öncelik)
-1. **Dinamik Kontrol Sıklığı**: 60 saniyelik mail tarama süresini settings.html üzerinden anlık olarak değiştirebilme altyapısı.
-2. **Session Yönetimi:** Kullanıcı giriş yaptıktan sonra tarayıcıyı kapatsa bile oturumun güvenli şekilde (Cookie/JWT) korunması ve "Çıkış Yap" butonu aktivasyonu.
-
-### 🟡 Orta Öncelikli
-3. **Ayarlar Sayfası:**
-   - **İmza Ayarı:** Her mailin sonuna otomatik imza ekleme.
-   - **Kontrol Sıklığı:** 60 saniyelik süreyi arayüzden değiştirebilme.
-   - **Çoklu Dil Desteği:** AI'nın sadece Türkçe değil, gelen mailin diline göre (İngilizce, Almanca vb.) otomatik dilde cevap taslağı hazırlayabilmesi.
-   - **Gelişmiş Filtreleme:** Gelen kutusunda "Sadece Onay Bekleyenler" veya "Sadece Belirli Şirketler" bazlı gelişmiş arama ve filtreleme seçenekleri.
-
-### 🟢 Gelecek Özellikler
-4. **Manuel Mail Oluşturma:** Sıfırdan yeni e-posta yazma butonu.
-5. **İstatistikler:** Cevaplanan mail sayısı ve kazanılan zaman grafikleri.
-6. **Performans Analitiği:** Yanıtlanan mail sayıları, AI'nın kurtardığı toplam süre ve şirket bazlı etkileşim yoğunluğunu gösteren görsel grafikler (Chart.js entegrasyonu).
-7. **Sesli Komut Entegrasyonu (Voice-to-Mail):** Taslakları sesli komutla onaylama, reddetme veya sesle not ekleyerek taslağı revize etme.
-
----
-
-### Kurulum ve .env Yapılandırması
-  ## 1. Virtual environment oluştur
-
-  ```bash
-  python -m venv .venv
-  ```
-
-  ## 2. Aktive Et
-  ```bash
-  .venv\Scripts\activate
-  ```
-
-  ## 3. Paketleri yükle
-  ```bash
-  pip install requirements.txt
-  ```
----
-
-### Otomatik Yapılandırma (İlk Çalıştırma)
-  - .env dosyası yoksa karşınıza Sistem Yapılandırması penceresi gelir.
-  - Email: Gmail adresinizi girin..
-  - Uygulama Şifresi: Google hesabınızdan aldığınız 16 haneli kodu girin.
-  - Onay: "Kaydet" dediğinizde sistem .env dosyasını oluşturur ve ana uygulamayı başlatır.
-
----
-
-### Kullanım
-**1.setup py dosyasını çalıştırın**  
-```bash
-setup.py
+## 🧠 Algoritma ve Çalışma Mantığı
+- Proje, veritabanı kirliliğini önlemek ve kullanıcı deneyimini artırmak için İki Ana Akış ve bir Sesli Kontrol Katmanı üzerine kuruludur.
 ```
-**2.gerekli alanları doldurun**
-**3. main dosyasına gelip dosyayı çalıştırın**
-```bash
-main.py
+graph TD
+    subgraph "Backend Core (Ana Sistem)"
+        A[FastAPI Server] -->|Veri| DB[(MongoDB)]
+        A -->|AI Metin| O[Ollama / Llama 3.2]
+        A -->|AI Ses| W[Faster-Whisper]
+        
+        subgraph "Bağlantı Katmanı"
+            A -->|Hesap 1| ACC1[Gmail 1 (SMTP/IMAP)]
+            A -->|Hesap 2| ACC2[Gmail 2 (SMTP/IMAP)]
+            ACC1 & ACC2 -.->|Birleştirilmiş| U_INBOX[Unified Inbox]
+        end
+    end
+
+    subgraph "Akış 1: Gelen Kutusu & AI Analiz"
+        M[Mail Gelir] --> DETECT{AI Analizi}
+        DETECT -- "İş/Tarih Var" --> TASK[Görev Yöneticisine Ekle]
+        DETECT -- "Normal Mail" --> DRAFT_GEN[Cevap Taslağı Üret]
+        
+        DRAFT_GEN --> UI_INBOX[Arayüz: Gelen Kutusu]
+        UI_INBOX --> ACT1{Kullanıcı Kararı}
+        ACT1 -- "Onayla" --> SEND1[Maili Gönder]
+        ACT1 -- "Reddet/Yenile" --> REGEN[Yeniden Yaz]
+    end
+
+    subgraph "Akış 2: Writer (Yazar Modu)"
+        NEW[Yeni Mail Başlat] --> INPUT{Giriş Yöntemi}
+        INPUT -- "Klavye" --> TYPE[Elle Yaz]
+        INPUT -- "Mikrofon" --> VOICE_FLOW
+        INPUT -- "AI Prompt" --> OLLAMA_GEN[AI Taslak Üret]
+
+        TYPE & VOICE_FLOW & OLLAMA_GEN --> MERGE[Editör Alanı]
+        MERGE --> AS[Auto-Save (1 sn)]
+        AS --> DB_DRAFT[Veritabanı: DRAFT]
+        DB_DRAFT --> LIST((Taslaklar Sayfası))
+        LIST --> PRE_SEND[Onay Modalı] --> SEND2[Maili Gönder]
+    end
+
+    subgraph "Akış 3: Sesli Komut Modülü"
+        MIC[Mikrofon] -->|Ses Verisi| LOCK[Buton Kilitle (Processing)]
+        LOCK --> W
+        W -->|Metin Çıktısı| FILTER{Analiz & Filtre}
+        
+        FILTER -- "Halüsinasyon" --> IGNORE[Yoksay]
+        FILTER -- "Komut (Gönder/Sil)" --> FUNC[Fonksiyonu Çalıştır]
+        FILTER -- "Dikte (Yazı)" --> FOCUS[Odaklanılan Kutuya Yaz]
+        
+        FUNC & FOCUS --> UNLOCK[Kilidi Aç]
+    end
 ```
-**4. mail ve şifreniz ile giriş yapınız**
-  
+---
+
+## ✨ Özellikler
+1. **🔒 Tamamen Yerel ve Güvenli (Privacy-First)** 
+- **Yerel LLM:** Ollama kullanarak mail içerikleri asla OpenAI veya Google sunucularına gönderilmez.
+- **Yerel Ses İşleme:** Faster-Whisper ile sesli komutlar bilgisayarınızda işlenir. 
+- **Şifreli Veri:** Uygulama şifreleri ve hassas veriler Fernet (AES) ile şifrelenerek saklanır.
+
+2. **🎙️ Sesli Asistan (Jarvis Modu)**
+- **Bas-Konuş:** Writer arayüzünde konuşarak mail yazdırabilirsiniz (Dikte).
+- **Komut Sistemi:** "Maili gönder", "Taslağı kaydet", "Yeniden yaz" gibi komutlarla klavyesiz yönetim.
+- **Offline:** İnternet kesilse bile ses tanıma çalışmaya devam eder.
+
+3. **📝 Akıllı Editör & Writer Ayrımı**
+- **Inbox (Gelen Kutusu):** Yapay zeka her maile otomatik cevap taslağı hazırlar. Bu taslaklar, siz müdahale edene kadar "Taslaklar" sayfasını kirletmez.
+- **Writer (Yazar):** Sıfırdan mail yazarken Auto-Save devreye girer. Elektrik kesilse bile yazdıklarınız anında kaydedilir ve Taslaklar sayfasında listelenir.
+
+4. **🤖 Görev ve Karar Merkezi**
+- AI, mailleri analiz eder ve içindeki toplantı, fatura ödeme gibi görevleri JSON formatında çıkararak Görevler paneline ekler.
+- "Kabul Et" veya "Reddet" butonları ile AI, mailin içeriğini seçiminize göre (Resmi/Samimi) yeniden yazar.
 
 ---
 
-### MongoDB Veri Yapısı ve Koleksiyonlar
+## 🛠️ Kurulum
+ ## Gereksinimler
+- Python 3.10+
+- MongoDB
+- Ollama (Llama 3.2 Modeli)
+- FFmpeg
 
-| Koleksiyon Adı | Kayıt Türü | Anahtar Alanlar (Fields) | Açıklama |
-|---------|-------|----------|----------|
-| mails| Dinamik | subject, body, reply_draft, status, from | Gelen mailler, AI taslakları ve işlem geçmişi burada tutulur. |
-| users | Sabit | email, master_password, app_password, is_active | Sisteme giriş yapabilecek yetkili kullanıcı bilgileri. |
-| settings| Yapılandırma | check_interval, signature, ai_model | Uygulama çalışma parametreleri (kontrol sıklığı vb.). |
-| tasks | Dinamik | title, due_date, status, sender | AI'nın maillerden ayıkladığı, onay bekleyen veya kesinleşmiş görev/ajanda kayıtlarıdır.|
-| contacts | İlişkisel | email, name, ai_notes, default_tone | Şirket hafızasını oluşturan rehber verileri; AI'nın branch/kişi özelinde aldığı kritik notları saklar.|
+## 1: Depoyu Klonlayın ve Ortamı Kurun
+```bash
+    git clone https://github.com/kullaniciadi/mail-ai.git
+    cd mail-ai
+    python -m venv venv
+    # Windows için:
+    venv\Scripts\activate
+    # Mac/Linux için:
+    source venv/bin/activate
+```
+## 2: Bağımlılıkları Yükleyin
+    ```bash
+    pip install -r requirements.txt
+    ```
 
+## 3: Ollama Kurulumu
+- Yapay zeka modelini çalıştırabilmek için Ollama uygulamasının bilgisayarınızda kurulu olması gerekir.
+- Ollama.com adresine gidin.
+- İşletim sisteminize (Windows/Mac/Linux) uygun versiyonu indirip kurun.
+- Kurulum bitince terminalden ollama --version yazarak kontrol edin.
+
+## 4: AI Modelini Çekin
+- Ollama kurulduktan sonra terminale şu komutu girerek modelin inmesini bekleyin
+```bash
+ollama pull llama3.2
+```
+## 5: Ses Modelini (Whisper) İndirin
+- Sesli komut özelliklerinin hızlı çalışması için Whisper modelini önceden indirin. (Bu işlem yaklaşık 1.5 GB veri indirir, lütfen "İŞLEM TAMAMLANDI" yazısını görene kadar bekleyin):
+```bash
+python download_model.py
+```
+
+## 6: Otomatik Kurulumu Başlatın
+- Sistemin .env dosyasını ve veritabanı ayarlarını yapması için main.py dosyasını çalıştırın:
+```bash
+python main.py
+```
+## 6: Sistemi Çalıştırma
+- sistemi sürekli main dosyası ile çalıştırmaya gerek yok application_run dosyası ile direkt çalıştırabilirsiniz
+```bash
+python download_model.py
+```
+
+
+## 🗄️ Veritabanı Mimarisi (MongoDB)
+
+Proje, verisel bütünlüğü korumak için NoSQL yapısını kullanır. Aşağıda koleksiyonların şeması ve kullanım amaçları detaylandırılmıştır.
+
+| Koleksiyon | Kayıt Türü | Kritik Alanlar (Fields) | Açıklama |
+| :--- | :--- | :--- | :--- |
+| **mails** | `Dinamik` | `subject`, `body`, `type` ('inbox'/'outbound'), `status` ('WAITING'/'DRAFT'/'SENT'), `reply_draft`, `draft_history` | **Sistemin Kalbi.** Hem gelen kutusu maillerini hem de Writer ile yazılan yeni taslakları tutar. `type` alanı, mailin gelen kutusunda mı yoksa taslaklarda mı görüneceğini belirler. |
+| **users** | `Sabit` | `email`, `master_password` (Hash), `full_name`, `company_name`, `created_at` | Panele giriş yapabilen ana yönetici kullanıcı bilgileri. |
+| **accounts** | `Yapılandırma` | `email`, `password` (AES Şifreli), `provider`, `signature` | **Çoklu Hesap Desteği.** Mail göndermek için kullanılan SMTP hesapları ve her hesaba özel imza ayarları burada saklanır. |
+| **contacts** | `İlişkisel` | `email`, `name`, `ai_summary`, `last_contacted`, `interaction_count` | **CRM Hafızası.** Kişilerle olan geçmiş yazışmaların AI tarafından çıkarılmış özetleri ve iletişim sıklığı burada tutulur. |
+| **tasks** | `Dinamik` | `title`, `due_date`, `urgency_score` (1-10), `source_mail_id`, `status` | AI'nın maillerden ayıkladığı "Fatura Öde", "Toplantı Yap" gibi aksiyon öğeleri. |
+| **settings** | `Config` | `ollama_model`, `voice_speed`, `theme`, `check_interval` | Uygulamanın genel davranış ayarları (Tema, AI Modeli, Tarama Sıklığı vb.). |
+
+---
 
 ---
 📁 Dosya Yapısı
@@ -145,81 +182,75 @@ MAIL_AI/
 │   │   ├── 📄 __init__.py
 │   │   ├── 📄 approval.py      # Onay Mekanizması Rotaları
 │   │   ├── 📄 force_reply.py   # Zorunlu Yanıtlama Rotaları
-│   │   └── 📄 ui.py            # Dashboard ve Web Arayüz Rotaları
-│   ├── 📂 services/            # Arka Plan Servisleri
-│   │   ├── 📄 mail_classifier.py # Mailleri Sınıflandırma (AI)
-|   |   ├── 📄 extractor.py       # Görev Çıkarımı
+│   │   ├── 📄 ui.py            # Dashboard ve Web Arayüz Rotaları
+│   │   └── 📄 voice.py         # Sesli Komutları yönlendirme
+│   ├── 📂 services/              # Arka Plan Servisleri
+│   │   ├── 📄 extractor.py       # Görev Çıkarımı
+|   |   ├── 📄 mail_classifier.py # Mailleri Sınıflandırma (AI)
 │   │   ├── 📄 mail_listener.py   # IMAP Dinleyici (Mail Yakalama)
 │   │   ├── 📄 mail_sender.py     # SMTP Gönderici
 │   │   ├── 📄 ollama_service.py  # Yerel LLM/Ollama Entegrasyonu
-│   │   └── 📄 reply_generator.py # AI Yanıt Taslağı Oluşturucu
-│   ├── 📂 static/              # CSS ve JS Dosyaları
-│   │   ├── 📂 css/     # 
+│   │   ├── 📄 reply_generator.py # AI Yanıt Taslağı Oluşturucu
+│   │   └── 📄 voice_service.py   # Sesli Komut algılayıcı
+│   ├── 📂 static/ # CSS ve JS Dosyaları
+│   │   ├── 📂 css/    
+|   |   |    ├──📄 base.css
 |   |   |    ├──📄 contacts.css
 |   |   |    ├──📄 dashboard.css
+|   |   |    ├──📄 editor.css
+|   |   |    ├──📄 history.css
 |   |   |    ├──📄 home.css
 |   |   |    ├──📄 login.css
 |   |   |    ├──📄 settings.css
+|   |   |    ├──📄 setup_web.css
 |   |   |    ├──📄 styles.css
 |   |   |    ├──📄 tasks.css
+|   |   |    ├──📄 view_html.css
 |   |   |    └──📄 writer.css
-│   │   ├── 📂 static/         # Giriş Sayfası Tasarımı
+│   │   ├── 📂 js/         
+│   │   |    ├──📄 contacts.js
 │   │   |    ├──📄 dashboard.js
-|   |   |    ├──📄 editor.js
-|   |   |    ├──📄 home.js
-|   |   |    └──📄 sear.js
-│   ├── 📂 templates/           # HTML Şablonları (Jinja2)
-│   │   ├── 📄 dashboard.html   # Ana Kontrol Paneli
-│   │   ├── 📄 editor.html      # Mail Düzenleme Ekranı
-│   │   ├── 📄 history.html     # İşlem Geçmişi (Arşiv)
-│   │   ├── 📄 tasks.html       # Göreb Sayfa Yapısı 
-|   |   ├── 📄 base.html        # Ana Sayfa Yapısı 
-|   |   ├── 📄 writer.html      # Mail Yazdırma Sayfa Yapısı
-|   |   ├── 📄 settings.html    # Ayarlar Sayfa Yapısı
-|   |   ├── 📄 Home.html        # Giriş Sayfası
-|   |   ├── 📄 contacts.html    # Şirketler ve Rehber Sayfa Yapısı
-|   |   ├── 📄 contacts.html    # Şirketler ve Rehber Detay Sayfa Yapısı
-│   │   └── 📄 login.html       # Giriş Ekranı
-|   |
-|   |
+│   │   |    ├──📄 drafts.js
+│   │   |    ├──📄 editor.js
+│   │   |    ├──📄 home.js
+│   │   |    ├──📄 script.js
+|   |   |    ├──📄 search.js
+|   |   |    ├──📄 tasks.js
+|   |   |    ├──📄 voice.js
+|   |   |    └──📄 writer.js
+│   ├── 📂 templates/           
+│   │   ├── 📄 accounts.html   
+│   │   ├── 📄 base.html      
+│   │   ├── 📄 contact_detail.html     
+│   │   ├── 📄 contacts.html       
+|   |   ├── 📄 dashboard.html        
+|   |   ├── 📄 drafts.html      
+|   |   ├── 📄 editor.html      
+|   |   ├── 📄 history.html      
+|   |   ├── 📄 home.html      
+|   |   ├── 📄 login.html      
+|   |   ├── 📄 settings.html    
+|   |   ├── 📄 setup_web.html        
+|   |   ├── 📄 tasks.html    
+|   |   ├── 📄 view_mail.html    
+│   │   └── 📄 writer.html       
 │   ├── 📂 utils/               # Yardımcı Modüller
 │   │    └── 📄 prompt_templates.py # AI İçin Prompt Şablonları
 |   │
-│   ├──📄 main.py                  # Uygulama Giriş Noktası (FastAPI & Scheduler)
+│   ├──📄 main.py          # Uygulama Giriş Noktası (FastAPI & Scheduler)
 |   ├──📄 config.py        # Genel Yapılandırma
 │   └──📄 database.py      # MongoDB Bağlantı Yönetimi
 |
 ├── 📂 venv/                    # Python Sanal Ortamı
 ├── 📄 .env                     # (Otomatik) Yapılandırma ve Keyler
 ├── 📄 .gitignore               # Git Dışı Bırakılacaklar
-├── 📄 create_user.py           # Manuel Kullanıcı Oluşturma Scripti
-├── 📄 README.md                # (Otomatik) Proje Dokümantasyonu
+├── 📄 application_run.py       # sistemi direkt olarak çalıştıran dosya
+├── 📄 create_user.py           # Herhangi Bir Olumsuzlukta Manuel Kullanıcı Oluşturma Scripti
+├── 📄 download_model.py        # Mikrofon için gerekli modeli indirme scripti
+├── 📄 README.md                # Proje Dokümantasyonu
 ├── 📄 requirements.txt         # Gerekli Kütüphaneler Listesi
-└── 📄 setup.py                 # Otomatik Kurulum Sihirbazı
-
+└── 📄 USER_MANUAL.txt          # Kullanım Kılavuzı
 ```
 ---
-
-# 🏗️ Mimari
-```
-┌────────────────────────┐      ┌──────────────────────────┐
-│   Kullanıcı Girişi     │      │    Otomatik Kurulum      │
-│  (setup.py - Tkinter)  ├─────▶│  (.env & README & Mongo) │
-└──────────┬─────────────┘      └────────────┬─────────────┘
-           │                                 │
-           ▼                                 ▼
-┌────────────────────────┐      ┌──────────────────────────┐
-│   FastAPI Sunucusu     │      │   Mail Dinleyici (Task)  │
-│    (Uvicorn:8000)      │◀─────┤  (60 saniyelik periyot)  │
-└──────────┬─────────────┘      └────────────┬─────────────┘
-           │                                 │
-           ▼                                 ▼
-┌────────────────────────┐      ┌──────────────────────────┐
-│  MongoDB Veritabanı    │◀─────┤   AI Yanıt Motoru        │
-│  (mail_asistani_db)    │      │   (Taslak Üretimi)       │
-└────────────────────────┘      └──────────────────────────┘
-```
-
----
-# 📜 Lisans
-Bu proje eğitim amaçlı geliştirilmiştir.
+## 📜 Lisans
+- Bu proje, kişisel verilerin korunması ve açık kaynak felsefesi gözetilerek eğitim amaçlı geliştirilmiştir. MIT License altında dağıtılabilir.
