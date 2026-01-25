@@ -28,7 +28,7 @@ Gelen e-postaları yapay zeka ile analiz eden, yanıt taslakları hazırlayan, s
 
 ## 🧠 Algoritma ve Çalışma Mantığı
 - Proje, veritabanı kirliliğini önlemek ve kullanıcı deneyimini artırmak için İki Ana Akış ve bir Sesli Kontrol Katmanı üzerine kuruludur.
-```
+```mermaid
 graph TD
     subgraph "Backend Core (Ana Sistem)"
         A[FastAPI Server] -->|Veri| DB[(MongoDB)]
