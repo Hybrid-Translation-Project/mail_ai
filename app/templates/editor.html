@@ -6,16 +6,16 @@
 
 {% block content %}
 <div class="back-btn-wrapper">
-    <a href="/ui" class="back-btn">← Gelen Kutusuna Dön</a>
+    <a href="/ui" class="back-btn">← <span data-i18n="editor_back">Gelen Kutusuna Dön</span></a>
 </div>
 
 <div class="row editor-container">
     
     <div class="col-md-7">
         <div class="mail-card">
-            <h3 class="mt-0 text-white">📩 Gelen Mail</h3>
-            <p class="mail-meta"><strong>Kimden:</strong> {{ mail.from }}</p>
-            <p class="mail-meta"><strong>Konu:</strong> {{ mail.subject }}</p>
+            <h3 class="mt-0 text-white">📩 <span data-i18n="editor_mail_header">Gelen Mail</span></h3>
+            <p class="mail-meta"><strong data-i18n="editor_label_from">Kimden:</strong> {{ mail.from }}</p>
+            <p class="mail-meta"><strong data-i18n="editor_label_subject">Konu:</strong> {{ mail.subject }}</p>
             <hr class="border-secondary">
             
             <div class="mail-body" style="background-color: #ffffff; color: #000000; padding: 20px; border-radius: 5px; overflow: auto; max-height: 600px;">
@@ -28,21 +28,23 @@
         <div class="mail-card sticky-panel">
             
             <div class="action-header">
-                <h3 class="m-0 text-white">🤖 AI Cevap Paneli</h3>
+                <h3 class="m-0 text-white">🤖 <span data-i18n="editor_ai_panel">AI Cevap Paneli</span></h3>
                 <div class="text-end">
-                    <span id="saveStatus" class="save-status">✅ Güncel</span>
+                    <span id="saveStatus" class="save-status">
+                        ✅ <span data-i18n="status_saved">Güncel</span>
+                    </span>
                 </div>
             </div>
 
             <div class="ai-actions">
                 <button type="button" onclick="handleAction('regenerate', '{{ mail._id }}')" class="btn-ai-action btn-regenerate" title="AI Taslağını Yenile">
-                    🔄 Yenile
+                    🔄 <span data-i18n="btn_regenerate">Yenile</span>
                 </button>
                 <button type="button" onclick="handleAction('approve', '{{ mail._id }}')" class="btn-ai-action btn-approve">
-                    ✅ Onayla
+                    ✅ <span data-i18n="btn_approve_short">Onayla</span>
                 </button>
                 <button type="button" onclick="handleAction('reject', '{{ mail._id }}')" class="btn-ai-action btn-reject">
-                    ❌ Reddet
+                    ❌ <span data-i18n="btn_reject">Reddet</span>
                 </button>
             </div>
 
@@ -51,22 +53,22 @@
                 
                 <div class="editor-actions">
                     <button type="button" onclick="forceSave()" class="btn btn-save">
-                        💾 Şimdi Kaydet
+                        💾 <span data-i18n="btn_save_now">Şimdi Kaydet</span>
                     </button>
                     
                     <button type="submit" formaction="/ui/approve/{{ mail._id }}" class="btn btn-send">
-                        🚀 Gönder
+                        🚀 <span data-i18n="btn_send">Gönder</span>
                     </button>
                     
                     <button type="submit" formaction="/ui/cancel/{{ mail._id }}" class="btn btn-cancel">
-                        🚫 Arşive At
+                        🚫 <span data-i18n="btn_archive">Arşive At</span>
                     </button>
                 </div>
             </form>
 
             {% if mail.draft_history and mail.draft_history|length > 0 %}
             <div class="version-section">
-                <h5 class="version-title">🕒 Versiyon Geçmişi</h5>
+                <h5 class="version-title">🕒 <span data-i18n="editor_version_history">Versiyon Geçmişi</span></h5>
                 <div class="version-list">
                     
                     {% for version in mail.draft_history|reverse %}
@@ -79,7 +81,7 @@
                                 {% if version.source == 'AI' %}
                                 <span class="badge-ai">🤖 AI</span>
                                 {% else %}
-                                <span class="badge-user">👤 Sen</span>
+                                <span class="badge-user">👤 <span data-i18n="badge_user">Sen</span></span>
                                 {% endif %}
                             </span>
                             <small class="text-muted">{{ version.saved_at }}</small>
@@ -98,5 +100,10 @@
     </div>
 </div>
 
-<script src="/static/js/editor.js"></script>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="/static/js/translations.js"></script>
+    <script src="/static/js/language_engine.js"></script>
+    <script src="/static/js/editor.js"></script>
 {% endblock %}

@@ -1,0 +1,19 @@
+/* Hesap Kartı */
+.account-card {
+    border: 1px solid #333;
+}
+
+/* Kart Başlığı Taşan Kısım Gizleme */
+.card-title-wrapper {
+    overflow: hidden;
+}
+
+/* Aktif Durum Rozeti */
+.status-badge {
+    font-size: 0.7rem;
+}
+
+/* Modal İçindeki Yardımcı Metinler (Küçük açıklamalar) */
+.form-helper-text {
+    font-size: 0.7rem;
+}

@@ -6,59 +6,84 @@
 
 {% block content %}
 <div class="settings-container">
+    
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>⚙️ Sistem ve Hesap Ayarları</h2>
+        <h2>⚙️ <span data-i18n="settings_title">Sistem Ayarları</span></h2>
+    </div>
+
+    <div class="settings-card mb-4">
+        <h3><i class="fas fa-globe"></i> <span data-i18n="settings_general_header">Genel Tercihler</span></h3>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label" data-i18n="settings_lang">Uygulama Dili</label>
+                    <select id="languageSelect" class="form-control">
+                        <option value="tr">🇹🇷 Türkçe</option>
+                        <option value="en">🇬🇧 English</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label" data-i18n="settings_theme">Görünüm Modu</label>
+                    <select class="form-control input-disabled" disabled>
+                        <option>Dark Mode (Varsayılan)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
     </div>
 
     <form action="/ui/settings/update-profile" method="post">
         <div class="settings-card">
-            <h3><i class="fas fa-user-circle"></i> Profil Bilgileri</h3>
+            <h3><i class="fas fa-user-circle"></i> <span data-i18n="settings_profile_header">Profil Bilgileri</span></h3>
+            
             <div class="form-group">
-                <label>Tam Adınız</label>
+                <label data-i18n="settings_label_fullname" class="form-label">Tam Adınız</label>
                 <input type="text" name="full_name" value="{{ user.full_name }}" required>
             </div>
+            
             <div class="form-group">
-                <label>E-posta İmzanız</label>
-                <textarea name="signature" style="width: 100%; height: 100px; background: #252525; border: 1px solid #444; color: white; border-radius: 6px; padding: 10px;">{{ user.signature }}</textarea>
-                <p class="helper-text">Onayladığınız taslakların sonuna bu imza otomatik eklenir.</p>
+                <label data-i18n="settings_label_signature" class="form-label">E-posta İmzanız</label>
+                <textarea name="signature">{{ user.signature }}</textarea>
+                <p class="helper-text" data-i18n="settings_helper_signature">Onayladığınız taslakların sonuna bu imza otomatik eklenir.</p>
             </div>
+            
             <div class="form-group">
-                <label>Doğrulama: Panel Şifreniz</label>
-                <input type="password" name="current_password" placeholder="Değişiklikleri kaydetmek için panel şifrenizi girin" required>
+                <label data-i18n="settings_label_verify" class="form-label">Doğrulama: Panel Şifreniz</label>
+                <input type="password" name="current_password" data-i18n="placeholder_password_verify" placeholder="Değişiklikleri kaydetmek için şifrenizi girin" required>
             </div>
-            <button type="submit" class="save-btn"><i class="fas fa-user-check"></i> Profili Güncelle</button>
+            
+            <button type="submit" class="save-btn">
+                <i class="fas fa-user-check"></i> <span data-i18n="btn_update_profile">Profili Güncelle</span>
+            </button>
         </div>
     </form>
 
     <form action="/ui/settings/update-password" method="post" class="mt-4">
         <div class="settings-card">
-            <h3><i class="fas fa-lock"></i> Panel Giriş Şifresi</h3>
+            <h3><i class="fas fa-lock"></i> <span data-i18n="settings_password_header">Panel Giriş Şifresi</span></h3>
+            
             <div class="form-group">
-                <label>Mevcut Şifre</label>
+                <label data-i18n="settings_label_old_pass" class="form-label">Mevcut Şifre</label>
                 <input type="password" name="old_password" required>
             </div>
+            
             <div class="form-group">
-                <label>Yeni Şifre</label>
+                <label data-i18n="settings_label_new_pass" class="form-label">Yeni Şifre</label>
                 <input type="password" name="new_password" required>
             </div>
-            <button type="submit" class="save-btn" style="background-color: #f39c12;"><i class="fas fa-key"></i> Şifreyi Değiştir</button>
+            
+            <button type="submit" class="save-btn btn-warning">
+                <i class="fas fa-key"></i> <span data-i18n="btn_change_password">Şifreyi Değiştir</span>
+            </button>
         </div>
     </form>
 
-    <form action="/ui/settings/update-api-key" method="post" class="mt-4">
-        <div class="settings-card">
-            <h3><i class="fab fa-google"></i> Gmail Bağlantısı</h3>
-            <div class="form-group">
-                <label>Gmail Uygulama Şifresi (16 Haneli)</label>
-                <input type="password" name="new_app_password" placeholder="•••• •••• •••• ••••" required>
-            </div>
-            <div class="form-group">
-                <label>Doğrulama: Panel Şifreniz</label>
-                <input type="password" name="master_password" required>
-            </div>
-            <button type="submit" class="save-btn" style="background-color: #e74c3c;"><i class="fas fa-sync"></i> API Anahtarını Güncelle</button>
-        </div>
-    </form>
     </div>
-</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="/static/js/translations.js"></script>
+    <script src="/static/js/language_engine.js"></script>
 {% endblock %}

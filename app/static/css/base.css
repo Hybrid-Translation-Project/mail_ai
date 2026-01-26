@@ -5,6 +5,7 @@
     --accent: #10b981;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
+    --danger: #ef4444;
 }
 
 body {
@@ -13,34 +14,145 @@ body {
     font-family: 'Inter', sans-serif;
     margin: 0;
     display: flex;
+    min-height: 100vh;
 }
 
+/* --- SIDEBAR (YAN MENÜ) --- */
 .sidebar {
     width: 260px;
     height: 100vh;
     background: var(--card-bg);
-    border-right: 1px solid rgba(255,255,255,0.1);
+    border-right: 1px solid rgba(255,255,255,0.05);
     padding: 20px;
     position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
 }
 
+/* Logo Alanı */
+.logo {
+    margin-bottom: 30px;
+    padding-left: 10px;
+}
+
+.logo a {
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Menü Linkleri */
 .nav-link {
     display: flex;
     align-items: center;
-    padding: 12px;
+    padding: 12px 15px;
     color: var(--text-muted);
     text-decoration: none;
     border-radius: 8px;
-    transition: 0.3s;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+    font-size: 0.95rem;
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link i {
+    width: 24px;
+    text-align: center;
+    margin-right: 12px;
+}
+
+.nav-link:hover {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-main);
+}
+
+.nav-link.active {
     background: var(--primary);
     color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
+/* Menü Başlıkları (ANA MENÜ, SİSTEM vb.) */
+.nav-section {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #64748b;
+    margin: 24px 0 8px 15px;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+/* Çıkış Linki (Özel Stil) */
+.logout-link {
+    margin-top: auto; /* En alta iter */
+    color: var(--danger) !important;
+}
+
+.logout-link:hover {
+    background: rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Kullanıcı Profil Alanı (Sol Alt) */
+.user-profile-nav {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.user-profile-nav i {
+    font-size: 2rem;
+    color: var(--text-muted);
+}
+
+.user-info-text {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-company {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- MAIN CONTENT (ANA İÇERİK) --- */
 .main-content {
-    margin-left: 260px;
-    padding: 40px;
+    margin-left: 260px; /* Sidebar genişliği kadar boşluk */
+    padding: 30px 40px;
     width: 100%;
+    overflow-x: hidden;
+}
+
+/* Responsive (Mobil Uyumu için Basit Ayar) */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
 }

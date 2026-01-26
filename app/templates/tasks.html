@@ -2,54 +2,28 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="/static/css/tasks.css">
-    <style>
-        .animate-pulse { animation: pulse-red 2s infinite; }
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
-        }
-        .category-badge { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        
-        /* Sekme Stilleri */
-        .nav-pills .nav-link {
-            background: #1a1a1a;
-            color: #aaa;
-            border: 1px solid #333;
-            margin-right: 8px;
-            transition: all 0.2s;
-        }
-        .nav-pills .nav-link:hover {
-            background: #252525;
-            color: #fff;
-        }
-        .nav-pills .nav-link.active {
-            background-color: #ffc107; /* Warning Rengi */
-            color: black !important;
-            border-color: #ffc107;
-            font-weight: bold;
-        }
-    </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2>✅ AI Görev ve Karar Merkezi</h2>
-            <p class="text-muted small">AI tarafından çıkarılan görev önerileri ve takvim.</p>
+            <h2>✅ <span data-i18n="tasks_page_title">AI Görev ve Karar Merkezi</span></h2>
+            <p class="text-muted small" data-i18n="tasks_page_subtitle">AI tarafından çıkarılan görev önerileri ve takvim.</p>
         </div>
         
         {% set pending_count = tasks|selectattr("status", "equalto", "WAITING_APPROVAL")|list|length %}
         {% if pending_count > 0 %}
-            <span class="badge bg-danger p-2 animate-pulse">🔔 {{ pending_count }} Onay Bekleyen İş Var</span>
+            <span class="badge bg-danger p-2 animate-pulse">
+                🔔 {{ pending_count }} <span data-i18n="tasks_badge_pending">Onay Bekleyen İş Var</span>
+            </span>
         {% endif %}
     </div>
 
     <ul class="nav nav-pills mb-4" id="accountTabs">
         <li class="nav-item">
             <button class="nav-link active rounded-pill px-4" data-filter="all">
-                <i class="fas fa-layer-group"></i> Tümü
+                <i class="fas fa-layer-group"></i> <span data-i18n="tasks_tab_all">Tümü</span>
             </button>
         </li>
         {% for acc in accounts %}
@@ -63,8 +37,8 @@
 
     <div class="card shadow-sm mb-5 border-warning" style="background: #1e1e1e; border-left: 5px solid #ffc107;">
         <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">⚠️ Onay Bekleyen Öneriler</h5>
-            <small>AI bu maillerden senin için görev/toplantı ihtimali çıkardı</small>
+            <h5 class="mb-0">⚠️ <span data-i18n="tasks_pending_title">Onay Bekleyen Öneriler</span></h5>
+            <small data-i18n="tasks_pending_desc">AI bu maillerden senin için görev/toplantı ihtimali çıkardı</small>
         </div>
         <div class="card-body p-0">
             <div class="list-group list-group-flush" id="pendingTasksList">
@@ -94,25 +68,25 @@
                                 {% endif %}
                             </div>
                             <p class="mb-0 small text-muted">
-                                📅 <strong>Tarih:</strong> {{ task.due_date or 'Belirtilmedi' }} | 
-                                👤 <strong>Kimden:</strong> {{ task.sender }}
+                                📅 <strong data-i18n="tasks_label_date">Tarih:</strong> {{ task.due_date or 'Belirtilmedi' }} | 
+                                👤 <strong data-i18n="tasks_label_from">Kimden:</strong> {{ task.sender }}
                             </p>
                         </div>
                         <div class="d-flex gap-2 align-items-center">
                             <form action="/ui/task/approve/{{ task._id }}" method="post" class="m-0">
-                                <button type="submit" class="btn btn-sm btn-success px-3">✔️ Onayla</button>
+                                <button type="submit" class="btn btn-sm btn-success px-3">✔️ <span data-i18n="btn_approve">Onayla</span></button>
                             </form>
                             <form action="/ui/task/reject/{{ task._id }}" method="post" class="m-0">
-                                <button type="submit" class="btn btn-sm btn-outline-warning px-3">❌ Reddet</button>
+                                <button type="submit" class="btn btn-sm btn-outline-warning px-3">❌ <span data-i18n="btn_reject">Reddet</span></button>
                             </form>
-                            <form action="/ui/task/delete/{{ task._id }}" method="post" class="m-0" onsubmit="return confirm('Bu görevi tamamen silmek istediğine emin misin?');">
+                            <form action="/ui/task/delete/{{ task._id }}" method="post" class="m-0" onsubmit="return confirm('Delete this task? / Bu görevi tamamen silmek istediğine emin misin?');">
                                 <button type="submit" class="btn btn-sm btn-danger px-2" title="Görevi Sil">🗑️</button>
                             </form>
                         </div>
                     </div>
                 {% endfor %}
                 
-                <div id="noPendingMsg" class="p-4 text-center text-muted italic {% if has_pending %}d-none{% endif %}">
+                <div id="noPendingMsg" class="p-4 text-center text-muted italic {% if has_pending %}d-none{% endif %}" data-i18n="tasks_no_pending">
                     Şu an onay bekleyen veya seçili filtreye uygun bir öneri bulunmuyor.
                 </div>
             </div>
@@ -120,7 +94,7 @@
     </div>
 
     <div class="d-flex align-items-center mb-3 justify-content-between">
-        <h4 class="mb-0">📅 Kesinleşmiş İş Programı</h4>
+        <h4 class="mb-0">📅 <span data-i18n="tasks_confirmed_title">Kesinleşmiş İş Programı</span></h4>
     </div>
     
     <div class="table-responsive shadow-sm rounded">
@@ -128,11 +102,12 @@
             <thead class="table-secondary text-dark">
                 <tr>
                     <th style="width: 50px;">#</th>
-                    <th>Hesap</th> <th>Görev / Etkinlik</th>
-                    <th>Kategori</th>
-                    <th>İlgili Kişi/Şirket</th>
-                    <th>Planlanan Tarih</th>
-                    <th>İşlem</th>
+                    <th data-i18n="tasks_col_account">Hesap</th> 
+                    <th data-i18n="tasks_col_task">Görev / Etkinlik</th>
+                    <th data-i18n="tasks_col_category">Kategori</th>
+                    <th data-i18n="tasks_col_contact">İlgili Kişi/Şirket</th>
+                    <th data-i18n="tasks_col_date">Planlanan Tarih</th>
+                    <th data-i18n="tasks_col_action">İşlem</th>
                 </tr>
             </thead>
             <tbody id="confirmedTasksList">
@@ -163,23 +138,26 @@
                         <td><span class="badge bg-secondary">{{ task.sender }}</span></td>
                         <td>{{ task.due_date }}</td>
                         <td>
-                            <form action="/ui/task/delete/{{ task._id }}" method="post" class="d-inline" onsubmit="return confirm('Tamamlanmış bu görevi listeden silmek istiyor musun?');">
-                                <button type="submit" class="btn btn-sm btn-link text-danger p-0" style="text-decoration: none;">Sil</button>
+                            <form action="/ui/task/delete/{{ task._id }}" method="post" class="d-inline" onsubmit="return confirm('Remove this task? / Tamamlanmış bu görevi listeden silmek istiyor musun?');">
+                                <button type="submit" class="btn btn-sm btn-link text-danger p-0" style="text-decoration: none;" data-i18n="btn_delete">Sil</button>
                             </form>
                         </td>
                     </tr>
                 {% endfor %}
 
                 <tr id="noConfirmedMsg" class="{% if has_confirmed %}d-none{% endif %}">
-                    <td colspan="7" class="text-center py-4 text-muted">Seçili kriterlere uygun kesinleşmiş görev yok.</td>
+                    <td colspan="7" class="text-center py-4 text-muted" data-i18n="tasks_no_confirmed">Seçili kriterlere uygun kesinleşmiş görev yok.</td>
                 </tr>
             </tbody>
         </table>
     </div>
 </div>
 
+
 {% endblock %}
 
 {% block extra_js %}
+    <script src="/static/js/translations.js"></script>
+    <script src="/static/js/language_engine.js"></script>
     <script src="/static/js/tasks.js"></script>
 {% endblock %}
