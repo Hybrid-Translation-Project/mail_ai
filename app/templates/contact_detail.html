@@ -4,7 +4,7 @@
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="col-md-8">
-            <h3>📂 {{ contact.name if contact.name else contact.email }} - Mail Geçmişi</h3>
+            <h3>📂 {{ contact.name if contact.name else contact.email }} - <span data-i18n="contact_mail_history">Mail Geçmişi</span></h3>
             
             <div class="list-group mt-3">
                 {% for mail in history %}
@@ -15,16 +15,20 @@
                     </div>
                     <p class="mb-1 small text-truncate" style="color: #ccc;">{{ mail.body }}</p>
                     <small class="text-success">
-                        Durum: 
-                        {% if mail.status == 'SENT' %} Gönderildi
-                        {% elif mail.status == 'CANCELED' %} İptal/Ret
-                        {% else %} {{ mail.status }} {% endif %}
+                        <span data-i18n="status_label">Durum:</span> 
+                        {% if mail.status == 'SENT' %} 
+                            <span data-i18n="status_sent">Gönderildi</span>
+                        {% elif mail.status == 'CANCELED' %} 
+                            <span data-i18n="status_cancelled">İptal/Ret</span>
+                        {% else %} 
+                            {{ mail.status }} 
+                        {% endif %}
                     </small>
                 </a>
                 {% endfor %}
                 
                 {% if not history %}
-                    <div class="alert alert-secondary mt-3" role="alert">
+                    <div class="alert alert-secondary mt-3" role="alert" data-i18n="contact_no_history">
                         Bu kişiyle henüz bir mail geçmişi bulunmuyor.
                     </div>
                 {% endif %}
@@ -34,8 +38,8 @@
         <div class="col-md-4">
             <div class="card shadow border-0" style="background: #1e1e1e; border: 1px solid #333;">
                 <div class="card-body">
-                    <h5 class="card-title text-danger">🧠 AI Şirket Notları</h5>
-                    <p class="small text-muted italic">LLaMA tarafından bu şirket hakkında yapılan çıkarımlar:</p>
+                    <h5 class="card-title text-danger">🧠 <span data-i18n="contact_ai_notes_title">AI Şirket Notları</span></h5>
+                    <p class="small text-muted italic" data-i18n="contact_ai_notes_desc">LLaMA tarafından bu şirket hakkında yapılan çıkarımlar:</p>
                     
                     <ul class="list-group list-group-flush small">
                         {% if contact and contact.ai_notes %}
@@ -43,14 +47,21 @@
                             <li class="list-group-item bg-transparent text-white border-secondary">📍 {{ note }}</li>
                             {% endfor %}
                         {% else %}
-                            <li class="list-group-item bg-transparent text-muted">Henüz bir not çıkarılmamış.</li>
+                            <li class="list-group-item bg-transparent text-muted" data-i18n="contact_no_notes">Henüz bir not çıkarılmamış.</li>
                         {% endif %}
                     </ul>
                     
-                    <button class="btn btn-sm btn-outline-danger mt-3 w-100">🧠 Hafızayı Yenile</button>
+                    <button class="btn btn-sm btn-outline-danger mt-3 w-100">
+                        🧠 <span data-i18n="btn_refresh_memory">Hafızayı Yenile</span>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="/static/js/translations.js"></script>
+    <script src="/static/js/language_engine.js"></script>
 {% endblock %}

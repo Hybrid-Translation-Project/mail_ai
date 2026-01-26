@@ -3,7 +3,7 @@
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-secondary">
     <h1 class="h2 text-warning">
-        <i class="fas fa-file-signature"></i> Taslaklar
+        <i class="fas fa-file-signature"></i> <span data-i18n="drafts_page_title">Taslaklar</span>
     </h1>
 </div>
 
@@ -13,10 +13,10 @@
         <table class="table table-dark table-hover align-middle">
             <thead>
                 <tr class="text-muted border-bottom border-secondary">
-                    <th scope="col" style="width: 25%;">Alıcı</th>
-                    <th scope="col" style="width: 45%;">Konu & Özet</th>
-                    <th scope="col" style="width: 15%;">Son Kayıt</th>
-                    <th scope="col" style="width: 15%;" class="text-end">İşlemler</th>
+                    <th scope="col" style="width: 25%;" data-i18n="drafts_col_recipient">Alıcı</th>
+                    <th scope="col" style="width: 45%;" data-i18n="drafts_col_subject">Konu & Özet</th>
+                    <th scope="col" style="width: 15%;" data-i18n="drafts_col_last_saved">Son Kayıt</th>
+                    <th scope="col" style="width: 15%;" class="text-end" data-i18n="drafts_col_actions">İşlemler</th>
                 </tr>
             </thead>
             <tbody>
@@ -25,7 +25,7 @@
                     <td>
                         <div class="fw-bold text-white">{{ draft.recipient }}</div>
                         <small class="text-muted" style="font-size: 0.8rem;">
-                            <i class="fas fa-pen-nib text-warning"></i> Mail Taslağı
+                            <i class="fas fa-pen-nib text-warning"></i> <span data-i18n="badge_draft">Mail Taslağı</span>
                         </small>
                     </td>
 
@@ -43,7 +43,7 @@
 
                     <td class="text-end">
                         <a href="/ui/writer?draft_id={{ draft._id }}" class="btn btn-sm btn-outline-primary me-1" title="Düzenlemeye Devam Et">
-                            <i class="fas fa-pen"></i> Düzenle
+                            <i class="fas fa-pen"></i> <span data-i18n="btn_edit">Düzenle</span>
                         </a>
                         
                         <button onclick="deleteDraft('{{ draft._id }}')" class="btn btn-sm btn-outline-danger" title="Taslağı Sil">
@@ -60,15 +60,18 @@
         <div class="mb-3">
             <i class="fas fa-folder-open fa-4x text-secondary opacity-50"></i>
         </div>
-        <h4>Henüz kaydedilmiş bir taslak yok.</h4>
-        <p>Yarım bıraktığınız mailler burada otomatik olarak listelenir.</p>
+        <h4 data-i18n="drafts_empty_title">Henüz kaydedilmiş bir taslak yok.</h4>
+        <p data-i18n="drafts_empty_desc">Yarım bıraktığınız mailler burada otomatik olarak listelenir.</p>
         <a href="/ui/writer" class="btn btn-warning mt-2">
-            <i class="fas fa-plus"></i> Yeni Mail Yaz
+            <i class="fas fa-plus"></i> <span data-i18n="btn_new_mail">Yeni Mail Yaz</span>
         </a>
     </div>
     {% endif %}
 </div>
+{% endblock %}
 
-<script src="/static/js/drafts.js"></script>
-
+{% block extra_js %}
+    <script src="/static/js/translations.js"></script>
+    <script src="/static/js/language_engine.js"></script>
+    <script src="/static/js/drafts.js"></script>
 {% endblock %}

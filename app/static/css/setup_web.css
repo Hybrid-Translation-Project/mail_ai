@@ -74,3 +74,27 @@ h2 {
     margin-bottom: 20px;
     border: 1px solid #cf6679;
 }
+/* ... Mevcut kodlar varsa burada kalabilir ... */
+
+/* Dil Seçici (Sağ Üst) */
+.language-switcher {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+}
+
+.lang-select {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+/* Dropdown açıldığında seçeneklerin arka planı (Okunabilirlik için) */
+.lang-select option {
+    background-color: #2c3e50;
+    color: #fff;
+}

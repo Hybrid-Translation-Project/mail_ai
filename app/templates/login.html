@@ -3,17 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Mail Asistanı - Giriş</title>
+    <title data-i18n="login_page_title">AI Mail Asistanı - Giriş</title>
+    
     <link rel="stylesheet" href="/static/css/login.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="login-card">
-        <div style="text-align: center; margin-bottom: 20px;">
-            <i class="fas fa-robot" style="font-size: 3rem; color: #38bdf8;"></i>
+        
+        <div class="language-switcher">
+            <select id="languageSelect" class="lang-select">
+                <option value="tr">🇹🇷 TR</option>
+                <option value="en">🇬🇧 EN</option>
+            </select>
         </div>
-        <h2>📧 Mail Asistanı</h2>
-        <p style="color: #888; font-size: 0.85rem; margin-bottom: 20px; text-align: center;">
+
+        <div class="logo-container">
+            <i class="fas fa-robot logo-icon"></i>
+        </div>
+        
+        <h2>📧 <span data-i18n="login_header_title">Mail Asistanı</span></h2>
+        
+        <p class="login-subtitle" data-i18n="login_subtitle">
             Devam etmek için panel yetkilerinizi doğrulayın.
         </p>
 
@@ -25,17 +36,17 @@
         
         <form action="/login" method="post">
             <div class="input-group">
-                <label><i class="fas fa-envelope"></i> E-posta Adresi</label>
-                <input type="email" name="username" required placeholder="ornek@gmail.com">
+                <label><i class="fas fa-envelope"></i> <span data-i18n="login_label_email">E-posta Adresi</span></label>
+                <input type="email" name="username" required data-i18n="login_placeholder_email" placeholder="ornek@gmail.com">
             </div>
             
             <div class="input-group">
-                <label><i class="fas fa-lock"></i> Panel Giriş Şifresi</label>
-                <input type="password" name="password" required placeholder="Panel şifrenizi girin">
+                <label><i class="fas fa-lock"></i> <span data-i18n="login_label_password">Panel Giriş Şifresi</span></label>
+                <input type="password" name="password" required data-i18n="login_placeholder_password" placeholder="Panel şifrenizi girin">
             </div>
             
             <button type="submit" class="login-btn">
-                <i class="fas fa-sign-in-alt"></i> Güvenli Giriş Yap
+                <i class="fas fa-sign-in-alt"></i> <span data-i18n="login_btn_enter">Güvenli Giriş Yap</span>
             </button>
             
             {% if error %}
@@ -43,9 +54,12 @@
             {% endif %}
         </form>
 
-        <div style="margin-top: 25px; text-align: center; font-size: 0.8rem; color: #555; border-top: 1px solid #333; padding-top: 15px;">
-            <p>Sistemi sıfırlamak veya yeni hesap kurmak için <code>.env</code> dosyasını silip sayfayı yenileyin.</p>
+        <div class="login-footer">
+            <p data-i18n="login_footer_reset">Sistemi sıfırlamak veya yeni hesap kurmak için <code>.env</code> dosyasını silip sayfayı yenileyin.</p>
         </div>
     </div>
+
+    <script src="/static/js/translations.js"></script>
+    <script src="/static/js/language_engine.js"></script>
 </body>
 </html>

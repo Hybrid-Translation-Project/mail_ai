@@ -29,3 +29,11 @@
 .task-item:hover {
     transform: translateX(10px);
 }
+.category-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .urgency-high { color: #ff4757; font-weight: bold; }
+        .urgency-mid { color: #ffa502; }
+        .animate-flicker { animation: flicker 1.5s infinite alternate; }
+        @keyframes flicker {
+            0% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }

@@ -1,48 +1,22 @@
 {% extends "base.html" %}
 
 {% block extra_css %}
-    <style>
-        .avatar-circle {
-            width: 45px;
-            height: 45px;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .contact-card-item {
-            transition: all 0.3s ease;
-        }
-        .nav-pills .nav-link {
-            background: #1a1a1a;
-            color: #aaa;
-            border: 1px solid #333;
-            margin-right: 8px;
-            transition: all 0.2s;
-        }
-        .nav-pills .nav-link:hover {
-            background: #252525;
-            color: #fff;
-        }
-        .nav-pills .nav-link.active {
-            background-color: #0d6efd;
-            color: white !important;
-            border-color: #0d6efd;
-        }
-    </style>
+<link rel="stylesheet" href="/static/css/contacts.css">
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="text-white"><i class="fas fa-address-book text-primary"></i> Rehber & Şirketler</h2>
-            <p class="text-muted small">Hesaplarında kayıtlı kişi ve kurumlar.</p>
+            <h2 class="text-white">
+                <i class="fas fa-address-book text-primary"></i> <span data-i18n="contacts_page_title">Rehber & Şirketler</span>
+            </h2>
+            <p class="text-muted small" data-i18n="contacts_page_subtitle">Hesaplarında kayıtlı kişi ve kurumlar.</p>
         </div>
         <div class="w-25">
             <div class="input-group">
                 <span class="input-group-text bg-dark border-secondary text-muted"><i class="fas fa-search"></i></span>
-                <input type="text" id="contactSearch" class="form-control bg-dark text-white border-secondary" placeholder="İsim veya mail ara...">
+                <input type="text" id="contactSearch" class="form-control bg-dark text-white border-secondary" placeholder="İsim veya mail ara..." data-i18n="placeholder_search_contacts">
             </div>
         </div>
     </div>
@@ -50,7 +24,7 @@
     <ul class="nav nav-pills mb-4" id="accountTabs">
         <li class="nav-item">
             <button class="nav-link active rounded-pill px-4" data-filter="all">
-                <i class="fas fa-layer-group"></i> Tümü
+                <i class="fas fa-layer-group"></i> <span data-i18n="contacts_tab_all">Tümü</span>
             </button>
         </li>
         
@@ -77,7 +51,13 @@
                         </div>
                         <div style="overflow: hidden;">
                             <h5 class="card-title text-white mb-0 text-truncate" title="{{ contact.name }}">{{ contact.name }}</h5>
-                            <small class="text-muted">{{ contact.company if contact.company else 'Bireysel' }}</small>
+                            <small class="text-muted">
+                                {% if contact.company %}
+                                    {{ contact.company }}
+                                {% else %}
+                                    <span data-i18n="contact_type_individual">Bireysel</span>
+                                {% endif %}
+                            </small>
                         </div>
                     </div>
 
@@ -91,15 +71,21 @@
                                 <i class="fas fa-link"></i> {{ contact.owner_account }}
                             </span>
                         {% else %}
-                            <span class="badge bg-dark border border-secondary text-muted fw-normal">Genel</span>
+                            <span class="badge bg-dark border border-secondary text-muted fw-normal" data-i18n="badge_general">Genel</span>
                         {% endif %}
                         
-                        <span class="badge bg-info text-dark ms-1">{{ contact.tag or 'Kişi' }}</span>
+                        <span class="badge bg-info text-dark ms-1">
+                            {% if contact.tag %}
+                                {{ contact.tag }}
+                            {% else %}
+                                <span data-i18n="contact_tag_person">Kişi</span>
+                            {% endif %}
+                        </span>
                     </div>
 
                     <div class="d-grid">
                         <a href="/ui/contact/{{ contact.email }}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-history"></i> Geçmişi Gör
+                            <i class="fas fa-history"></i> <span data-i18n="btn_view_history">Geçmişi Gör</span>
                         </a>
                     </div>
                 </div>
@@ -110,11 +96,15 @@
 
     <div id="noResults" class="text-center mt-5 d-none">
         <i class="fas fa-search fs-1 text-muted opacity-25"></i>
-        <h4 class="text-muted mt-3">Kriterlere uygun kişi bulunamadı.</h4>
+        <h4 class="text-muted mt-3" data-i18n="contacts_no_results">Kriterlere uygun kişi bulunamadı.</h4>
     </div>
 </div>
+
+
 {% endblock %}
 
 {% block extra_js %}
+    <script src="/static/js/translations.js"></script>
+    <script src="/static/js/language_engine.js"></script>
     <script src="/static/js/contacts.js"></script>
 {% endblock %}

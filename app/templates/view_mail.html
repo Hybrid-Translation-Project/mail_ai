@@ -11,7 +11,7 @@
 <div class="view-container">
     <div class="d-flex justify-content-between mb-3 align-items-center">
         <button onclick="history.back()" class="btn btn-outline-secondary btn-sm" style="color: #ccc; border-color: #444;">
-            <i class="fas fa-arrow-left"></i> Geri Dön
+            <i class="fas fa-arrow-left"></i> <span data-i18n="btn_back">Geri Dön</span>
         </button>
         <span class="text-muted small">Mail ID: {{ mail._id }}</span>
     </div>
@@ -22,22 +22,22 @@
         <div class="p-3 rounded" style="background-color: #2c2c2c;">
             <div class="row">
                 <div class="col-md-6">
-                    <div class="mb-1"><strong>Kimden:</strong> <span class="text-primary">{{ mail.from }}</span></div>
-                    <div class="mb-1"><strong>Kime:</strong> <span class="text-light">{{ mail.to }}</span></div>
-                    <div><strong>Tarih:</strong> <span class="text-muted">{{ mail.created_at }}</span></div>
+                    <div class="mb-1"><strong data-i18n="view_label_from">Kimden:</strong> <span class="text-primary">{{ mail.from }}</span></div>
+                    <div class="mb-1"><strong data-i18n="view_label_to">Kime:</strong> <span class="text-light">{{ mail.to }}</span></div>
+                    <div><strong data-i18n="view_label_date">Tarih:</strong> <span class="text-muted">{{ mail.created_at }}</span></div>
                 </div>
                 
                 <div class="col-md-6 text-md-end mt-3 mt-md-0">
                     <div class="mb-2">
-                        <strong>Durum:</strong> 
+                        <strong data-i18n="status_label">Durum:</strong> 
                         {% if mail.status == 'SENT' %}
-                            <span class="status-badge sent"><i class="fas fa-check"></i> GÖNDERİLDİ</span>
+                            <span class="status-badge sent"><i class="fas fa-check"></i> <span data-i18n="status_sent">GÖNDERİLDİ</span></span>
                         {% elif mail.status == 'CANCELED' %}
-                            <span class="status-badge canceled"><i class="fas fa-ban"></i> İPTAL / TASLAK SİLİNDİ</span>
+                            <span class="status-badge canceled"><i class="fas fa-ban"></i> <span data-i18n="status_cancelled">İPTAL / TASLAK SİLİNDİ</span></span>
                         {% elif mail.status == 'WAITING_APPROVAL' %}
-                            <span class="status-badge waiting"><i class="fas fa-clock"></i> ONAY BEKLİYOR</span>
+                            <span class="status-badge waiting"><i class="fas fa-clock"></i> <span data-i18n="status_waiting">ONAY BEKLİYOR</span></span>
                         {% elif mail.status == 'DRAFT' %}
-                             <span class="badge bg-secondary"><i class="fas fa-pencil-alt"></i> TASLAK</span>
+                             <span class="badge bg-secondary"><i class="fas fa-pencil-alt"></i> <span data-i18n="badge_draft">TASLAK</span></span>
                         {% else %}
                             <span class="badge bg-secondary">{{ mail.status }}</span>
                         {% endif %}
@@ -45,10 +45,14 @@
 
                     {% if mail.decision %}
                     <div>
-                        <span class="small text-muted">AI Kararı:</span>
-                        {% if mail.decision == 'approve' %} <span class="text-success fw-bold">Kabul</span>
-                        {% elif mail.decision == 'reject' %} <span class="text-danger fw-bold">Ret</span>
-                        {% else %} <span class="text-secondary">Nötr</span> {% endif %}
+                        <span class="small text-muted" data-i18n="view_ai_decision">AI Kararı:</span>
+                        {% if mail.decision == 'approve' %} 
+                            <span class="text-success fw-bold" data-i18n="decision_approve">Kabul</span>
+                        {% elif mail.decision == 'reject' %} 
+                            <span class="text-danger fw-bold" data-i18n="decision_reject">Ret</span>
+                        {% else %} 
+                            <span class="text-secondary" data-i18n="decision_neutral">Nötr</span> 
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>
@@ -56,24 +60,29 @@
         </div>
     </div>
 
-    <h6 class="text-muted mb-2">📩 Mail İçeriği:</h6>
+    <h6 class="text-muted mb-2">📩 <span data-i18n="view_mail_content">Mail İçeriği:</span></h6>
     <div class="mail-content-box shadow-sm">
         {{ mail.body | safe }}
     </div>
 
     {% if mail.reply_draft and mail.status == 'SENT' %}
     <div class="mt-4 p-3 rounded" style="border-left: 5px solid #28a745; background: #1a2e1e;">
-        <h6 class="text-success mb-2"><i class="fas fa-reply"></i> Gönderilen Cevap:</h6>
+        <h6 class="text-success mb-2"><i class="fas fa-reply"></i> <span data-i18n="view_sent_reply">Gönderilen Cevap:</span></h6>
         <div style="color: #e2e2e2; white-space: pre-wrap; font-family: sans-serif;">{{ mail.reply_draft | safe }}</div>
     </div>
     {% endif %}
     
     {% if mail.decision == 'reject' and mail.status == 'SENT' %}
     <div class="mt-4 p-3 rounded" style="border-left: 5px solid #dc3545; background: #2c1a1a;">
-        <h6 class="text-danger mb-2"><i class="fas fa-times-circle"></i> Red Cevabı Gönderildi:</h6>
+        <h6 class="text-danger mb-2"><i class="fas fa-times-circle"></i> <span data-i18n="view_reject_reply">Red Cevabı Gönderildi:</span></h6>
         <div style="color: #e2e2e2; white-space: pre-wrap;">{{ mail.reply_draft | safe }}</div>
-        <p class="small text-muted mt-2 mb-0">* Bu işlem için görev oluşturulmamıştır.</p>
+        <p class="small text-muted mt-2 mb-0">* <span data-i18n="view_reject_note">Bu işlem için görev oluşturulmamıştır.</span></p>
     </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="/static/js/translations.js"></script>
+    <script src="/static/js/language_engine.js"></script>
 {% endblock %}

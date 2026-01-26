@@ -3,51 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Mail Asistanı - Kurulum</title>
+    <title data-i18n="setup_page_title">AI Mail Asistanı - Kurulum</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/setup_web.css">
 </head>
 <body>
+    
+    <div class="language-switcher">
+        <select id="languageSelect" class="lang-select">
+            <option value="tr">🇹🇷 TR</option>
+            <option value="en">🇬🇧 EN</option>
+        </select>
+    </div>
+
     <div class="setup-card">
-        <h2><i class="fas fa-magic"></i> Akıllı Kurulum</h2>
+        <h2><i class="fas fa-magic"></i> <span data-i18n="setup_header">Akıllı Kurulum</span></h2>
         
         {% if request.query_params.get('error') %}
-            <div class="alert">⚠️ Hata: {{ request.query_params.get('error') }}</div>
+            <div class="alert">
+                ⚠️ <span data-i18n="error_prefix">Hata:</span> {{ request.query_params.get('error') }}
+            </div>
         {% endif %}
 
         <form action="/setup" method="post">
             <div class="form-group">
-                <label><i class="fas fa-user"></i> Adınız Soyadınız</label>
-                <input type="text" name="full_name" placeholder="Örn: Serhat Akçay" required>
+                <label><i class="fas fa-user"></i> <span data-i18n="setup_label_fullname">Adınız Soyadınız</span></label>
+                <input type="text" name="full_name" placeholder="Örn: Serhat Akçay" data-i18n="placeholder_fullname" required>
             </div>
 
             <div class="form-group">
-                <label><i class="fas fa-building"></i> Şirket / Ünvan</label>
-                <input type="text" name="company_name" placeholder="Örn: Serhat Yazılım A.Ş." required>
+                <label><i class="fas fa-building"></i> <span data-i18n="setup_label_company">Şirket / Ünvan</span></label>
+                <input type="text" name="company_name" placeholder="Örn: Serhat Yazılım A.Ş." data-i18n="placeholder_company" required>
             </div>
 
             <div class="form-group">
-                <label><i class="fas fa-envelope"></i> Gmail Adresiniz</label>
-                <input type="email" name="email" placeholder="ornek@gmail.com" required>
+                <label><i class="fas fa-envelope"></i> <span data-i18n="setup_label_email">Gmail Adresiniz</span></label>
+                <input type="email" name="email" placeholder="ornek@gmail.com" data-i18n="placeholder_email" required>
             </div>
 
             <div class="form-group">
-                <label><i class="fas fa-key"></i> Gmail Uygulama Şifresi (16 Hane)</label>
+                <label><i class="fas fa-key"></i> <span data-i18n="setup_label_app_pass">Gmail Uygulama Şifresi (16 Hane)</span></label>
                 <input type="password" name="app_password" placeholder="•••• •••• •••• ••••" required>
             </div>
 
             <div class="form-group">
-                <label><i class="fas fa-lock"></i> Panel Giriş Şifresi Belirleyin</label>
-                <input type="password" name="master_password" placeholder="Web paneli için yeni şifre" required>
+                <label><i class="fas fa-lock"></i> <span data-i18n="setup_label_master_pass">Panel Giriş Şifresi Belirleyin</span></label>
+                <input type="password" name="master_password" placeholder="Web paneli için yeni şifre" data-i18n="placeholder_master_pass" required>
             </div>
 
             <div class="form-group">
-                <label><i class="fas fa-signature"></i> E-Posta İmzanız</label>
-                <textarea name="signature" placeholder="Saygılarımla, Serhat - CEO"></textarea>
+                <label><i class="fas fa-signature"></i> <span data-i18n="setup_label_signature">E-Posta İmzanız</span></label>
+                <textarea name="signature" placeholder="Saygılarımla, Serhat - CEO" data-i18n="placeholder_signature_example"></textarea>
             </div>
 
-            <button type="submit" class="submit-btn">KURULUMU TAMAMLA</button>
+            <button type="submit" class="submit-btn" data-i18n="btn_complete_setup">KURULUMU TAMAMLA</button>
         </form>
     </div>
+
+    <script src="/static/js/translations.js"></script>
+    <script src="/static/js/language_engine.js"></script>
 </body>
 </html>
