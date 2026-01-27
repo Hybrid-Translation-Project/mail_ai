@@ -1,7 +1,7 @@
 import os
 import re
-from typing import Optional
-from fastapi import APIRouter, Request, Form, Depends, HTTPException, Body
+from typing import Optional, List
+from fastapi import APIRouter, Request, Form, Depends, HTTPException, Body, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from bson import ObjectId
@@ -14,6 +14,13 @@ from app.database import mails_col, contacts_col, tasks_col, users_col, accounts
 from app.services.mail_sender import send_gmail_via_user
 from app.services.reply_generator import generate_reply, generate_decision_reply
 from app.core.security import encrypt_password, verify_master_password, hash_master_password, decrypt_password
+
+# --- YENİ EKLENEN: Semantik Arama Modülü ---
+try:
+    from app.rag.embeddings import get_embedding
+except ImportError:
+    # Eğer embedding modülü henüz hazır değilse hata vermesin, boş fonksiyon dönsün
+    def get_embedding(text): return []
 
 router = APIRouter()
 
@@ -535,3 +542,52 @@ async def send_writer_mail(
         return RedirectResponse(url="/ui/dashboard?msg=Mail+Gonderildi", status_code=303)
     else:
         return RedirectResponse(url=f"/ui/writer?error={msg}", status_code=303)
+
+# --- YENİ EKLENEN: SEMANTİK ARAMA API ENDPOINT'İ ---
+@router.get("/ui/search-api")
+async def search_mails(q: str = Query(..., min_length=1)):
+    """
+    Frontend'den gelen arama isteğini karşılar.
+    MongoDB Atlas Vector Search kullanarak 'anlamsal' arama yapar.
+    Örn: "Fatura" aratırsan, içinde fatura yazmasa bile ödeme maillerini bulur.
+    """
+    try:
+        # 1. Kullanıcının sorgusunu vektöre çevir (Sayısal hale getir)
+        # NOT: Embeddings modülü henüz tam yüklenmemişse boş dönebilir, kontrol edelim.
+        query_vector = get_embedding(q)
+        
+        if not query_vector:
+            # Fallback: Vektör oluşturulamazsa boş dön (veya basit regex arama yapılabilir)
+            return {"results": [], "message": "Vektör oluşturulamadı veya model yüklenemedi."}
+
+        # 2. MongoDB Aggregation Pipeline (Sorgu Hattı)
+        pipeline = [
+            {
+                "$vectorSearch": {
+                    "index": "vector_index", # database.py'de oluşturduğumuz indeks adı
+                    "path": "embedding",     # Vektörün kayıtlı olduğu alan
+                    "queryVector": query_vector,
+                    "numCandidates": 100,    # Aday havuzu (performans ayarı)
+                    "limit": 10              # En alakalı 10 sonucu getir
+                }
+            },
+            {
+                "$project": {
+                    "_id": {"$toString": "$_id"}, # ObjectId'yi stringe çevir (JSON hatası almamak için)
+                    "subject": 1,
+                    "sender": 1,
+                    "snippet": {"$substr": ["$body", 0, 150]}, # Metnin ilk 150 karakteri
+                    "date": 1,
+                    "score": {"$meta": "vectorSearchScore"} # Benzerlik puanı (Ne kadar alakalı?)
+                }
+            }
+        ]
+        
+        # 3. Sorguyu çalıştır
+        results = list(mails_col.aggregate(pipeline))
+        
+        return {"results": results}
+
+    except Exception as e:
+        print(f"❌ Arama Hatası: {e}")
+        return {"results": [], "error": str(e)}

@@ -16,6 +16,13 @@ from app.services.reply_generator import generate_reply
 from app.services.extractor import extract_insights_and_tasks
 from app.models.contact_model import create_contact
 
+# YENİ EKLENEN: Semantik Arama İçin Vektör Motoru
+try:
+    from app.rag.embeddings import get_embedding
+except ImportError:
+    # Eğer model henüz inmemişse hata vermesin, boş liste dönsün
+    def get_embedding(text): return []
+
 # Güvenlik
 from app.core.security import decrypt_password
 
@@ -114,11 +121,10 @@ def process_account_inbox(account):
                 tone = contact.get("default_tone", "formal") if contact else "formal"
                 
                 if not contact:
-                    # GÜNCELLEME BURADA YAPILDI: owner_account eklendi
                     contacts_col.insert_one(create_contact({
                         "email": sender_email, 
                         "name": sender_name if sender_name else sender_email.split("@")[0],
-                        "owner_account": email_user  # <-- KİŞİ HANGİ HESABA BAĞLI?
+                        "owner_account": email_user
                     }))
 
                 # 3. AI Analizi (Görev ve İçgörü Çıkarımı)
@@ -131,11 +137,16 @@ def process_account_inbox(account):
                         {"email": sender_email},
                         {"$push": {"ai_notes": analysis['insight']}}
                     )
+                
+                # --- YENİ EKLENEN: Semantik Arama İçin Vektör Oluşturma ---
+                # Konu ve İçeriği birleştirip tek bir anlam haritası çıkarıyoruz.
+                full_text_for_vector = f"{subject} {body}"
+                vector_embedding = get_embedding(full_text_for_vector)
 
                 # 4. Ana Mail Kaydı
                 mail_doc = {
-                    "user_email": email_user, # Hangi hesaba geldi? (ÇOK ÖNEMLİ)
-                    "account_id": str(account["_id"]), # Hesabın ID'si
+                    "user_email": email_user, # Hangi hesaba geldi?
+                    "account_id": str(account["_id"]), 
                     "from": sender_email,
                     "subject": subject,
                     "body": body,
@@ -144,7 +155,10 @@ def process_account_inbox(account):
                     "status": "WAITING_APPROVAL", 
                     "classifier": classify_result,
                     "extracted_task": analysis.get('task') if analysis.get('task') else None,
-                    "created_at": datetime.utcnow()
+                    "created_at": datetime.utcnow(),
+                    
+                    # Vektör Verisi (Arama için kritik)
+                    "embedding": vector_embedding 
                 }
 
                 # Taslak cevabı oluştur
@@ -154,7 +168,7 @@ def process_account_inbox(account):
                     mail_doc["reply_draft"] = "AI bu mail için otomatik cevap gerekmediğini düşündü."
                 
                 mails_col.insert_one(mail_doc)
-                print(f"📥 Mail Kaydedildi: {subject} -> {email_user}")
+                print(f"📥 Mail Kaydedildi (Vektörlü): {subject} -> {email_user}")
 
             except Exception as e:
                 print(f"⚠️ Mail işleme hatası: {e}")

@@ -43,6 +43,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
-    // Fonksiyonları çalıştır
     animateStats();
 });
