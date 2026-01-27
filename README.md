@@ -83,7 +83,7 @@ graph TD
         Dashboard --> WriteAction[✍️ Yeni Mail Yaz]
         
         %% ARAMA AKIŞI
-        SearchAction --> API_Search[/ui/search-api/]
+        SearchAction --> API_Search["/ui/search-api/"]
         API_Search --> Embedder_Search[embeddings.py: Sorguyu Vektörle]
         Embedder_Search --> VectorQuery[Sorgu Vektörü]
         VectorQuery --> DB_VectorSearch[(MongoDB: Vector Search)]
@@ -91,7 +91,7 @@ graph TD
         
         %% SES AKIŞI
         VoiceAction --> RecordAudio[Ses Kaydet JS]
-        RecordAudio --> API_Voice[/voice/transcribe]
+        RecordAudio --> API_Voice["/voice/transcribe"]
         API_Voice --> WhisperModel[AI: Whisper Ses->Metin]
         WhisperModel --> ActionRouter{Komut mu Metin mi?}
         ActionRouter -- Komut --> ExecuteCmd[Komutu Çalıştır]
