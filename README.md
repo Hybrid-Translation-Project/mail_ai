@@ -32,89 +32,89 @@ Gelen e-postaları yapay zeka ile analiz eden, yanıt taslakları hazırlayan, s
 ```mermaid
 graph TD
     %% --- BAŞLANGIÇ VE KURULUM ---
-    Start((Başlat: application_run.py)) --> CheckModels{Modeller Var mı?}
-    CheckModels -- Hayır --> Download[download_model.py: Whisper & MiniLM İndir]
-    CheckModels -- Evet --> InitDB[database.py: init_db]
+    Start(("Başlat: application_run.py")) --> CheckModels{"Modeller Var mı?"}
+    CheckModels -- Hayır --> Download["download_model.py: Whisper & MiniLM İndir"]
+    CheckModels -- Evet --> InitDB["database.py: init_db"]
     Download --> InitDB
     
-    InitDB --> CheckIndex{Vector Index Var mı?}
-    CheckIndex -- Hayır --> CreateIndex[MongoDB Atlas: Search Index Oluştur]
-    CheckIndex -- Evet --> StartServer[FastAPI Server Başlat: main.py]
+    InitDB --> CheckIndex{"Vector Index Var mı?"}
+    CheckIndex -- Hayır --> CreateIndex["MongoDB Atlas: Search Index Oluştur"]
+    CheckIndex -- Evet --> StartServer["FastAPI Server Başlat: main.py"]
     CreateIndex --> StartServer
 
     %% --- KULLANICI GİRİŞİ ---
-    StartServer --> UserAccess[Kullanıcı Tarayıcıyı Açar]
-    UserAccess --> IsConfigured{Setup Yapıldı mı?}
-    IsConfigured -- Hayır --> SetupPage[Setup Ekranı]
-    SetupPage --> SaveConfig[Verileri Şifrele ve .env/.db Kaydet]
-    IsConfigured -- Evet --> LoginPage[Login Ekranı]
+    StartServer --> UserAccess["Kullanıcı Tarayıcıyı Açar"]
+    UserAccess --> IsConfigured{"Setup Yapıldı mı?"}
+    IsConfigured -- Hayır --> SetupPage["Setup Ekranı"]
+    SetupPage --> SaveConfig["Verileri Şifrele ve .env/.db Kaydet"]
+    IsConfigured -- Evet --> LoginPage["Login Ekranı"]
     SaveConfig --> LoginPage
-    LoginPage --> AuthCheck{Şifre Doğru mu?}
-    AuthCheck -- Hayır --> LoginError[Hata Göster]
-    AuthCheck -- Evet --> Dashboard[🖥️ DASHBOARD & UI]
+    LoginPage --> AuthCheck{"Şifre Doğru mu?"}
+    AuthCheck -- Hayır --> LoginError["Hata Göster"]
+    AuthCheck -- Evet --> Dashboard["🖥️ DASHBOARD & UI"]
 
     %% --- ARKA PLAN SERVİSLERİ (LOOP) ---
     subgraph Background_Service [Arka Plan Otomasyonu]
-        Scheduler[APScheduler] -->|Her 60sn| MailListener[mail_listener.py]
-        MailListener --> ConnectIMAP[IMAP: Mailleri Kontrol Et]
-        ConnectIMAP --> NewMail{Yeni Mail Var mı?}
-        NewMail -- Yok --> Sleep[Bekle]
-        NewMail -- Var --> FetchBody[Mail İçeriğini Çek]
+        Scheduler["APScheduler"] -->|Her 60sn| MailListener["mail_listener.py"]
+        MailListener --> ConnectIMAP["IMAP: Mailleri Kontrol Et"]
+        ConnectIMAP --> NewMail{"Yeni Mail Var mı?"}
+        NewMail -- Yok --> Sleep["Bekle"]
+        NewMail -- Var --> FetchBody["Mail İçeriğini Çek"]
         
-        FetchBody --> AI_Process_1[AI: Sınıflandırma & Görev Çıkarma]
-        FetchBody --> AI_Process_2[AI: Cevap Taslağı Oluştur]
+        FetchBody --> AI_Process_1["AI: Sınıflandırma & Görev Çıkarma"]
+        FetchBody --> AI_Process_2["AI: Cevap Taslağı Oluştur"]
         
         %% YENİ EKLENEN KISIM: VEKTÖRLEME
-        FetchBody --> Embedder_BG[embeddings.py: Vektör Oluştur]
-        Embedder_BG --> VectorData[Sayısal Vektör Verisi]
+        FetchBody --> Embedder_BG["embeddings.py: Vektör Oluştur"]
+        Embedder_BG --> VectorData["Sayısal Vektör Verisi"]
         
         AI_Process_1 --> MergeData
         AI_Process_2 --> MergeData
-        VectorData --> MergeData[Verileri Birleştir]
+        VectorData --> MergeData["Verileri Birleştir"]
         
-        MergeData --> SaveDB_BG[(MongoDB: Kaydet ve İndeksle)]
+        MergeData --> SaveDB_BG[("MongoDB: Kaydet ve İndeksle")]
     end
 
     %% --- KULLANICI ETKİLEŞİMLERİ ---
     subgraph User_Actions [Kullanıcı Aksiyonları]
-        Dashboard --> SearchAction[🔍 Arama Yap]
-        Dashboard --> VoiceAction[🎤 Sesli Komut]
-        Dashboard --> ReviewAction[📝 Mail İncele/Düzenle]
-        Dashboard --> WriteAction[✍️ Yeni Mail Yaz]
+        Dashboard --> SearchAction["🔍 Arama Yap"]
+        Dashboard --> VoiceAction["🎤 Sesli Komut"]
+        Dashboard --> ReviewAction["📝 Mail İncele/Düzenle"]
+        Dashboard --> WriteAction["✍️ Yeni Mail Yaz"]
         
         %% ARAMA AKIŞI
         SearchAction --> API_Search["/ui/search-api/"]
-        API_Search --> Embedder_Search[embeddings.py: Sorguyu Vektörle]
-        Embedder_Search --> VectorQuery[Sorgu Vektörü]
-        VectorQuery --> DB_VectorSearch[(MongoDB: Vector Search)]
-        DB_VectorSearch --> ReturnResults[Sonuçları Listele]
+        API_Search --> Embedder_Search["embeddings.py: Sorguyu Vektörle"]
+        Embedder_Search --> VectorQuery["Sorgu Vektörü"]
+        VectorQuery --> DB_VectorSearch[("MongoDB: Vector Search")]
+        DB_VectorSearch --> ReturnResults["Sonuçları Listele"]
         
         %% SES AKIŞI
-        VoiceAction --> RecordAudio[Ses Kaydet JS]
+        VoiceAction --> RecordAudio["Ses Kaydet JS"]
         RecordAudio --> API_Voice["/voice/transcribe"]
-        API_Voice --> WhisperModel[AI: Whisper Ses->Metin]
-        WhisperModel --> ActionRouter{Komut mu Metin mi?}
-        ActionRouter -- Komut --> ExecuteCmd[Komutu Çalıştır]
-        ActionRouter -- Metin --> FillText[Editöre Yaz]
+        API_Voice --> WhisperModel["AI: Whisper Ses->Metin"]
+        WhisperModel --> ActionRouter{"Komut mu Metin mi?"}
+        ActionRouter -- Komut --> ExecuteCmd["Komutu Çalıştır"]
+        ActionRouter -- Metin --> FillText["Editöre Yaz"]
 
         %% YAZMA/GÖNDERME AKIŞI
-        ReviewAction --> EditorPage[Editor Sayfası]
-        WriteAction --> WriterPage[Writer Sayfası]
+        ReviewAction --> EditorPage["Editor Sayfası"]
+        WriteAction --> WriterPage["Writer Sayfası"]
         
-        EditorPage --> SaveDraft[/save-draft: Kaydet]
-        WriterPage --> GenerateAI[/writer/generate: AI ile Yaz]
+        EditorPage --> SaveDraft["/save-draft: Kaydet"]
+        WriterPage --> GenerateAI["/writer/generate: AI ile Yaz"]
         
-        EditorPage --> ApproveSend[Onayla ve Gönder]
-        WriterPage --> SendMail[Gönder]
+        EditorPage --> ApproveSend["Onayla ve Gönder"]
+        WriterPage --> SendMail["Gönder"]
         
-        ApproveSend --> SMTP_Service[mail_sender.py: SMTP]
+        ApproveSend --> SMTP_Service["mail_sender.py: SMTP"]
         SendMail --> SMTP_Service
-        SMTP_Service --> UpdateStatus[(MongoDB: Status=SENT)]
+        SMTP_Service --> UpdateStatus[("MongoDB: Status=SENT")]
     end
 
     %% BAĞLANTILAR
     SaveDB_BG -.-> Dashboard
-    UpdateStatus -.-> HistoryPage[History Sayfası]
+    UpdateStatus -.-> HistoryPage["History Sayfası"]
 ```
 ---
 
