@@ -8,7 +8,7 @@ import time
 from dotenv import load_dotenv
 
 # Veritabanı Bağlantıları
-from app.database import mails_col, contacts_col, users_col, accounts_col, tasks_col
+from app.database import mails_col, contacts_col, users_col, accounts_col, tasks_col, tags_col
 
 # AI Servisleri
 from app.services.mail_classifier import should_reply
@@ -85,6 +85,12 @@ def process_account_inbox(account):
                 # Başlık ve Gönderen Bilgileri
                 subject = decode_mime_words(msg["Subject"] or "")
                 sender_name, sender_email = parseaddr(msg.get("From"))
+                message_id = msg.get("Message-ID") # Message-ID çekiyoruz
+
+                # Eğer Message-ID yoksa (çok nadir), benzersiz bir ID üretelim
+                if not message_id:
+                     import uuid
+                     message_id = f"gen-{uuid.uuid4()}"
 
                 # Mail Gövdesini Çekme
                 body = ""
@@ -96,14 +102,22 @@ def process_account_inbox(account):
                 else:
                     body = msg.get_payload(decode=True).decode(errors="ignore")
 
-                # Çifte Kayıt Kontrolü (Aynı mail tekrar işlenmesin)
-                exists = mails_col.find_one({
+                # Çifte Kayıt Kontrolü (Aynı mail tekrar işlenmesin - Message-ID ile daha güvenli)
+                # Önce message_id ile kontrol et, yoksa eski yöntemle
+                exists = mails_col.find_one({"message_id": message_id})
+                if exists:
+                    print(f"⚠️ Mail zaten kayıtlı (ID: {message_id}), atlanıyor.")
+                    continue
+
+                # Yedek kontrol (Eski yöntem) - Silebiliriz ama dursun
+                exists_old = mails_col.find_one({
                     "subject": subject, 
                     "user_email": email_user, 
                     "created_at": {"$gte": datetime.now().replace(hour=0, minute=0, second=0)}
                 })
                 
-                if exists:
+                if exists_old:
+                    print(f"⚠️ Mail zaten kayıtlı (Konu: {subject}), atlanıyor.")
                     continue
 
                 # 1. AI Sınıflandırma (Cevap verilmeli mi?)
@@ -123,7 +137,12 @@ def process_account_inbox(account):
 
                 # 3. AI Analizi (Görev ve İçgörü Çıkarımı)
                 print(f"🤖 AI Analizi Yapılıyor: {subject}")
-                analysis = extract_insights_and_tasks(body)
+                
+                # YENİ: Hesaba ait etiketleri çek (ARTIK GLOBAL)
+                # Eskiden user_id'ye göre çekiyorduk, şimdi tüm sistemdeki etiketleri çekiyoruz.
+                available_tags = list(tags_col.find({}, {"_id": 0, "slug": 1, "description": 1}))
+
+                analysis = extract_insights_and_tasks(body, available_tags=available_tags)
 
                 # --- Şirket Hafızası Güncelleme ---
                 if analysis.get('insight'):
@@ -134,6 +153,7 @@ def process_account_inbox(account):
 
                 # 4. Ana Mail Kaydı
                 mail_doc = {
+                    "message_id": message_id, # <-- ARTIK KAYDEDİYORUZ
                     "user_email": email_user, # Hangi hesaba geldi? (ÇOK ÖNEMLİ)
                     "account_id": str(account["_id"]), # Hesabın ID'si
                     "from": sender_email,
@@ -141,6 +161,7 @@ def process_account_inbox(account):
                     "body": body,
                     "category": analysis.get('category', 'Diğer'),
                     "urgency_score": analysis.get('urgency_score', 0),
+                    "tags": analysis.get("tags", []), # YENİ: Etiketler
                     "status": "WAITING_APPROVAL", 
                     "classifier": classify_result,
                     "extracted_task": analysis.get('task') if analysis.get('task') else None,

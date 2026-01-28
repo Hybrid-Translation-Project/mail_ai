@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="/static/css/tasks.css">
+<link rel="stylesheet" href="/static/css/tasks.css">
 {% endblock %}
 
 {% block content %}
@@ -9,14 +9,15 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2>✅ <span data-i18n="tasks_page_title">AI Görev ve Karar Merkezi</span></h2>
-            <p class="text-muted small" data-i18n="tasks_page_subtitle">AI tarafından çıkarılan görev önerileri ve takvim.</p>
+            <p class="text-muted small" data-i18n="tasks_page_subtitle">AI tarafından çıkarılan görev önerileri ve
+                takvim.</p>
         </div>
-        
+
         {% set pending_count = tasks|selectattr("status", "equalto", "WAITING_APPROVAL")|list|length %}
         {% if pending_count > 0 %}
-            <span class="badge bg-danger p-2 animate-pulse">
-                🔔 {{ pending_count }} <span data-i18n="tasks_badge_pending">Onay Bekleyen İş Var</span>
-            </span>
+        <span class="badge bg-danger p-2 animate-pulse">
+            🔔 {{ pending_count }} <span data-i18n="tasks_badge_pending">Onay Bekleyen İş Var</span>
+        </span>
         {% endif %}
     </div>
 
@@ -44,49 +45,54 @@
             <div class="list-group list-group-flush" id="pendingTasksList">
                 {% set has_pending = false %}
                 {% for task in tasks if task.status == 'WAITING_APPROVAL' %}
-                    {% set has_pending = true %}
-                    <div class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center p-3 task-item-pending" 
-                         data-owner="{{ task.user_email }}">
-                        
-                        <div style="flex-grow: 1;">
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <span class="badge bg-dark border border-secondary text-muted" title="İlgili Hesap">
-                                    <i class="fas fa-inbox"></i> {{ task.user_email }}
-                                </span>
+                {% set has_pending = true %}
+                <div class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center p-3 task-item-pending"
+                    data-owner="{{ task.user_email }}">
 
-                                <h6 class="mb-0 text-warning">{{ task.title }}</h6>
-                                
-                                <span class="badge category-badge 
-                                    {% if task.category == 'Teklif' %}bg-success
-                                    {% elif task.category == 'Şikayet' %}bg-danger
-                                    {% elif task.category == 'Ödeme' %}bg-info
+                    <div style="flex-grow: 1;">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-dark border border-secondary text-muted" title="İlgili Hesap">
+                                <i class="fas fa-inbox"></i> {{ task.user_email }}
+                            </span>
+
+                            <h6 class="mb-0 text-warning">{{ task.title }}</h6>
+
+                            <span class="badge category-badge 
+                                    {% if task.category == 'Teklif' or task.category == 'Proposal' %}bg-success
+                                    {% elif task.category == 'Şikayet' or task.category == 'Complaint' %}bg-danger
+                                    {% elif task.category == 'Ödeme' or task.category == 'Payment' %}bg-info
                                     {% else %}bg-secondary{% endif %}">
-                                    {{ task.category or 'Genel' }}
-                                </span>
-                                {% if task.urgency_score and task.urgency_score >= 80 %}
-                                    <span title="Yüksek Aciliyet (Skor: {{ task.urgency_score }})">🔥</span>
-                                {% endif %}
-                            </div>
-                            <p class="mb-0 small text-muted">
-                                📅 <strong data-i18n="tasks_label_date">Tarih:</strong> {{ task.due_date or 'Belirtilmedi' }} | 
-                                👤 <strong data-i18n="tasks_label_from">Kimden:</strong> {{ task.sender }}
-                            </p>
+                                {{ task.category or 'Genel' }}
+                            </span>
+                            {% if task.urgency_score and task.urgency_score >= 80 %}
+                            <span title="Yüksek Aciliyet (Skor: {{ task.urgency_score }})">🔥</span>
+                            {% endif %}
                         </div>
-                        <div class="d-flex gap-2 align-items-center">
-                            <form action="/ui/task/approve/{{ task._id }}" method="post" class="m-0">
-                                <button type="submit" class="btn btn-sm btn-success px-3">✔️ <span data-i18n="btn_approve">Onayla</span></button>
-                            </form>
-                            <form action="/ui/task/reject/{{ task._id }}" method="post" class="m-0">
-                                <button type="submit" class="btn btn-sm btn-outline-warning px-3">❌ <span data-i18n="btn_reject">Reddet</span></button>
-                            </form>
-                            <form action="/ui/task/delete/{{ task._id }}" method="post" class="m-0" onsubmit="return confirm('Delete this task? / Bu görevi tamamen silmek istediğine emin misin?');">
-                                <button type="submit" class="btn btn-sm btn-danger px-2" title="Görevi Sil">🗑️</button>
-                            </form>
-                        </div>
+                        <p class="mb-0 small text-muted">
+                            📅 <strong data-i18n="tasks_label_date">Tarih:</strong> {{ task.due_date or 'Belirtilmedi'
+                            }} |
+                            👤 <strong data-i18n="tasks_label_from">Kimden:</strong> {{ task.sender }}
+                        </p>
                     </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <form action="/ui/task/approve/{{ task._id }}" method="post" class="m-0">
+                            <button type="submit" class="btn btn-sm btn-success px-3">✔️ <span
+                                    data-i18n="btn_approve">Onayla</span></button>
+                        </form>
+                        <form action="/ui/task/reject/{{ task._id }}" method="post" class="m-0">
+                            <button type="submit" class="btn btn-sm btn-outline-warning px-3">❌ <span
+                                    data-i18n="btn_reject">Reddet</span></button>
+                        </form>
+                        <form action="/ui/task/delete/{{ task._id }}" method="post" class="m-0"
+                            onsubmit="return confirm('Delete this task? / Bu görevi tamamen silmek istediğine emin misin?');">
+                            <button type="submit" class="btn btn-sm btn-danger px-2" title="Görevi Sil">🗑️</button>
+                        </form>
+                    </div>
+                </div>
                 {% endfor %}
-                
-                <div id="noPendingMsg" class="p-4 text-center text-muted italic {% if has_pending %}d-none{% endif %}" data-i18n="tasks_no_pending">
+
+                <div id="noPendingMsg" class="p-4 text-center text-muted italic {% if has_pending %}d-none{% endif %}"
+                    data-i18n="tasks_no_pending">
                     Şu an onay bekleyen veya seçili filtreye uygun bir öneri bulunmuyor.
                 </div>
             </div>
@@ -96,13 +102,13 @@
     <div class="d-flex align-items-center mb-3 justify-content-between">
         <h4 class="mb-0">📅 <span data-i18n="tasks_confirmed_title">Kesinleşmiş İş Programı</span></h4>
     </div>
-    
+
     <div class="table-responsive shadow-sm rounded">
         <table class="table table-dark table-hover mb-0">
             <thead class="table-secondary text-dark">
                 <tr>
                     <th style="width: 50px;">#</th>
-                    <th data-i18n="tasks_col_account">Hesap</th> 
+                    <th data-i18n="tasks_col_account">Hesap</th>
                     <th data-i18n="tasks_col_task">Görev / Etkinlik</th>
                     <th data-i18n="tasks_col_category">Kategori</th>
                     <th data-i18n="tasks_col_contact">İlgili Kişi/Şirket</th>
@@ -113,40 +119,43 @@
             <tbody id="confirmedTasksList">
                 {% set has_confirmed = false %}
                 {% for task in tasks if task.status == 'CONFIRMED' %}
-                    {% set has_confirmed = true %}
-                    <tr class="task-item-confirmed" data-owner="{{ task.user_email }}">
-                        <td><i class="fas fa-check-circle text-success"></i></td>
-                        <td>
-                            <span class="badge bg-dark border border-secondary text-muted" style="font-size: 0.7rem;">
-                                {{ task.user_email.split('@')[0] }}
-                            </span>
-                        </td>
-                        <td>
-                            <strong>{{ task.title }}</strong>
-                            {% if task.urgency_score and task.urgency_score >= 80 %}
-                                <span class="ms-1" title="Kritik İş">🔥</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <span class="badge border 
-                                {% if task.category == 'Teklif' %}border-success text-success
-                                {% elif task.category == 'Şikayet' %}border-danger text-danger
+                {% set has_confirmed = true %}
+                <tr class="task-item-confirmed" data-owner="{{ task.user_email }}">
+                    <td><i class="fas fa-check-circle text-success"></i></td>
+                    <td>
+                        <span class="badge bg-dark border border-secondary text-muted" style="font-size: 0.7rem;">
+                            {{ task.user_email.split('@')[0] }}
+                        </span>
+                    </td>
+                    <td>
+                        <strong>{{ task.title }}</strong>
+                        {% if task.urgency_score and task.urgency_score >= 80 %}
+                        <span class="ms-1" title="Kritik İş">🔥</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge border 
+                                {% if task.category == 'Teklif' or task.category == 'Proposal' %}border-success text-success
+                                {% elif task.category == 'Şikayet' or task.category == 'Complaint' %}border-danger text-danger
                                 {% else %}border-light text-light{% endif %}">
-                                {{ task.category or 'Genel' }}
-                            </span>
-                        </td>
-                        <td><span class="badge bg-secondary">{{ task.sender }}</span></td>
-                        <td>{{ task.due_date }}</td>
-                        <td>
-                            <form action="/ui/task/delete/{{ task._id }}" method="post" class="d-inline" onsubmit="return confirm('Remove this task? / Tamamlanmış bu görevi listeden silmek istiyor musun?');">
-                                <button type="submit" class="btn btn-sm btn-link text-danger p-0" style="text-decoration: none;" data-i18n="btn_delete">Sil</button>
-                            </form>
-                        </td>
-                    </tr>
+                            {{ task.category or 'Genel' }}
+                        </span>
+                    </td>
+                    <td><span class="badge bg-secondary">{{ task.sender }}</span></td>
+                    <td>{{ task.due_date }}</td>
+                    <td>
+                        <form action="/ui/task/delete/{{ task._id }}" method="post" class="d-inline"
+                            onsubmit="return confirm('Remove this task? / Tamamlanmış bu görevi listeden silmek istiyor musun?');">
+                            <button type="submit" class="btn btn-sm btn-link text-danger p-0"
+                                style="text-decoration: none;" data-i18n="btn_delete">Sil</button>
+                        </form>
+                    </td>
+                </tr>
                 {% endfor %}
 
                 <tr id="noConfirmedMsg" class="{% if has_confirmed %}d-none{% endif %}">
-                    <td colspan="7" class="text-center py-4 text-muted" data-i18n="tasks_no_confirmed">Seçili kriterlere uygun kesinleşmiş görev yok.</td>
+                    <td colspan="7" class="text-center py-4 text-muted" data-i18n="tasks_no_confirmed">Seçili kriterlere
+                        uygun kesinleşmiş görev yok.</td>
                 </tr>
             </tbody>
         </table>
@@ -157,7 +166,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="/static/js/translations.js"></script>
-    <script src="/static/js/language_engine.js"></script>
-    <script src="/static/js/tasks.js"></script>
+<script src="/static/js/translations.js"></script>
+<script src="/static/js/language_engine.js"></script>
+<script src="/static/js/tasks.js"></script>
 {% endblock %}
