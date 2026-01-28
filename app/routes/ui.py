@@ -10,7 +10,7 @@ from dotenv import load_dotenv, set_key
 from pydantic import BaseModel
 
 # Veritabanı ve Servisler
-from app.database import mails_col, contacts_col, tasks_col, users_col, accounts_col
+from app.database import mails_col, contacts_col, tasks_col, users_col, accounts_col, tags_col
 from app.services.mail_sender import send_gmail_via_user
 from app.services.reply_generator import generate_reply, generate_decision_reply
 from app.core.security import encrypt_password, verify_master_password, hash_master_password, decrypt_password
@@ -101,7 +101,7 @@ async def run_setup(full_name: str = Form(...), company_name: str = Form(...), e
         set_key(ENV_PATH, "MASTER_PASSWORD", hashed_master)
         set_key(ENV_PATH, "MONGO_URI", "mongodb://localhost:27017/")
         set_key(ENV_PATH, "DB_NAME", "mail_asistani_db")
-        set_key(ENV_PATH, "OLLAMA_MODEL", "llama3.2")
+        set_key(ENV_PATH, "OLLAMA_MODEL", "mistral")
         
         user_data = {
             "full_name": full_name, "company_name": company_name, "email": email,
@@ -119,6 +119,16 @@ async def run_setup(full_name: str = Form(...), company_name: str = Form(...), e
         }
         if not accounts_col.find_one({"email": email}):
             accounts_col.insert_one(first_account)
+
+        # --- VARSAYILAN ETİKETLERİ EKLE (JSON'dan) ---
+        if tags_col.count_documents({}) == 0:
+            import json
+            defaults_path = os.path.join(app_dir, "defaults.json")
+            if os.path.exists(defaults_path):
+                with open(defaults_path, "r", encoding="utf-8") as f:
+                    default_tags = json.load(f)
+                    if default_tags:
+                        tags_col.insert_many(default_tags)
 
         return RedirectResponse(url="/login?msg=Basarili", status_code=303)
     except Exception as e: return RedirectResponse(url=f"/setup?error={str(e)}", status_code=303)
@@ -223,7 +233,19 @@ def inbox(request: Request):
     }).sort("created_at", -1))
     
     for m in waiting_mails: m["_id"] = str(m["_id"])
-    return templates.TemplateResponse("dashboard.html", {"request": request, "mails": waiting_mails, "user": user})
+
+    # YENİ: Etiketleri (Tags) çek ve map'le
+    # Mail'lerde sadece "slug" tutuyoruz. Ekranda rengini ve ismini göstermek için
+    # tüm tagleri çekip bir sözlük (dictionary) yapıyoruz.
+    all_tags = list(tags_col.find({}))
+    tags_map = {t["slug"]: t for t in all_tags}
+
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request, 
+        "mails": waiting_mails, 
+        "user": user,
+        "tags_map": tags_map # Template'e gönderiyoruz
+    })
 
 # --- TASLAKLAR SAYFASI (Sadece WRITER'dan gelen yarım kalmış mailler) ---
 @router.get("/ui/drafts", response_class=HTMLResponse)
@@ -476,7 +498,89 @@ async def contact_detail(request: Request, email: str):
 @router.get("/ui/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
     user = users_col.find_one({"is_active": True})
-    return templates.TemplateResponse("settings.html", {"request": request, "user": user})
+    user = users_col.find_one({"is_active": True})
+    tags = list(tags_col.find({}).sort("created_at", 1))
+    return templates.TemplateResponse("settings.html", {"request": request, "user": user, "tags": tags})
+
+# --- TAG YÖNETİMİ (YENİ) ---
+@router.post("/ui/settings/tags/add")
+async def add_tag(name: str = Form(...), color: str = Form(...), description: str = Form(...)):
+    user = users_col.find_one({"is_active": True})
+    
+    # Otomatik slug oluşturma (Örn: "Acil İşler" -> "acil-isler")
+    slug = name.strip().lower().replace(" ", "-").replace("ı", "i").replace("ğ", "g").replace("ü", "u").replace("ş", "s").replace("ö", "o").replace("ç", "c")
+    slug = re.sub(r'[^a-z0-9-]', '', slug)
+    
+    # Aynı slug varsa ekleme
+    if tags_col.find_one({"slug": slug}):
+        return RedirectResponse(url="/ui/settings?error=error_tag_exists", status_code=303)
+
+
+    new_tag = {
+        "name": name,
+        "slug": slug,
+        "color": color,
+        "description": description,
+        "created_at": datetime.now()
+    }
+    tags_col.insert_one(new_tag)
+
+    # --- JSON DOSYASINI GÜNCELLE (PERSISTENT DEFAULT) ---
+    import json
+    defaults_path = os.path.join(app_dir, "defaults.json")
+    
+    # Mevcut listeyi oku
+    current_defaults = []
+    if os.path.exists(defaults_path):
+        try:
+            with open(defaults_path, "r", encoding="utf-8") as f:
+                current_defaults = json.load(f)
+        except: pass
+    
+    # Eğer bu slug zaten dosyada yoksa ekle
+    if not any(t.get("slug") == slug for t in current_defaults):
+        # _id ve datetime objesi JSON'a gitmez, temiz kopya oluştur
+        json_tag = {
+            "name": name, 
+            "slug": slug, 
+            "color": color, 
+            "description": description
+        }
+        current_defaults.append(json_tag)
+        
+        # Dosyayı güncelle
+        with open(defaults_path, "w", encoding="utf-8") as f:
+            json.dump(current_defaults, f, ensure_ascii=False, indent=4)
+
+    return RedirectResponse(url="/ui/settings?msg=msg_tag_added", status_code=303)
+
+@router.post("/ui/settings/tags/delete/{tag_id}")
+async def delete_tag(tag_id: str):
+    # Tag silindiğinde, maillerdeki referanslar (slug) kalır.
+    # Ancak Dashboard'da tags_map içinde bulunamayacağı için sessizce yok sayılır (Soft fail).
+    tags_col.delete_one({"_id": ObjectId(tag_id)})
+    return RedirectResponse(url="/ui/settings?msg=msg_tag_deleted", status_code=303)
+
+@router.post("/ui/settings/tags/update/{tag_id}")
+async def update_tag(tag_id: str, name: str = Form(...), color: str = Form(...), description: str = Form(...)):
+    user = users_col.find_one({"is_active": True})
+    
+    # Yeni slug oluştur (İsim değişmiş olabilir)
+    slug = name.strip().lower().replace(" ", "-").replace("ı", "i").replace("ğ", "g").replace("ü", "u").replace("ş", "s").replace("ö", "o").replace("ç", "c")
+    slug = re.sub(r'[^a-z0-9-]', '', slug)
+
+    # Güncelle
+    tags_col.update_one(
+        {"_id": ObjectId(tag_id)},
+        {"$set": {
+            "name": name,
+            "slug": slug,
+            "color": color,
+            "description": description,
+            "updated_at": datetime.now()
+        }}
+    )
+    return RedirectResponse(url="/ui/settings?msg=msg_tag_updated", status_code=303)
 
 # --- WRITER (YENİ MAIL OLUŞTURMA) ---
 @router.get("/ui/writer", response_class=HTMLResponse)

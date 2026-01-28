@@ -137,13 +137,19 @@ graph TD
 - AI, mailleri analiz eder ve içindeki toplantı, fatura ödeme gibi görevleri JSON formatında çıkararak Görevler paneline ekler.
 - "Kabul Et" veya "Reddet" butonları ile AI, mailin içeriğini seçiminize göre (Resmi/Samimi) yeniden yazar.
 
+
+5. **🏷️ Dinamik Etiketleme Sistemi**
+- **Kişiselleştirilebilir:** Ayarlar menüsünden "Fatura", "Acil", "İK" gibi kendi etiketlerinizi oluşturun.
+- **Otomatik Algılama:** AI, gelen maili analiz eder ve tanımladığınız etiketlerden en uygun olanı (veya olanları) seçip mailinize yapıştırır.
+- **Görsel Takip:** Dashboard üzerinde renkli rozetlerle (badges) hangi mailin neyle ilgili olduğunu tek bakışta anlayın.
+
 ---
 
 ## 🛠️ Kurulum
  ## Gereksinimler
 - Python 3.10+
 - MongoDB
-- Ollama
+- Ollama (Mistral Modeli)
 - FFmpeg
 
 ## 1: Depoyu Klonlayın ve Ortamı Kurun
@@ -170,7 +176,7 @@ graph TD
 ## 4: AI Modelini Çekin
 - Ollama kurulduktan sonra terminale şu komutu girerek modelin inmesini bekleyin
 ```bash
-ollama pull llama3.2
+ollama pull mistral
 ```
 ## 5: Ses Modelini İndirin
 - Sesli komut özelliklerinin hızlı çalışması için Whisper modelini önceden indirin. (Bu işlem yaklaşık 1.5 GB veri indirir, lütfen "İŞLEM TAMAMLANDI" yazısını görene kadar bekleyin):
@@ -196,10 +202,10 @@ Proje, verisel bütünlüğü korumak için NoSQL yapısını kullanır. Aşağ�
 
 | Koleksiyon | Kayıt Türü | Kritik Alanlar (Fields) | Açıklama |
 | :--- | :--- | :--- | :--- |
-| **mails** | `Dinamik` | `subject`, `body`, `type` ('inbox'/'outbound'), `status` ('WAITING'/'DRAFT'/'SENT'), `reply_draft`, `draft_history` | **Sistemin Kalbi.** Hem gelen kutusu maillerini hem de Writer ile yazılan yeni taslakları tutar. `type` alanı, mailin gelen kutusunda mı yoksa taslaklarda mı görüneceğini belirler. |
+| **mails** | `Dinamik` | `message_id`, `tags`, `subject`, `body`, `type`, `status` | **Sistemin Kalbi.** Gelen mailler (`message_id` ile tekilleştirilmiş) ve AI tarafından atanan `tags` (etiketler) burada tutulur. |
 | **users** | `Sabit` | `email`, `master_password` (Hash), `full_name`, `company_name`, `created_at` | Panele giriş yapabilen ana yönetici kullanıcı bilgileri. |
 | **accounts** | `Yapılandırma` | `email`, `password` (AES Şifreli), `provider`, `signature` | **Çoklu Hesap Desteği.** Mail göndermek için kullanılan SMTP hesapları ve her hesaba özel imza ayarları burada saklanır. |
-| **contacts** | `İlişkisel` | `email`, `name`, `ai_summary`, `last_contacted`, `interaction_count` | **CRM Hafızası.** Kişilerle olan geçmiş yazışmaların AI tarafından çıkarılmış özetleri ve iletişim sıklığı burada tutulur. |
+| **tags** | `Yapılandırma` | `user_id`, `name`, `slug`, `color`, `description` | **Etiket Sistemi.** Kullanıcının tanımladığı dinamik etiketler, renk kodları ve AI'nın bunları seçmesi için gereken açıklamalar. |
 | **tasks** | `Dinamik` | `title`, `due_date`, `urgency_score` (1-10), `source_mail_id`, `status` | AI'nın maillerden ayıkladığı "Fatura Öde", "Toplantı Yap" gibi aksiyon öğeleri. |
 | **settings** | `Config` | `ollama_model`, `voice_speed`, `theme`, `check_interval` | Uygulamanın genel davranış ayarları (Tema, AI Modeli, Tarama Sıklığı vb.). |
 
@@ -255,6 +261,7 @@ Proje, verisel bütünlüğü korumak için NoSQL yapısını kullanır. Aşağ�
 │   │   |    ├──📄 home.js
 │   │   |    ├──📄 script.js
 |   |   |    ├──📄 search.js
+|   |   |    ├──📄 tags.js            # (YENİ) Dinamik Etiket Renklendirme
 |   |   |    ├──📄 tasks.js
 |   |   |    ├──📄 voice.js
 |   |   |    └──📄 writer.js

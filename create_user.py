@@ -48,6 +48,26 @@ def create_admin_user():
     )
     
     print(f"\n✅ Başarılı! Bilgiler hem .env dosyasına hem de MongoDB'ye işlendi.")
+    
+    # 5. VARSAYILAN ETİKETLERİ EKLE (Eğer yoksa)
+    from app.database import tags_col 
+    if tags_col.count_documents({}) == 0:
+        import json
+        
+        # Dosya yolu: create_user.py proje kök dizininde, 
+        # defaults.json ise app/ klasörünün içinde.
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        defaults_path = os.path.join(base_dir, "app", "defaults.json")
+
+        if os.path.exists(defaults_path):
+            with open(defaults_path, "r", encoding="utf-8") as f:
+                default_tags = json.load(f)
+                if default_tags:
+                    tags_col.insert_many(default_tags)
+                    print("🏷️  Varsayılan etiketler (defaults.json) yüklendi.")
+        else:
+             print("⚠️ defaults.json bulunamadı, etiket eklenmedi.")
+
     print("🚀 Şimdi 'python -m app.main' yazarak sistemi açabilirsin.")
 
 if __name__ == "__main__":

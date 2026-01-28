@@ -30,6 +30,10 @@ try:
 
     # Bağlı olan mail hesaplarının tutulacağı collection
     accounts_col = db.accounts
+    
+    # Kullanıcı tanımlı etiketlerin (Tags) tutulduğu collection
+    # {name, slug, color, description, user_id}
+    tags_col = db.tags
 
     # AI görevlerinin tutulduğu collection
     tasks_col = db.tasks

@@ -10,9 +10,9 @@ load_dotenv()
 # Önce .env'e bakar, bulamazsa ikinci parametreyi (varsayılanı) kullanır.
 # Bu sayede "URL is not set" hatası almazsın.
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2") # Veya qwen2.5
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "mistral") # Veya qwen2.5
 
-def ask_llama(prompt: str) -> str:
+def ask_llm(prompt: str, json_mode: bool = False) -> str:
     """
     Ollama LLM'e prompt gönderir.
     SADECE model cevabını string olarak döndürür.
@@ -40,6 +40,7 @@ def ask_llama(prompt: str) -> str:
                 "model": OLLAMA_MODEL,
                 "prompt": prompt,
                 "stream": False,
+                "format": "json" if json_mode else None,
                 # Temperature 0: Modelin halüsinasyon görmesini engeller, mantıklı cevap verir.
                 "options": {
                     "temperature": 0.0
