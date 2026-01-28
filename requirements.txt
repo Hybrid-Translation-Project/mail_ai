@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-pymongo
+pymongo[srv]>=4.7
 python-dotenv
 requests
 python-multipart
@@ -10,3 +10,4 @@ jinja2
 pydantic
 email-validator
 faster-whisper
+sentence-transformers

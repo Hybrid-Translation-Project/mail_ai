@@ -1,5 +1,3 @@
-// app/static/js/drafts.js
-
 async function deleteDraft(mailId) {
     // Kullanıcıya son bir şans verelim
     const confirmation = confirm("Bu taslağı silmek istediğinize emin misiniz? (Bu işlem geri alınamaz)");

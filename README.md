@@ -28,55 +28,93 @@ Gelen e-postaları yapay zeka ile analiz eden, yanıt taslakları hazırlayan, s
 
 ## 🧠 Algoritma ve Çalışma Mantığı
 - Proje, veritabanı kirliliğini önlemek ve kullanıcı deneyimini artırmak için İki Ana Akış ve bir Sesli Kontrol Katmanı üzerine kuruludur.
+
 ```mermaid
 graph TD
-    subgraph "Backend Core (Ana Sistem)"
-        A[FastAPI Server] -->|Veri| DB[(MongoDB)]
-        A -->|AI Metin| O["Ollama / Mistral"]
-        A -->|AI Ses| W[Faster-Whisper]
+    %% --- BAŞLANGIÇ VE KURULUM ---
+    Start(("Başlat: application_run.py")) --> CheckModels{"Modeller Var mı?"}
+    CheckModels -- Hayır --> Download["download_model.py: Whisper & MiniLM İndir"]
+    CheckModels -- Evet --> InitDB["database.py: init_db"]
+    Download --> InitDB
+    
+    InitDB --> CheckIndex{"Vector Index Var mı?"}
+    CheckIndex -- Hayır --> CreateIndex["MongoDB Atlas: Search Index Oluştur"]
+    CheckIndex -- Evet --> StartServer["FastAPI Server Başlat: main.py"]
+    CreateIndex --> StartServer
+
+    %% --- KULLANICI GİRİŞİ ---
+    StartServer --> UserAccess["Kullanıcı Tarayıcıyı Açar"]
+    UserAccess --> IsConfigured{"Setup Yapıldı mı?"}
+    IsConfigured -- Hayır --> SetupPage["Setup Ekranı"]
+    SetupPage --> SaveConfig["Verileri Şifrele ve .env/.db Kaydet"]
+    IsConfigured -- Evet --> LoginPage["Login Ekranı"]
+    SaveConfig --> LoginPage
+    LoginPage --> AuthCheck{"Şifre Doğru mu?"}
+    AuthCheck -- Hayır --> LoginError["Hata Göster"]
+    AuthCheck -- Evet --> Dashboard["🖥️ DASHBOARD & UI"]
+
+    %% --- ARKA PLAN SERVİSLERİ (LOOP) ---
+    subgraph Background_Service [Arka Plan Otomasyonu]
+        Scheduler["APScheduler"] -->|Her 60sn| MailListener["mail_listener.py"]
+        MailListener --> ConnectIMAP["IMAP: Mailleri Kontrol Et"]
+        ConnectIMAP --> NewMail{"Yeni Mail Var mı?"}
+        NewMail -- Yok --> Sleep["Bekle"]
+        NewMail -- Var --> FetchBody["Mail İçeriğini Çek"]
         
-        subgraph "Bağlantı Katmanı"
-            A -->|Hesap 1| ACC1["Gmail 1 (SMTP/IMAP)"]
-            A -->|Hesap 2| ACC2["Gmail 2 (SMTP/IMAP)"]
-            ACC1 & ACC2 -.->|Birleştirilmiş| U_INBOX[Unified Inbox]
-        end
+        FetchBody --> AI_Process_1["AI: Sınıflandırma & Görev Çıkarma"]
+        FetchBody --> AI_Process_2["AI: Cevap Taslağı Oluştur"]
+        
+        %% YENİ EKLENEN KISIM: VEKTÖRLEME
+        FetchBody --> Embedder_BG["embeddings.py: Vektör Oluştur"]
+        Embedder_BG --> VectorData["Sayısal Vektör Verisi"]
+        
+        AI_Process_1 --> MergeData
+        AI_Process_2 --> MergeData
+        VectorData --> MergeData["Verileri Birleştir"]
+        
+        MergeData --> SaveDB_BG[("MongoDB: Kaydet ve İndeksle")]
     end
 
-    subgraph "Akış 1: Gelen Kutusu & AI Analiz"
-        M[Mail Gelir] --> DETECT{AI Analizi}
-        DETECT -- "İş/Tarih Var" --> TASK[Görev Yöneticisine Ekle]
-        DETECT -- "Normal Mail" --> DRAFT_GEN[Cevap Taslağı Üret]
+    %% --- KULLANICI ETKİLEŞİMLERİ ---
+    subgraph User_Actions [Kullanıcı Aksiyonları]
+        Dashboard --> SearchAction["🔍 Arama Yap"]
+        Dashboard --> VoiceAction["🎤 Sesli Komut"]
+        Dashboard --> ReviewAction["📝 Mail İncele/Düzenle"]
+        Dashboard --> WriteAction["✍️ Yeni Mail Yaz"]
         
-        DRAFT_GEN --> UI_INBOX[Arayüz: Gelen Kutusu]
-        UI_INBOX --> ACT1{Kullanıcı Kararı}
-        ACT1 -- "Onayla" --> SEND1[Maili Gönder]
-        ACT1 -- "Reddet/Yenile" --> REGEN[Yeniden Yaz]
+        %% ARAMA AKIŞI
+        SearchAction --> API_Search["/ui/search-api/"]
+        API_Search --> Embedder_Search["embeddings.py: Sorguyu Vektörle"]
+        Embedder_Search --> VectorQuery["Sorgu Vektörü"]
+        VectorQuery --> DB_VectorSearch[("MongoDB: Vector Search")]
+        DB_VectorSearch --> ReturnResults["Sonuçları Listele"]
+        
+        %% SES AKIŞI
+        VoiceAction --> RecordAudio["Ses Kaydet JS"]
+        RecordAudio --> API_Voice["/voice/transcribe"]
+        API_Voice --> WhisperModel["AI: Whisper Ses->Metin"]
+        WhisperModel --> ActionRouter{"Komut mu Metin mi?"}
+        ActionRouter -- Komut --> ExecuteCmd["Komutu Çalıştır"]
+        ActionRouter -- Metin --> FillText["Editöre Yaz"]
+
+        %% YAZMA/GÖNDERME AKIŞI
+        ReviewAction --> EditorPage["Editor Sayfası"]
+        WriteAction --> WriterPage["Writer Sayfası"]
+        
+        EditorPage --> SaveDraft["/save-draft: Kaydet"]
+        WriterPage --> GenerateAI["/writer/generate: AI ile Yaz"]
+        
+        EditorPage --> ApproveSend["Onayla ve Gönder"]
+        WriterPage --> SendMail["Gönder"]
+        
+        ApproveSend --> SMTP_Service["mail_sender.py: SMTP"]
+        SendMail --> SMTP_Service
+        SMTP_Service --> UpdateStatus[("MongoDB: Status=SENT")]
     end
 
-    subgraph "Akış 2: Writer (Yazar Modu)"
-        NEW[Yeni Mail Başlat] --> INPUT{Giriş Yöntemi}
-        INPUT -- "Klavye" --> TYPE[Elle Yaz]
-        INPUT -- "Mikrofon" --> VOICE_FLOW
-        INPUT -- "AI Prompt" --> OLLAMA_GEN[AI Taslak Üret]
-
-        TYPE & VOICE_FLOW & OLLAMA_GEN --> MERGE[Editör Alanı]
-        MERGE --> AS["Auto-Save (1 sn)"]
-        AS --> DB_DRAFT[Veritabanı: DRAFT]
-        DB_DRAFT --> LIST((Taslaklar Sayfası))
-        LIST --> PRE_SEND[Onay Modalı] --> SEND2[Maili Gönder]
-    end
-
-    subgraph "Akış 3: Sesli Komut Modülü"
-        MIC[Mikrofon] -->|Ses Verisi| LOCK["Buton Kilitle (Processing)"]
-        LOCK --> W
-        W -->|Metin Çıktısı| FILTER{Analiz & Filtre}
-        
-        FILTER -- "Halüsinasyon" --> IGNORE[Yoksay]
-        FILTER -- "Komut (Gönder/Sil)" --> FUNC[Fonksiyonu Çalıştır]
-        FILTER -- "Dikte (Yazı)" --> FOCUS[Odaklanılan Kutuya Yaz]
-        
-        FUNC & FOCUS --> UNLOCK[Kilidi Aç]
-    end
+    %% BAĞLANTILAR
+    SaveDB_BG -.-> Dashboard
+    UpdateStatus -.-> HistoryPage["History Sayfası"]
 ```
 ---
 
@@ -140,7 +178,7 @@ graph TD
 ```bash
 ollama pull mistral
 ```
-## 5: Ses Modelini (Whisper) İndirin
+## 5: Ses Modelini İndirin
 - Sesli komut özelliklerinin hızlı çalışması için Whisper modelini önceden indirin. (Bu işlem yaklaşık 1.5 GB veri indirir, lütfen "İŞLEM TAMAMLANDI" yazısını görene kadar bekleyin):
 ```bash
 python download_model.py
@@ -177,13 +215,15 @@ Proje, verisel bütünlüğü korumak için NoSQL yapısını kullanır. Aşağ�
 📁 Dosya Yapısı
 
 ```
-MAIL_AI/
+📂MAIL_AI/
 ├── 📂 app/                     # Uygulama Ana Dizini
 │   ├── 📂 core/                # Çekirdek Sistem Bileşenleri
 │   │   └── 📄 security.py      # Şifreleme ve Güvenlik İşlemleri
 │   ├── 📂 models/              # Veri Modelleri (Şemalar)
 │   │   ├── 📄 contact_model.py # Kişi/Rehber Modeli
 │   │   └── 📄 mail_model.py    # Mail Veri Yapısı
+│   ├── 📂 rag/              # mini model
+│   │   └── 📄 embeddings.py # semantik arama model
 │   ├── 📂 routes/              # API ve Web Yönlendirmeleri
 │   │   ├── 📄 __init__.py
 │   │   ├── 📄 approval.py      # Onay Mekanizması Rotaları
