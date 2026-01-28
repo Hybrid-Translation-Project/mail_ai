@@ -15,7 +15,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
 
-ENV_PATH = os.path.join(BASE_DIR, ".env")
+# .env dosyası projenin ana dizininde (app klasörünün bir üstünde)
+ROOT_DIR = os.path.dirname(BASE_DIR)
+ENV_PATH = os.path.join(ROOT_DIR, ".env")
 
 # .env dosyasını yükle
 load_dotenv(ENV_PATH)

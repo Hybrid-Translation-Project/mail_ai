@@ -1,6 +1,6 @@
 import json
 import re
-from app.services.ollama_service import ask_llama
+from app.services.ollama_service import ask_llm
 from app.utils.prompt_templates import TONE_INSTRUCTIONS, REPLY_PROMPT_TEMPLATE
 
 def extract_json_safe(text: str) -> dict:
@@ -42,7 +42,7 @@ def generate_reply(mail_text: str, tone: str = "formal") -> str:
         mail_text=mail_text
     )
 
-    reply = ask_llama(prompt)
+    reply = ask_llm(prompt)
     return _clean_reply(reply)
 
 def generate_decision_reply(mail_text: str, decision: str, tone: str = "formal") -> str:
@@ -78,7 +78,7 @@ def generate_decision_reply(mail_text: str, decision: str, tone: str = "formal")
     - Gereksiz açıklamalar veya 'İşte cevabınız' gibi girişler yapma.
     """
 
-    reply = ask_llama(prompt)
+    reply = ask_llm(prompt)
     return _clean_reply(reply)
 
 def analyze_email_for_task(mail_text: str, sender: str = "") -> dict:
@@ -102,7 +102,7 @@ def analyze_email_for_task(mail_text: str, sender: str = "") -> dict:
     {mail_text}
     """
     
-    response = ask_llama(prompt)
+    response = ask_llm(prompt)
     
     # İŞTE BURASI: Hata veren json.loads yerine güvenli fonksiyonu kullanıyoruz
     return extract_json_safe(response)

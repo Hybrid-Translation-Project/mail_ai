@@ -30,6 +30,10 @@ try:
     # Bağlı olan mail hesaplarının (Gmail vb.) tutulacağı collection (YENİ EKLENDİ)
     # Bu koleksiyon; İş, Kişisel vb. tüm ek hesapları tutacak.
     accounts_col = db.accounts
+    
+    # Kullanıcı tanımlı etiketlerin (Tags) tutulduğu collection
+    # {name, slug, color, description, user_id}
+    tags_col = db.tags
 
     # AI tarafından maillerden çıkarılan görevlerin (To-Do) tutulduğu collection
     tasks_col = db.tasks

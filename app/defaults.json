@@ -1,0 +1,116 @@
+[
+    {
+        "name": "URGENT",
+        "slug": "urgent",
+        "color": "#e12d2d",
+        "description": "Critical issues, immediate action, crisis moments."
+    },
+    {
+        "name": "HR & CV",
+        "slug": "hr_cv",
+        "color": "#571782",
+        "description": "Job applications, CVs, interviews, personnel matters."
+    },
+    {
+        "name": "NOTIFICATION",
+        "slug": "notification",
+        "color": "#b7bbbd",
+        "description": "Automated alerts, newsletters, system messages."
+    },
+    {
+        "name": "PROPOSAL",
+        "slug": "proposal",
+        "color": "#4ad219",
+        "description": "Price quotes, sales offers, customer requests."
+    },
+    {
+        "name": "MEETING",
+        "slug": "meeting",
+        "color": "#9b59b6",
+        "description": "Meeting invites, calendar events, Zoom links."
+    },
+    {
+        "name": "LOGISTICS",
+        "slug": "logistics",
+        "color": "#e67e22",
+        "description": "Shipping, delivery updates, tracking numbers, cargo."
+    },
+    {
+        "name": "SECURITY",
+        "slug": "security",
+        "color": "#c0392b",
+        "description": "Passwords, security alerts, 2FA."
+    },
+    {
+        "name": "TRAVEL",
+        "slug": "travel",
+        "color": "#3498db",
+        "description": "Travel, flights, hotels, holidays."
+    },
+    {
+        "name": "Yazılım & DevOps",
+        "slug": "devops",
+        "color": "#34495e",
+        "description": "Jira görevleri, GitHub bildirimleri, sunucu alarmları ve CI/CD raporları."
+    },
+    {
+        "name": "PERSONAL",
+        "slug": "personal",
+        "color": "#e91e63",
+        "description": "Personal emails, family, friends, non-work."
+    },
+    {
+        "name": "NEWSLETTER",
+        "slug": "newsletter",
+        "color": "#7f8c8d",
+        "description": "Newsletters, daily digests, subscriptions."
+    },
+    {
+        "name": "SOCIAL MEDIA",
+        "slug": "social_media",
+        "color": "#1abc9c",
+        "description": "Social media notifications, LinkedIn, Twitter, Instagram."
+    },
+    {
+        "name": "FINANCE",
+        "slug": "finance",
+        "color": "#3498db",
+        "description": "Invoices, bank statements, receipts, payments."
+    },
+    {
+        "name": "TASK TRACKING",
+        "slug": "task_tracking",
+        "color": "#3498db",
+        "description": "General business emails, process tracking."
+    },
+    {
+        "name": "INCIDENT",
+        "slug": "incident",
+        "color": "#ffcb5c",
+        "description": "Production incidents, service disruptions, ongoing technical issues."
+    },
+    {
+        "name": "WARNING / PERFORMANCE",
+        "slug": "warning--performance",
+        "color": "#ff5900",
+        "description": "Performance degradation, warnings, threshold alerts."
+    },
+    {
+        "name": "SUPPORT / CUSTOMER",
+        "slug": "support--customer",
+        "color": "#8c00a8",
+        "description": "Customer support requests, helpdesk tickets, user issues."
+    },
+    {
+        "name": "ANNOUNCEMENT / INFO",
+        "slug": "announcement--info",
+        "color": "#1e567b",
+        "description": "Announcements, informational messages, FYI emails."
+    },
+    {
+        "name": "SPAM / PROMOTION",
+        "slug": "spam--promotion",
+        "color": "#9c9c9c",
+        "description": "Promotions, marketing emails, unsolicited content."
+    }
+]

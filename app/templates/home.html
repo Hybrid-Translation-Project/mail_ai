@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="/static/css/home.css">
+<link rel="stylesheet" href="/static/css/home.css">
 {% endblock %}
 
 {% block content %}
@@ -9,8 +9,8 @@
     <div class="welcome-section mb-4">
         <h1><span data-i18n="home_welcome">Merhaba</span> {{ user.full_name if user else 'Kullanıcı' }}, 👋</h1>
         <p class="text-muted">
-            <span data-i18n="home_intro_start">İşte bugünün özeti ve AI asistanının</span> 
-            {{ user.company_name if user else 'şirketin' }} 
+            <span data-i18n="home_intro_start">İşte bugünün özeti ve AI asistanının</span>
+            {{ user.company_name if user else 'şirketin' }}
             <span data-i18n="home_intro_end">için notları.</span>
         </p>
     </div>
@@ -50,45 +50,48 @@
             <div class="content-block">
                 <div class="block-header">
                     <h4>🔥 <span data-i18n="home_critical_header">Kritik Program</span></h4>
-                    <a href="/ui/tasks" class="btn btn-sm btn-outline-primary" data-i18n="home_btn_see_all">Tümünü Gör</a>
+                    <a href="/ui/tasks" class="btn btn-sm btn-outline-primary" data-i18n="home_btn_see_all">Tümünü
+                        Gör</a>
                 </div>
                 <div class="task-list">
                     {% if urgent_tasks %}
-                        {% for task in urgent_tasks %}
-                        <div class="task-item d-flex align-items-center justify-content-between p-3 border-bottom">
-                            <div class="d-flex align-items-center">
-                                <div class="task-date me-3 text-center" style="min-width: 80px;">
-                                    <small class="d-block text-muted">{{ task.due_date or 'Yakında' }}</small>
-                                </div>
-                                <div class="task-info">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="category-dot 
-                                            {% if task.category == 'Teklif' %}bg-success
-                                            {% elif task.category == 'Şikayet' %}bg-danger
-                                            {% elif task.category == 'Ödeme' %}bg-info
-                                            {% else %}bg-secondary{% endif %}">
-                                        </span>
-                                        <strong>{{ task.title }}</strong>
-                                        {% if task.urgency_score and task.urgency_score >= 80 %}
-                                            <span class="animate-flicker">🔥</span>
-                                        {% endif %}
-                                    </div>
-                                    <small class="text-muted">{{ task.sender }}</small>
-                                </div>
+                    {% for task in urgent_tasks %}
+                    <div class="task-item d-flex align-items-center justify-content-between p-3 border-bottom">
+                        <div class="d-flex align-items-center">
+                            <div class="task-date me-3 text-center" style="min-width: 80px;">
+                                <small class="d-block text-muted">{{ task.due_date or 'Yakında' }}</small>
                             </div>
-                            <div class="task-status">
-                                <span class="badge {% if task.urgency_score and task.urgency_score >= 80 %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                            <div class="task-info">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="category-dot 
+                                            {% if task.category == 'Teklif' or task.category == 'Proposal' %}bg-success
+                                            {% elif task.category == 'Şikayet' or task.category == 'Complaint' %}bg-danger
+                                            {% elif task.category == 'Ödeme' or task.category == 'Payment' %}bg-info
+                                            {% else %}bg-secondary{% endif %}">
+                                    </span>
+                                    <strong>{{ task.title }}</strong>
                                     {% if task.urgency_score and task.urgency_score >= 80 %}
-                                        <span data-i18n="badge_critical">KRİTİK</span>
-                                    {% else %}
-                                        <span data-i18n="badge_important">ÖNEMLİ</span>
+                                    <span class="animate-flicker">🔥</span>
                                     {% endif %}
-                                </span>
+                                </div>
+                                <small class="text-muted">{{ task.sender }}</small>
                             </div>
                         </div>
-                        {% endfor %}
+                        <div class="task-status">
+                            <span
+                                class="badge {% if task.urgency_score and task.urgency_score >= 80 %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                {% if task.urgency_score and task.urgency_score >= 80 %}
+                                <span data-i18n="badge_critical">KRİTİK</span>
+                                {% else %}
+                                <span data-i18n="badge_important">ÖNEMLİ</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
                     {% else %}
-                        <p class="text-muted p-3 text-center" data-i18n="home_no_urgent_tasks">Şu an acil bir görev bulunmuyor.</p>
+                    <p class="text-muted p-3 text-center" data-i18n="home_no_urgent_tasks">Şu an acil bir görev
+                        bulunmuyor.</p>
                     {% endif %}
                 </div>
             </div>
@@ -97,21 +100,23 @@
         <div class="col-md-4">
             <div class="content-block ai-insight-block">
                 <h4>🤖 <span data-i18n="home_ai_title">AI Asistanı</span></h4>
-                
+
                 <div class="ai-note">
                     <p>
-                        "{{ user.company_name if user else 'Şirket' }} <span data-i18n="home_ai_msg_1">verilerine göre bugün bekleyen</span> 
-                        <strong>{{ stats.pending_mails }}</strong> 
+                        "{{ user.company_name if user else 'Şirket' }} <span data-i18n="home_ai_msg_1">verilerine göre
+                            bugün bekleyen</span>
+                        <strong>{{ stats.pending_mails }}</strong>
                         <span data-i18n="home_ai_msg_2">önemli mailin var. İncelemek ister misin?</span>"
                     </p>
                     <a href="/ui" class="btn btn-sm btn-primary" data-i18n="home_btn_go_inbox">Gelen Kutusuna Git</a>
                 </div>
-                
+
                 <div class="ai-note mt-3">
                     <p>
-                        "<span data-i18n="home_ai_msg_3">En son</span> 
-                        <strong>{{ stats.total_contacts }}</strong> 
-                        <span data-i18n="home_ai_msg_4">farklı şirketle etkileşim kurduk. Şirket hafızası güncel görünüyor.</span>"
+                        "<span data-i18n="home_ai_msg_3">En son</span>
+                        <strong>{{ stats.total_contacts }}</strong>
+                        <span data-i18n="home_ai_msg_4">farklı şirketle etkileşim kurduk. Şirket hafızası güncel
+                            görünüyor.</span>"
                     </p>
                 </div>
             </div>
@@ -123,7 +128,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="/static/js/translations.js"></script>
-    <script src="/static/js/language_engine.js"></script>
-    <script src="/static/js/home.js"></script>
+<script src="/static/js/translations.js"></script>
+<script src="/static/js/language_engine.js"></script>
+<script src="/static/js/home.js"></script>
 {% endblock %}

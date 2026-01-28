@@ -145,7 +145,7 @@ const translations = {
         "btn_view_history": "Geçmişi Gör",
         "contacts_no_results": "Kriterlere uygun kişi bulunamadı.",
         "badge_general": "Genel",
-        
+
         "contact_mail_history": "Mail Geçmişi",
         "contact_no_history": "Bu kişiyle henüz bir mail geçmişi bulunmuyor.",
         "contact_ai_notes_title": "AI Şirket Notları",
@@ -208,6 +208,22 @@ const translations = {
         "settings_label_app_pass": "Gmail Uygulama Şifresi (16 Haneli)",
         "btn_update_api": "API Anahtarını Güncelle",
 
+        "settings_tags_header": "Etiket Yönetimi",
+        "settings_tags_desc": "AI'nın maillerinizi otomatik olarak etiketlemesi için aşağıdan kategoriler oluşturun.",
+        "settings_tags_empty": "Henüz hiç etiket tanımlanmamış. Aşağıdan ilk etiketinizi oluşturun.",
+        "settings_tags_add_header": "Yeni Etiket Ekle",
+        "settings_tags_label_name": "Etiket Adı",
+        "settings_tags_label_color": "Renk Seçin",
+        "settings_tags_label_desc": "Açıklama (AI Kriteri)",
+        "settings_tags_placeholder_name": "Örn: Fatura",
+        "settings_tags_placeholder_desc": "Örn: Ödeme ve dekont mailleri...",
+        "settings_tags_edit_header": "Etiketi Düzenle",
+        "btn_add": "Ekle",
+        "msg_tag_added": "Etiket başarıyla eklendi.",
+        "msg_tag_deleted": "Etiket başarıyla silindi.",
+        "msg_tag_updated": "Etiket başarıyla güncellendi.",
+        "error_tag_exists": "Bu isimde bir etiket zaten mevcut!",
+
         "login_page_title": "AI Mail Asistanı - Giriş",
         "login_header_title": "Mail Asistanı",
         "login_subtitle": "Devam etmek için panel yetkilerinizi doğrulayın.",
@@ -230,7 +246,28 @@ const translations = {
         "placeholder_master_pass": "Web paneli için yeni şifre",
         "setup_label_signature": "E-Posta İmzanız",
         "placeholder_signature_example": "Saygılarımla,\nİsim Soyad - Ünvan",
-        "btn_complete_setup": "KURULUMU TAMAMLA"
+        "btn_complete_setup": "KURULUMU TAMAMLA",
+
+        // --- TAG TRANSLATIONS (TR) ---
+        "tag_name_urgent": "ACİL", "tag_desc_urgent": "Kritik sorunlar, anlık müdahale, kriz anları.",
+        "tag_name_hr_cv": "İK & CV", "tag_desc_hr_cv": "İş başvuruları, CV'ler, mülakatlar, personel işleri.",
+        "tag_name_notification": "BİLDİRİM", "tag_desc_notification": "Otomatik uyarılar, bültenler, sistem mesajları.",
+        "tag_name_proposal": "TEKLİF", "tag_desc_proposal": "Fiyat teklifleri, satış fırsatları, müşteri talepleri.",
+        "tag_name_meeting": "TOPLANTI", "tag_desc_meeting": "Toplantı davetleri, takvim olayları, Zoom linkleri.",
+        "tag_name_logistics": "LOJİSTİK", "tag_desc_logistics": "Kargo, teslimat durumları, takip numaraları.",
+        "tag_name_security": "GÜVENLİK", "tag_desc_security": "Şifreler, güvenlik uyarıları, 2FA kodları.",
+        "tag_name_travel": "SEYAHAT", "tag_desc_travel": "Uçuşlar, oteller, tatil planları.",
+        "tag_name_devops": "Yazılım & DevOps", "tag_desc_devops": "Jira görevleri, GitHub bildirimleri, sunucu alarmları.",
+        "tag_name_personal": "KİŞİSEL", "tag_desc_personal": "Kişisel mailler, aile, arkadaşlar.",
+        "tag_name_newsletter": "BÜLTEN", "tag_desc_newsletter": "Haber bültenleri, günlük özetler.",
+        "tag_name_social_media": "SOSYAL MEDYA", "tag_desc_social_media": "Sosyal medya bildirimleri, LinkedIn, Twitter.",
+        "tag_name_finance": "FİNANS", "tag_desc_finance": "Faturalar, banka özetleri, ödemeler.",
+        "tag_name_task_tracking": "GÖREV TAKİBİ", "tag_desc_task_tracking": "Genel iş takibi, süreç yönetimi.",
+        "tag_name_incident": "OLAY / KESİNTİ", "tag_desc_incident": "Canlı sistem hataları, kesintiler, teknik sorunlar.",
+        "tag_name_warning--performance": "UYARI / PERF.", "tag_desc_warning--performance": "Performans düşüşleri, sistem uyarıları.",
+        "tag_name_support--customer": "DESTEK / MÜŞTERİ", "tag_desc_support--customer": "Müşteri destek talepleri, yardım masası.",
+        "tag_name_announcement--info": "DUYURU / BİLGİ", "tag_desc_announcement--info": "Duyurular, bilgilendirme mesajları.",
+        "tag_name_spam--promotion": "SPAM / TANITIM", "tag_desc_spam--promotion": "Reklamlar, pazarlama mailleri."
     },
 
     // 🇬🇧 ENGLISH (EN)
@@ -379,7 +416,7 @@ const translations = {
         "btn_view_history": "View History",
         "contacts_no_results": "No contacts found matching criteria.",
         "badge_general": "General",
-        
+
         "contact_mail_history": "Mail History",
         "contact_no_history": "No mail history found with this contact.",
         "contact_ai_notes_title": "AI Company Notes",
@@ -442,6 +479,22 @@ const translations = {
         "settings_label_app_pass": "Gmail App Password (16 Digits)",
         "btn_update_api": "Update API Key",
 
+        "settings_tags_header": "Tag Management",
+        "settings_tags_desc": "Create categories below for AI to automatically tag your emails.",
+        "settings_tags_empty": "No tags defined yet. Create your first tag below.",
+        "settings_tags_add_header": "Add New Tag",
+        "settings_tags_label_name": "Tag Name",
+        "settings_tags_label_color": "Select Color",
+        "settings_tags_label_desc": "Description (AI Criteria)",
+        "settings_tags_placeholder_name": "Ex: Invoice",
+        "settings_tags_placeholder_desc": "Ex: Payment and receipt emails...",
+        "settings_tags_edit_header": "Edit Tag",
+        "btn_add": "Add",
+        "msg_tag_added": "Tag added successfully.",
+        "msg_tag_deleted": "Tag deleted successfully.",
+        "msg_tag_updated": "Tag updated successfully.",
+        "error_tag_exists": "A tag with this name already exists!",
+
         "login_page_title": "AI Mail Assistant - Login",
         "login_header_title": "Mail Assistant",
         "login_subtitle": "Verify your panel credentials to continue.",
@@ -464,6 +517,27 @@ const translations = {
         "placeholder_master_pass": "New password for web panel",
         "setup_label_signature": "Email Signature",
         "placeholder_signature_example": "Best Regards,\nName Surname - Title",
-        "btn_complete_setup": "COMPLETE SETUP"
+        "btn_complete_setup": "COMPLETE SETUP",
+
+        // --- TAG TRANSLATIONS (EN) ---
+        "tag_name_urgent": "URGENT", "tag_desc_urgent": "Critical issues, immediate action, crisis moments.",
+        "tag_name_hr_cv": "HR & CV", "tag_desc_hr_cv": "Job applications, CVs, interviews, personnel matters.",
+        "tag_name_notification": "NOTIFICATION", "tag_desc_notification": "Automated alerts, newsletters, system messages.",
+        "tag_name_proposal": "PROPOSAL", "tag_desc_proposal": "Price quotes, sales offers, customer requests.",
+        "tag_name_meeting": "MEETING", "tag_desc_meeting": "Meeting invites, calendar events, Zoom links.",
+        "tag_name_logistics": "LOGISTICS", "tag_desc_logistics": "Shipping, delivery updates, tracking numbers, cargo.",
+        "tag_name_security": "SECURITY", "tag_desc_security": "Passwords, security alerts, 2FA.",
+        "tag_name_travel": "TRAVEL", "tag_desc_travel": "Travel, flights, hotels, holidays.",
+        "tag_name_devops": "Software & DevOps", "tag_desc_devops": "Jira tasks, GitHub notifications, server alarms.",
+        "tag_name_personal": "PERSONAL", "tag_desc_personal": "Personal emails, family, friends, non-work.",
+        "tag_name_newsletter": "NEWSLETTER", "tag_desc_newsletter": "Newsletters, daily digests, subscriptions.",
+        "tag_name_social_media": "SOCIAL MEDIA", "tag_desc_social_media": "Social media notifications, LinkedIn, Twitter, Instagram.",
+        "tag_name_finance": "FINANCE", "tag_desc_finance": "Invoices, bank statements, receipts, payments.",
+        "tag_name_task_tracking": "TASK TRACKING", "tag_desc_task_tracking": "General business emails, process tracking.",
+        "tag_name_incident": "INCIDENT", "tag_desc_incident": "Production incidents, service disruptions, ongoing technical issues.",
+        "tag_name_warning--performance": "WARNING / PERF.", "tag_desc_warning--performance": "Performance degradation, warnings, threshold alerts.",
+        "tag_name_support--customer": "SUPPORT / CUSTOMER", "tag_desc_support--customer": "Customer support requests, helpdesk tickets, user issues.",
+        "tag_name_announcement--info": "ANNOUNCEMENT / INFO", "tag_desc_announcement--info": "Announcements, informational messages, FYI emails.",
+        "tag_name_spam--promotion": "SPAM / PROMOTION", "tag_desc_spam--promotion": "Promotions, marketing emails, unsolicited content."
     }
 };

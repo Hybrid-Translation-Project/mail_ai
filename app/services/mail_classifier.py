@@ -1,5 +1,5 @@
-# LLaMA ile konuşmak için Ollama servis fonksiyonunu import ediyoruz
-from app.services.ollama_service import ask_llama
+# LLM ile konuşmak için Ollama servis fonksiyonunu import ediyoruz
+from app.services.ollama_service import ask_llm
 
 
 def should_reply(mail_text: str) -> dict:
@@ -34,8 +34,8 @@ EMAIL CONTENT:
 RESPONSE:
 """
 
-    # LLaMA çağrısı
-    result = ask_llama(prompt)
+    # LLM çağrısı
+    result = ask_llm(prompt)
 
     # Fail-safe: model boş / None / patlak cevap dönerse
     # Risk almıyoruz → cevap yaz
