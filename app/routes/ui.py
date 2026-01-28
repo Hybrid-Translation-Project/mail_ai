@@ -411,9 +411,25 @@ async def task_action(mail_id: str, action_type: str):
     )
     return RedirectResponse(url=f"/ui/editor/{mail_id}", status_code=303)
 
+# ==========================================================
+# 🛠️ DÜZELTİLEN KISIM: AKILLI SİLME YÖNLENDİRMESİ
+# ==========================================================
 @router.post("/ui/mail/delete/{mail_id}")
-async def delete_mail(mail_id: str):
+async def delete_mail(request: Request, mail_id: str):
     mails_col.delete_one({"_id": ObjectId(mail_id)})
+    
+    # Kullanıcının geldiği sayfayı (Referer) alıyoruz
+    referer = request.headers.get("referer")
+    
+    # 1. Eğer "history" sayfasından silme tuşuna basıldıysa, History'ye geri dön
+    if referer and "history" in referer:
+        return RedirectResponse(url="/ui/history?msg=Silindi", status_code=303)
+    
+    # 2. Eğer "drafts" (taslaklar) sayfasından geldiyse oraya dön
+    elif referer and "drafts" in referer:
+        return RedirectResponse(url="/ui/drafts?msg=Silindi", status_code=303)
+        
+    # 3. Varsayılan (Inbox veya başka yer) -> Dashboard'a dön
     return RedirectResponse(url="/ui?msg=Silindi", status_code=303)
 
 # --- MANUEL KAYDETME (EDITOR) ---
