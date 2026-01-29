@@ -1,0 +1,19 @@
+.search-result-card {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: transform 0.2s;
+        }
+        .search-result-card:hover {
+            border-color: #bb86fc;
+            transform: translateY(-2px);
+        }
+        .similarity-score {
+            font-size: 0.7rem;
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #4caf50;
+        }

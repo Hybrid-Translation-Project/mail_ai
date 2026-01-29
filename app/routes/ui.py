@@ -432,6 +432,16 @@ async def delete_mail(request: Request, mail_id: str):
     # 3. Varsayılan (Inbox veya başka yer) -> Dashboard'a dön
     return RedirectResponse(url="/ui?msg=Silindi", status_code=303)
 
+# --- MAİL GERİ YÜKLEME (RESTORE) ---
+@router.post("/ui/restore/{mail_id}")
+async def restore_mail(mail_id: str):
+    # İptal edilen maili tekrar 'WAITING_APPROVAL' yaparak Gelen Kutusuna atar
+    mails_col.update_one(
+        {"_id": ObjectId(mail_id)}, 
+        {"$set": {"status": "WAITING_APPROVAL"}}
+    )
+    return RedirectResponse(url="/ui?msg=Mail+Geri+Yuklendi", status_code=303)
+
 # --- MANUEL KAYDETME (EDITOR) ---
 @router.post("/ui/update/{mail_id}")
 async def update_draft(mail_id: str, reply_draft: str = Form(...)):
@@ -494,13 +504,77 @@ async def view_mail(request: Request, mail_id: str):
     if not mail: return RedirectResponse(url="/ui/history")
     return templates.TemplateResponse("view_mail.html", {"request": request, "mail": mail, "user": user})
 
-# --- REHBER ---
+# --- REHBER (GÜNCELLENEN KISIM) ---
 @router.get("/ui/contacts", response_class=HTMLResponse)
-async def contacts_page(request: Request):
+async def contacts_page(request: Request, account: str = "all"):
+    """
+    Rehber Sayfası.
+    account parametresi: 'all' veya 'serhtay16@gmail.com' gibi spesifik bir mail.
+    """
     user = users_col.find_one({"is_active": True})
-    contacts = list(contacts_col.find().sort("name", 1))
     accounts = list(accounts_col.find({"user_id": user["_id"]}))
-    return templates.TemplateResponse("contacts.html", {"request": request, "contacts": contacts, "user": user, "accounts": accounts})
+    
+    # --- 🛠️ OTO-TAMİR BAŞLANGICI ---
+    # Bu blok, rehberdeki kişilerin "owners" (sahipler) listesini günceller.
+    # Her maili tarar ve "Bu maili kimden aldım?" -> "Rehbere o hesabı ekle" mantığıyla çalışır.
+    
+    all_contacts = list(contacts_col.find())
+    for contact in all_contacts:
+        if "owners" not in contact:
+            # Bu kişinin gönderdiği mailleri bul
+            mails_from_contact = list(mails_col.find({"from": contact["email"]}, {"user_email": 1}))
+            
+            # Hangi hesaplarımıza mail atmış? (Tekilleştirme: set)
+            found_owners = list(set([m["user_email"] for m in mails_from_contact if "user_email" in m]))
+            
+            # Veritabanını güncelle
+            contacts_col.update_one(
+                {"_id": contact["_id"]},
+                {"$set": {"owners": found_owners}}
+            )
+    # --- 🛠️ OTO-TAMİR BİTİŞİ ---
+
+    # --- FİLTRELEME MANTIĞI ---
+    filter_query = {}
+    if account != "all":
+        # Sadece seçilen hesaba ait (owners listesinde bu mail var mı?)
+        filter_query = {"owners": account}
+
+    contacts = list(contacts_col.find(filter_query).sort("name", 1))
+    
+    return templates.TemplateResponse("contacts.html", {
+        "request": request, 
+        "contacts": contacts, 
+        "user": user, 
+        "accounts": accounts,
+        "selected_account": account  # Frontend'de hangi sekmenin aktif olduğunu bilmek için
+    })
+
+# --- KİŞİ SİLME İŞLEMİ (ÇİFT MODLU - YENİ) ---
+@router.post("/ui/contacts/delete")
+async def delete_contact(contact_id: str = Form(...), delete_mode: str = Form(...)):
+    """
+    Kişiyi siler.
+    delete_mode:
+      - 'only_contact': Sadece rehberden siler, mailler kalır.
+      - 'with_history': Kişiyi VE ona ait tüm geçmiş mailleri siler.
+    """
+    # 1. Kişiyi bul
+    contact = contacts_col.find_one({"_id": ObjectId(contact_id)})
+    if not contact:
+        return RedirectResponse(url="/ui/contacts?error=Kisi+Bulunamadi", status_code=303)
+    
+    # 2. Eğer "Geçmişi de sil" dendiyse -> Mailleri temizle
+    if delete_mode == "with_history":
+        email = contact.get("email")
+        if email:
+            # Güvenlik için şimdilik sadece 'from' (onun attıklarını) siliyoruz.
+            mails_col.delete_many({"from": email})
+
+    # 3. Kişiyi rehberden sil
+    contacts_col.delete_one({"_id": ObjectId(contact_id)})
+    
+    return RedirectResponse(url="/ui/contacts?msg=Kisi+Silindi", status_code=303)
 
 @router.get("/ui/contact/{email}", response_class=HTMLResponse)
 async def contact_detail(request: Request, email: str):
@@ -663,7 +737,7 @@ async def send_writer_mail(
     else:
         return RedirectResponse(url=f"/ui/writer?error={msg}", status_code=303)
 
-# --- YENİ EKLENEN: SEMANTİK ARAMA API ENDPOINT'İ ---
+# --- SEMANTİK ARAMA API ENDPOINT'İ ---
 @router.get("/ui/search-api")
 async def search_mails(q: str = Query(..., min_length=1)):
     """
