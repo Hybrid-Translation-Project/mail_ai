@@ -1,3 +1,6 @@
+/* =========================================
+   TEMEL SIFIRLAMA & DEĞİŞKENLER
+   ========================================= */
 :root {
     --bg-dark: #0f172a;
     --card-bg: #1e293b;
@@ -8,13 +11,22 @@
     --danger: #ef4444;
 }
 
+/* 🛑 İŞTE BU SATIR HAYAT KURTARIR 🛑 */
+/* Tüm elemanların padding'ini genişliğe dahil eder, taşmayı önler */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 body {
     background-color: var(--bg-dark);
     color: var(--text-main);
     font-family: 'Inter', sans-serif;
     margin: 0;
+    padding: 0;
+    /* Flex yapısını koruyoruz */
     display: flex;
     min-height: 100vh;
+    overflow-x: hidden; /* Gereksiz yatay kaydırmayı engeller */
 }
 
 /* --- SIDEBAR (YAN MENÜ) --- */
@@ -30,6 +42,7 @@ body {
     display: flex;
     flex-direction: column;
     z-index: 1000;
+    transition: transform 0.3s ease;
 }
 
 /* Logo Alanı */
@@ -78,7 +91,7 @@ body {
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-/* Menü Başlıkları (ANA MENÜ, SİSTEM vb.) */
+/* Menü Başlıkları */
 .nav-section {
     font-size: 0.7rem;
     text-transform: uppercase;
@@ -88,9 +101,9 @@ body {
     font-weight: 700;
 }
 
-/* Çıkış Linki (Özel Stil) */
+/* Çıkış Linki */
 .logout-link {
-    margin-top: auto; /* En alta iter */
+    margin-top: auto;
     color: var(--danger) !important;
 }
 
@@ -98,7 +111,7 @@ body {
     background: rgba(239, 68, 68, 0.1) !important;
 }
 
-/* Kullanıcı Profil Alanı (Sol Alt) */
+/* Kullanıcı Profil Alanı */
 .user-profile-nav {
     margin-top: 20px;
     padding: 15px;
@@ -139,17 +152,16 @@ body {
 
 /* --- MAIN CONTENT (ANA İÇERİK) --- */
 .main-content {
-    margin-left: 260px; /* Sidebar genişliği kadar boşluk */
+    margin-left: 260px;
     padding: 30px 40px;
     width: 100%;
-    overflow-x: hidden;
+    flex-grow: 1; /* Sidebar yoksa bile tüm alanı kapla */
 }
 
-/* Responsive (Mobil Uyumu için Basit Ayar) */
+/* Responsive (Mobil) */
 @media (max-width: 768px) {
     .sidebar {
         transform: translateX(-100%);
-        transition: transform 0.3s ease;
     }
     .main-content {
         margin-left: 0;

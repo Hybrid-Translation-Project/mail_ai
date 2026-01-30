@@ -163,7 +163,7 @@ graph TD
     source venv/bin/activate
 ```
 ## 2: Bağımlılıkları Yükleyin
-    ```bash
+    ```
     pip install -r requirements.txt
     ```
 
