@@ -52,3 +52,12 @@
      border-radius: 3px;
      border: 1px solid rgba(255, 255, 255, 0.2);
  }
+
+/* Inbox satır durumları */
+.mail-row--read {
+    opacity: 0.88;
+}
+
+.mail-row--replied {
+    opacity: 0.70;
+}

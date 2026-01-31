@@ -1,7 +1,363 @@
 {% extends "base.html" %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="/static/css/editor.css">
+<style>
+    /* =========================================
+       1. SHARED CHAT STYLES (WhatsApp Mode) 
+       ========================================= */
+    :root {
+        --bg-app: #0f1115;
+        --bg-card: #181b21;
+        --bg-card-hover: #1e2229;
+        --border-card: #2d333b;
+        --accent-received: #ab47bc;
+        --accent-sent: #4b6cb7;
+        --text-primary: #e6edf3;
+        --text-secondary: #8b949e;
+        --btn-primary-bg: #ab47bc;
+        --btn-primary-hover: #9c27b0;
+
+        /* Status Colors */
+        --success: #2ea043;
+        --danger: #da3633;
+        --warning: #d29922;
+    }
+
+    body {
+        background-color: var(--bg-app) !important;
+        color: var(--text-primary);
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* --- Scrollbar Styling --- */
+    /* Tarayıcı scrollbarını koyu moda uygun hale getirme */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--bg-app);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #30363d;
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #58a6ff;
+    }
+
+    /* CHAT BUBBLES IN EDITOR (Left Column) */
+    .message-bubble {
+        background: var(--bg-card);
+        border: 1px solid var(--border-card);
+        border-radius: 8px;
+        position: relative;
+        padding: 10px 14px;
+        margin-bottom: 12px;
+        max-width: 85%;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .message-received {
+        margin-right: auto;
+        margin-left: 0;
+        background: #181b21;
+        border-radius: 18px 18px 18px 4px;
+        border-left: 3px solid var(--accent-received);
+        /* Small accent for context */
+    }
+
+    .message-sent {
+        margin-left: auto;
+        margin-right: 0;
+        background: #1c2333;
+        border-radius: 18px 18px 4px 18px;
+        border-right: 3px solid var(--accent-sent);
+    }
+
+    .bubble-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        margin-bottom: 6px;
+        opacity: 0.8;
+    }
+
+    .sender-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .message-date {
+        font-family: monospace;
+        opacity: 0.6;
+    }
+
+    .mail-content-render {
+        font-size: 0.9rem;
+        line-height: 1.5;
+        overflow-wrap: break-word;
+    }
+
+    .mail-content-render pre {
+        white-space: pre-wrap;
+        background: transparent;
+        border: none;
+        color: inherit;
+        font-family: inherit;
+        padding: 0;
+    }
+
+    .mail-content-render blockquote,
+    .mail-content-render .gmail_quote,
+    .mail-content-render div.gmail_quote {
+        display: none !important;
+    }
+
+
+    /* =========================================
+       2. AI PANEL STYLES (Right Column)
+       ========================================= */
+
+    .editor-container {
+        margin-top: 30px;
+        gap: 0;
+    }
+
+    /* BACK BUTTON */
+    .back-btn-wrapper {
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+
+    .back-btn {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.2s;
+    }
+
+    .back-btn:hover {
+        color: var(--text-primary);
+    }
+
+    /* PANEL CARD */
+    .mail-card.sticky-panel {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 12px;
+        padding: 20px;
+        position: sticky;
+        top: 20px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    /* PANEL HEADER */
+    .action-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #30363d;
+        padding-bottom: 15px;
+    }
+
+    .action-header h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .save-status {
+        font-size: 0.75rem;
+        background: rgba(46, 160, 67, 0.15);
+        color: #3fb950;
+        padding: 2px 8px;
+        border-radius: 12px;
+        border: 1px solid rgba(46, 160, 67, 0.3);
+    }
+
+    /* AI ACTION BUTTONS (Top row) */
+    .ai-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+    .btn-ai-action {
+        border: 1px solid #30363d;
+        background: #21262d;
+        color: var(--text-primary);
+        padding: 8px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .btn-ai-action:hover {
+        transform: translateY(-1px);
+    }
+
+    .btn-regenerate:hover {
+        background: #1f6feb;
+        border-color: #1f6feb;
+        color: white;
+    }
+
+    .btn-approve:hover {
+        background: var(--success);
+        border-color: var(--success);
+        color: white;
+    }
+
+    .btn-reject:hover {
+        background: var(--danger);
+        border-color: var(--danger);
+        color: white;
+    }
+
+    /* TEXTAREA */
+    .editor-textarea {
+        width: 100%;
+        background: #0d1117;
+        /* Very dark code-like bg */
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 15px;
+        color: #c9d1d9;
+        font-family: 'JetBrains Mono', monospace;
+        /* Monospace for editing focus */
+        font-size: 0.9rem;
+        resize: vertical;
+        min-height: 300px;
+        outline: none;
+        line-height: 1.6;
+    }
+
+    .editor-textarea:focus {
+        border-color: #58a6ff;
+        box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+    }
+
+    /* BOTTOM BUTTONS */
+    .editor-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #30363d;
+    }
+
+    .btn {
+        flex: 1;
+        padding: 10px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+    .btn-save {
+        background: transparent;
+        border: 1px solid #30363d;
+        color: var(--text-secondary);
+    }
+
+    .btn-save:hover {
+        border-color: var(--text-primary);
+        color: var(--text-primary);
+    }
+
+    .btn-send {
+        background: var(--btn-primary-bg);
+        color: white;
+        flex: 2;
+        /* Bigger send button */
+    }
+
+    .btn-send:hover {
+        background: var(--btn-primary-hover);
+        box-shadow: 0 4px 12px rgba(171, 71, 188, 0.3);
+    }
+
+    .btn-cancel {
+        background: transparent;
+        color: var(--danger);
+        opacity: 0.7;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(218, 54, 51, 0.1);
+        opacity: 1;
+    }
+
+    /* VERSION HISTORY (Drafts) */
+    .version-section {
+        margin-top: 30px;
+    }
+
+    .version-title {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .version-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .version-item {
+        background: #21262d;
+        border: 1px solid #30363d;
+        padding: 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .version-item:hover {
+        border-color: #58a6ff;
+    }
+
+    .version-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        margin-bottom: 4px;
+    }
+
+    .version-preview {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -10,23 +366,58 @@
 </div>
 
 <div class="row editor-container">
-    
+
     <div class="col-md-7">
-        <div class="mail-card">
-            <h3 class="mt-0 text-white">📩 <span data-i18n="editor_mail_header">Gelen Mail</span></h3>
-            <p class="mail-meta"><strong data-i18n="editor_label_from">Kimden:</strong> {{ mail.from }}</p>
-            <p class="mail-meta"><strong data-i18n="editor_label_subject">Konu:</strong> {{ mail.subject }}</p>
-            <hr class="border-secondary">
-            
-            <div class="mail-body" style="background-color: #ffffff; color: #000000; padding: 20px; border-radius: 5px; overflow: auto; max-height: 600px;">
-                {{ mail.body | safe }}
+        <h4 class="text-white mb-3">💬 <span data-i18n="editor_conversation">Konuşma Geçmişi</span></h4>
+        <div class="thread-container" style="max-height: 85vh; overflow-y: auto; padding-right: 5px;">
+            {% for m in thread %}
+            <div class="message-bubble {% if m.is_owner %}message-sent{% else %}message-received{% endif %} mb-3">
+
+                <div class="bubble-header">
+                    <div>
+                        <span class="sender-name">{{ m.from }}</span>
+                        {% if m.is_owner %}
+                        <span class="small text-muted">(Siz)</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-end">
+                        <span class="message-date">{{ m.created_at.strftime('%d.%m %H:%M') if m.created_at else ''
+                            }}</span>
+                    </div>
+                </div>
+
+                <div class="bubble-content">
+                    <div class="mail-content-render" style="overflow: auto; max-height: 500px;">
+                        {% if m.body_html %}
+                        {{ m.body_html | safe }}
+                        {% else %}
+                        {{ m.body | safe }}
+                        {% endif %}
+                    </div>
+
+                    <!-- Attachments -->
+                    {% if m.attachments %}
+                    <div class="mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                        <small class="text-white d-block mb-2">📎 EKLER:</small>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for att in m.attachments %}
+                            <a href="{{ att.url }}" target="_blank" class="btn btn-sm btn-outline-light" download
+                                style="font-size: 0.75rem;">
+                                <i class="fas fa-paperclip"></i> {{ att.filename }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
+            {% endfor %}
         </div>
     </div>
 
     <div class="col-md-5">
         <div class="mail-card sticky-panel">
-            
+
             <div class="action-header">
                 <h3 class="m-0 text-white">🤖 <span data-i18n="editor_ai_panel">AI Cevap Paneli</span></h3>
                 <div class="text-end">
@@ -37,29 +428,33 @@
             </div>
 
             <div class="ai-actions">
-                <button type="button" onclick="handleAction('regenerate', '{{ mail._id }}')" class="btn-ai-action btn-regenerate" title="AI Taslağını Yenile">
+                <button type="button" onclick="handleAction('regenerate', '{{ mail._id }}')"
+                    class="btn-ai-action btn-regenerate" title="AI Taslağını Yenile">
                     🔄 <span data-i18n="btn_regenerate">Yenile</span>
                 </button>
-                <button type="button" onclick="handleAction('approve', '{{ mail._id }}')" class="btn-ai-action btn-approve">
+                <button type="button" onclick="handleAction('approve', '{{ mail._id }}')"
+                    class="btn-ai-action btn-approve">
                     ✅ <span data-i18n="btn_approve_short">Onayla</span>
                 </button>
-                <button type="button" onclick="handleAction('reject', '{{ mail._id }}')" class="btn-ai-action btn-reject">
+                <button type="button" onclick="handleAction('reject', '{{ mail._id }}')"
+                    class="btn-ai-action btn-reject">
                     ❌ <span data-i18n="btn_reject">Reddet</span>
                 </button>
             </div>
 
             <form action="/ui/update/{{ mail._id }}" method="post" id="replyForm">
-                <textarea id="replyDraft" name="reply_draft" rows="12" data-mail-id="{{ mail._id }}" class="editor-textarea">{{ mail.reply_draft }}</textarea>
-                
+                <textarea id="replyDraft" name="reply_draft" rows="12" data-mail-id="{{ mail._id }}"
+                    class="editor-textarea">{{ mail.reply_draft }}</textarea>
+
                 <div class="editor-actions">
                     <button type="button" onclick="forceSave()" class="btn btn-save">
                         💾 <span data-i18n="btn_save_now">Şimdi Kaydet</span>
                     </button>
-                    
+
                     <button type="submit" formaction="/ui/approve/{{ mail._id }}" class="btn btn-send">
                         🚀 <span data-i18n="btn_send">Gönder</span>
                     </button>
-                    
+
                     <button type="submit" formaction="/ui/cancel/{{ mail._id }}" class="btn btn-cancel">
                         🚫 <span data-i18n="btn_archive">Arşive At</span>
                     </button>
@@ -70,12 +465,11 @@
             <div class="version-section">
                 <h5 class="version-title">🕒 <span data-i18n="editor_version_history">Versiyon Geçmişi</span></h5>
                 <div class="version-list">
-                    
+
                     {% for version in mail.draft_history|reverse %}
-                    <div class="version-item" 
-                         onclick="restoreVersion(this.dataset.content)" 
-                         data-content="{{ version.body | e }}">
-                        
+                    <div class="version-item" onclick="restoreVersion(this.dataset.content)"
+                        data-content="{{ version.body | e }}">
+
                         <div class="version-header">
                             <span>
                                 {% if version.source == 'AI' %}
@@ -103,7 +497,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="/static/js/translations.js"></script>
-    <script src="/static/js/language_engine.js"></script>
-    <script src="/static/js/editor.js"></script>
+<script src="/static/js/translations.js"></script>
+<script src="/static/js/language_engine.js"></script>
+<script src="/static/js/editor.js"></script>
 {% endblock %}

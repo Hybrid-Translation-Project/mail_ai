@@ -1,88 +1,413 @@
 {% extends "base.html" %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/view_html.css">
 <style>
-   
+    /* AI TASK CENTER UI - SaaS Dashboard Style */
+    :root {
+        --bg-app: #0f1115;
+        --bg-card: #181b21;
+        --bg-card-hover: #1e2229;
+        --border-card: #2d333b;
+        --accent-received: #ab47bc;
+        --accent-sent: #4b6cb7;
+        --text-primary: #e6edf3;
+        --text-secondary: #8b949e;
+        --btn-primary-bg: #ab47bc;
+        --btn-primary-hover: #9c27b0;
+    }
+
+    body {
+        background-color: var(--bg-app) !important;
+    }
+
+    .view-container {
+        max-width: 960px;
+        margin: 40px auto;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Header Area */
+    .task-header {
+        border-bottom: 1px solid var(--border-card);
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+    }
+
+    /* TIMELINE / CARD CONTAINER (Layout Fix) */
+    .timeline-container {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        /* Reduced gap */
+        position: relative;
+    }
+
+    .timeline-container::before {
+        display: none;
+    }
+
+    /* ACTION CARD STYLE (Bubble Base) */
+    .action-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-card);
+        border-radius: 8px;
+        /* Base radius, overridden below */
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.2s ease;
+        overflow: hidden;
+
+        /* 1) SIZE & WIDTH TWEAKS */
+        width: fit-content;
+        max-width: 72%;
+        min-width: 220px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        border: none !important;
+        /* No border for chat look */
+    }
+
+    .action-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* LEFT vs RIGHT ALIGNMENT & BUBBLE SHAPE */
+
+    /* RECEIVED (LEFT) */
+    .card-received {
+        margin-right: auto !important;
+        margin-left: 0 !important;
+        background: #181b21;
+        border-radius: 18px 18px 18px 4px;
+        /* Blob shape */
+    }
+
+    /* SENT (RIGHT) */
+    .card-sent {
+        margin-left: auto !important;
+        margin-right: 0 !important;
+        background: #1c2333;
+        border-radius: 18px 18px 4px 18px;
+        /* Blob shape */
+    }
+
+    /* CARD HEADER (Compact Chat Style) */
+    .card-header-row {
+        padding: 8px 12px !important;
+        /* Compact padding */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: transparent !important;
+        border-bottom: none !important;
+        font-size: 0.75rem;
+    }
+
+    .sender-info {
+        font-weight: 600;
+        font-size: 0.78rem !important;
+        /* Smaller text */
+        opacity: 0.9;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .sender-info i {
+        display: none;
+        /* No icons */
+    }
+
+    .meta-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    /* BADGES */
+    .badge-status {
+        font-size: 0.62rem !important;
+        padding: 2px 6px !important;
+        border-radius: 4px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .badge-draft {
+        background: rgba(171, 71, 188, 0.2);
+        color: #e1bee7;
+        border: 1px solid rgba(171, 71, 188, 0.3);
+    }
+
+    .badge-you {
+        background: rgba(75, 108, 183, 0.2);
+        color: #90caf9;
+        border: 1px solid rgba(75, 108, 183, 0.3);
+    }
+
+    /* CARD BODY */
+    .card-body {
+        padding: 8px 14px 14px 14px;
+        /* Tighter padding top */
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        /* Readable text */
+        line-height: 1.5;
+    }
+
+    /* Content Rendering */
+    .mail-content-render {
+        font-family: 'Inter', sans-serif;
+        overflow-wrap: break-word;
+    }
+
+    .mail-content-render img {
+        max-width: 100%;
+        border-radius: 6px;
+        margin: 10px 0;
+    }
+
+    /* 2) PRE TAG FIX - Look like normal message */
+    .mail-content-render pre {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        color: var(--text-primary) !important;
+        font-family: inherit !important;
+        font-size: 0.95rem !important;
+        white-space: pre-wrap;
+    }
+
+    /* Hide History/Quotes */
+    .mail-content-render blockquote,
+    .mail-content-render .gmail_quote,
+    .mail-content-render div.gmail_quote {
+        display: none !important;
+    }
+
+    /* 4) DATE - BOTTOM RIGHT */
+    .message-time {
+        text-align: right;
+        font-size: 0.65rem;
+        opacity: 0.55;
+        margin-top: 8px;
+        font-family: monospace;
+        /* Optional styling preference */
+    }
+
+    /* CARD ACTIONS (Footer - Hover Only) */
+    .card-actions {
+        padding: 6px 12px 10px 12px;
+        background: transparent;
+        border-top: none;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .action-card:hover .card-actions,
+    .action-card:focus-within .card-actions {
+        opacity: 1;
+    }
+
+    /* BUTTONS */
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        /* Smaller buttons */
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-primary-action {
+        background: var(--btn-primary-bg);
+        color: white;
+    }
+
+    .btn-primary-action:hover {
+        background: var(--btn-primary-hover);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 10px rgba(171, 71, 188, 0.3);
+    }
+
+    .btn-secondary-action {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+    }
+
+    .btn-secondary-action:hover {
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .attachment-pill {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 4px 10px;
+        border-radius: 6px;
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .attachment-pill:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+
+    /* Reply Box */
+    .quick-reply-box {
+        margin-top: 40px;
+        background: #181b21;
+        border: 1px dashed #444;
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+        .action-card {
+            max-width: 92%;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="view-container">
-    <div class="d-flex justify-content-between mb-3 align-items-center">
-        <button onclick="history.back()" class="btn btn-outline-secondary btn-sm" style="color: #ccc; border-color: #444;">
-            <i class="fas fa-arrow-left"></i> <span data-i18n="btn_back">Geri Dön</span>
-        </button>
-        <span class="text-muted small">Mail ID: {{ mail._id }}</span>
-    </div>
 
-    <div class="mail-header mb-4">
-        <h4 class="text-white mb-3">{{ mail.subject }}</h4>
-        
-        <div class="p-3 rounded" style="background-color: #2c2c2c;">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-1"><strong data-i18n="view_label_from">Kimden:</strong> <span class="text-primary">{{ mail.from }}</span></div>
-                    <div class="mb-1"><strong data-i18n="view_label_to">Kime:</strong> <span class="text-light">{{ mail.to }}</span></div>
-                    <div><strong data-i18n="view_label_date">Tarih:</strong> <span class="text-muted">{{ mail.created_at }}</span></div>
-                </div>
-                
-                <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                    <div class="mb-2">
-                        <strong data-i18n="status_label">Durum:</strong> 
-                        {% if mail.status == 'SENT' %}
-                            <span class="status-badge sent"><i class="fas fa-check"></i> <span data-i18n="status_sent">GÖNDERİLDİ</span></span>
-                        {% elif mail.status == 'CANCELED' %}
-                            <span class="status-badge canceled"><i class="fas fa-ban"></i> <span data-i18n="status_cancelled">İPTAL / TASLAK SİLİNDİ</span></span>
-                        {% elif mail.status == 'WAITING_APPROVAL' %}
-                            <span class="status-badge waiting"><i class="fas fa-clock"></i> <span data-i18n="status_waiting">ONAY BEKLİYOR</span></span>
-                        {% elif mail.status == 'DRAFT' %}
-                             <span class="badge bg-secondary"><i class="fas fa-pencil-alt"></i> <span data-i18n="badge_draft">TASLAK</span></span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ mail.status }}</span>
-                        {% endif %}
-                    </div>
-
-                    {% if mail.decision %}
-                    <div>
-                        <span class="small text-muted" data-i18n="view_ai_decision">AI Kararı:</span>
-                        {% if mail.decision == 'approve' %} 
-                            <span class="text-success fw-bold" data-i18n="decision_approve">Kabul</span>
-                        {% elif mail.decision == 'reject' %} 
-                            <span class="text-danger fw-bold" data-i18n="decision_reject">Ret</span>
-                        {% else %} 
-                            <span class="text-secondary" data-i18n="decision_neutral">Nötr</span> 
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+    <!-- Top Navigation / Subject Header -->
+    <div class="task-header d-flex justify-content-between align-items-center">
+        <div>
+            <button onclick="history.back()" class="btn btn-outline-secondary btn-sm text-light border-secondary mb-2">
+                <i class="fas fa-arrow-left"></i> <span data-i18n="btn_back">Geri Dön</span>
+            </button>
+            <h4 class="m-0" style="color: #e6edf3;">
+                <span
+                    style="font-size: 0.8rem; color: #8b949e; display: block; margin-bottom: 4px; letter-spacing: 0.5px;"
+                    data-i18n="lbl_subject">KONU</span>
+                {{ thread[-1].subject }}
+            </h4>
         </div>
     </div>
 
-    <h6 class="text-muted mb-2">📩 <span data-i18n="view_mail_content">Mail İçeriği:</span></h6>
-    <div class="mail-content-box shadow-sm">
-        {{ mail.body | safe }}
+    <!-- MAIN TIMELINE -->
+    <div class="timeline-container">
+        {% for mail in thread %}
+
+        <!-- Action Card / Bubble -->
+        <div class="action-card {% if mail.is_owner %}card-sent{% else %}card-received{% endif %}">
+
+            <!-- Card Header: Sender + Meta + Badges -->
+            <div class="card-header-row">
+                <div class="sender-info">
+                    {{ mail.from }}
+                </div>
+
+                <div class="meta-info">
+                    <!-- Badges -->
+                    {% if mail.is_owner %}
+                    <span class="badge-status badge-you" data-i18n="lbl_you">SİZ</span>
+                    {% endif %}
+
+                    {% if mail.status == "WAITING_APPROVAL" %}
+                    <span class="badge-status badge-draft" data-i18n="status_draft_ready">TASLAK HAZIR</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Card Body: Content -->
+            <div class="card-body">
+                <div class="mail-content-render">
+                    {% if mail.body_html %}
+                    {{ mail.body_html | safe }}
+                    {% else %}
+                    {{ mail.body | safe }}
+                    {% endif %}
+                </div>
+
+                <!-- Attachments -->
+                {% if mail.attachments %}
+                <div class="mt-3 pt-3 border-top border-dark" style="border-color: rgba(255,255,255,0.1) !important;">
+                    <small class="text-white d-block mb-2" data-i18n="lbl_attachments">EKLER</small>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for att in mail.attachments %}
+                        <a href="{{ att.url }}" target="_blank" class="attachment-pill" download>
+                            <i class="fas fa-paperclip"></i> {{ att.filename }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- 4. DATE MOVED TO BOTTOM (Message Time) -->
+                <div class="message-time">
+                    {{ mail.created_at.strftime('%d.%m %H:%M') if mail.created_at else '' }}
+                </div>
+            </div>
+
+            <!-- Card Actions: Prominent Buttons (Hover Only) -->
+            {% if not mail.is_owner %}
+            <div class="card-actions">
+                {% if mail.status == "WAITING_APPROVAL" %}
+                <!-- Primary Action -->
+                <a href="/ui/editor/{{ mail._id }}" class="btn-action btn-primary-action">
+                    <i class="fas fa-bolt"></i> <span data-i18n="btn_review_reply">İncele & Cevapla</span>
+                </a>
+                {% else %}
+                <!-- Secondary Action -->
+                <a href="/ui/editor/{{ mail._id }}" class="btn-action btn-secondary-action">
+                    <i class="fas fa-reply"></i> <span data-i18n="btn_reply">Cevapla</span>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Draft Edit Action -->
+            {% if mail.status == "DRAFT" %}
+            <div class="card-actions">
+                <a href="/ui/writer?draft_id={{ mail._id }}" class="btn-action btn-secondary-action">
+                    <i class="fas fa-edit"></i> <span data-i18n="btn_edit_draft">Taslağı Düzenle</span>
+                </a>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endfor %}
     </div>
 
-    {% if mail.reply_draft and mail.status == 'SENT' %}
-    <div class="mt-4 p-3 rounded" style="border-left: 5px solid #28a745; background: #1a2e1e;">
-        <h6 class="text-success mb-2"><i class="fas fa-reply"></i> <span data-i18n="view_sent_reply">Gönderilen Cevap:</span></h6>
-        <div style="color: #e2e2e2; white-space: pre-wrap; font-family: sans-serif;">{{ mail.reply_draft | safe }}</div>
+    <!-- Bottom Quick Reply -->
+    {% set last_mail = thread[-1] %}
+    {% if not last_mail.is_owner and last_mail.status != 'WAITING_APPROVAL' %}
+    <div class="quick-reply-box">
+        <p class="text-secondary mb-3" data-i18n="lbl_start_reply">Yeni bir görev veya yanıt oluşturmak ister misiniz?
+        </p>
+        <a href="/ui/editor/{{ last_mail._id }}" class="btn-action btn-primary-action">
+            <i class="fas fa-plus"></i> <span data-i18n="btn_write_reply">Yanıt Oluştur</span>
+        </a>
     </div>
     {% endif %}
-    
-    {% if mail.decision == 'reject' and mail.status == 'SENT' %}
-    <div class="mt-4 p-3 rounded" style="border-left: 5px solid #dc3545; background: #2c1a1a;">
-        <h6 class="text-danger mb-2"><i class="fas fa-times-circle"></i> <span data-i18n="view_reject_reply">Red Cevabı Gönderildi:</span></h6>
-        <div style="color: #e2e2e2; white-space: pre-wrap;">{{ mail.reply_draft | safe }}</div>
-        <p class="small text-muted mt-2 mb-0">* <span data-i18n="view_reject_note">Bu işlem için görev oluşturulmamıştır.</span></p>
-    </div>
-    {% endif %}
+
 </div>
-{% endblock %}
-
-{% block extra_js %}
-    <script src="/static/js/translations.js"></script>
-    <script src="/static/js/language_engine.js"></script>
 {% endblock %}

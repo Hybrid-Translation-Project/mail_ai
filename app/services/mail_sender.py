@@ -1,10 +1,42 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from typing import Optional, Sequence, Union
 from app.core.security import decrypt_password
 from app.database import users_col, accounts_col  # accounts_col eklendi
 
-def send_gmail_via_user(user_email: str, to_email: str, subject: str, body: str):
+def _normalize_message_id(value: str) -> str:
+    v = (value or "").strip()
+    if not v:
+        return ""
+    # RFC style: "<id@domain>"
+    if not v.startswith("<"):
+        v = "<" + v
+    if not v.endswith(">"):
+        v = v + ">"
+    return v
+
+def _normalize_references(value: Union[str, Sequence[str], None]) -> str:
+    """
+    References header: space-separated message-id list.
+    Input: already string, or list/tuple of ids (with or without <>).
+    """
+    if not value:
+        return ""
+    if isinstance(value, str):
+        return " ".join([_normalize_message_id(x) for x in value.split() if x.strip()])
+    return " ".join([_normalize_message_id(x) for x in value if str(x).strip()])
+
+def send_gmail_via_user(
+    user_email: str,
+    to_email: str,
+    subject: str,
+    body: str,
+    *,
+    message_id: Optional[str] = None,
+    in_reply_to: Optional[str] = None,
+    references: Union[str, Sequence[str], None] = None,
+):
     """
     Belirtilen gönderici (user_email) için önce ACCOUNTS tablosuna, 
     bulamazsa USERS tablosuna bakar, şifreyi çözer ve maili gönderir.
@@ -43,6 +75,19 @@ def send_gmail_via_user(user_email: str, to_email: str, subject: str, body: str)
         msg['From'] = user_email
         msg['To'] = to_email
         msg['Subject'] = subject
+        
+        # Threading headers (reply gibi görünmesi için kritik)
+        norm_mid = _normalize_message_id(message_id) if message_id else ""
+        if norm_mid:
+            msg["Message-ID"] = norm_mid
+        
+        norm_irt = _normalize_message_id(in_reply_to) if in_reply_to else ""
+        if norm_irt:
+            msg["In-Reply-To"] = norm_irt
+        
+        norm_refs = _normalize_references(references)
+        if norm_refs:
+            msg["References"] = norm_refs
 
         # HTML formatında içerik ekle
         msg.attach(MIMEText(body, 'html', 'utf-8')) 

@@ -1,8 +1,56 @@
 import os
 import re
+import uuid 
 from typing import Optional, List
 from fastapi import APIRouter, Request, Form, Depends, HTTPException, Body, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+from dotenv import load_dotenv 
+from datetime import datetime
+from bson import ObjectId
+import json 
+# Diğer importlar...
+
+# --- HELPER: Clean Reply Body ---
+def clean_reply_body(body):
+    """
+    Mail içeriğindeki 'On ... wrote:' gibi alıntı satırlarını ve sonrasını temizler.
+    Sadece yeni yazılan cevabı göstermek için kullanılır.
+    """
+    if not body: return ""
+    
+    quote_patterns = [
+        r'On\s+.*,\s+.*at\s+.*wrote:', 
+        r'Le\s+.*à\s+.*a\s+écrit\s*:', 
+        r'El\s+.*,\s+.*escribió:',    
+        r'-----\s*Original Message\s*-----', 
+        r'From:\s*.*Sent:\s*.*To:\s*.*Subject:', 
+        r'________________________________',
+    ]
+    
+    lines = body.split('\n')
+    clean_lines = []
+    
+    for line in lines:
+        is_quote_line = False
+        for pattern in quote_patterns:
+            if re.search(pattern, line, re.IGNORECASE):
+                is_quote_line = True
+                break
+        
+        if is_quote_line:
+            break 
+            
+        clean_lines.append(line)
+    
+    cleaned_text = "\n".join(clean_lines).strip()
+    
+    # Eğer temizlik sonrası elie bişey kalmazsa (örn: adam inline cevap yazmışsa)
+    # Hiçbir şey göstermemektense, orijinali göstermek daha iyidir.
+    if not cleaned_text:
+        return body
+        
+    return cleaned_text
 from fastapi.templating import Jinja2Templates
 from bson import ObjectId
 from datetime import datetime
@@ -78,6 +126,16 @@ def add_draft_version(mail_id: str, content: str, source: str = "USER"):
         {"$push": {"draft_history": version_entry}}
     )
 
+def mark_mail_read(mail_id: str):
+    """Maili 'okundu' olarak işaretler (Inbox'tan düşürmez / status değiştirmez)."""
+    try:
+        mails_col.update_one(
+            {"_id": ObjectId(mail_id)},
+            {"$set": {"is_read": True, "read_at": datetime.utcnow()}}
+        )
+    except Exception:
+        pass
+
 # --- KURULUM (SETUP) ---
 @router.get("/setup", response_class=HTMLResponse)
 async def setup_page(request: Request):
@@ -102,6 +160,11 @@ async def run_setup(full_name: str = Form(...), company_name: str = Form(...), e
         set_key(ENV_PATH, "MONGO_URI", "mongodb://localhost:27017/")
         set_key(ENV_PATH, "DB_NAME", "mail_asistani_db")
         set_key(ENV_PATH, "OLLAMA_MODEL", "mistral")
+        
+        # --- GÜVENLİK ÖNLEMİ: ÇAKIŞMAYI ÖNLE ---
+        # Yeni kurulum yapılıyorsa, eski tüm kullanıcıları pasife çek.
+        # Böylece sistemde sadece 1 tane "Aktif" yönetici olur.
+        users_col.update_many({}, {"$set": {"is_active": False}})
         
         user_data = {
             "full_name": full_name, "company_name": company_name, "email": email,
@@ -228,11 +291,15 @@ def inbox(request: Request):
     user = users_col.find_one({"is_active": True})
     # 'outbound' (Writer taslakları) olanları Inbox'ta gösterme
     waiting_mails = list(mails_col.find({
-        "status": "WAITING_APPROVAL",
+        # Gmail gibi: cevaplandıktan sonra da Inbox listede kalsın
+        "status": {"$in": ["WAITING_APPROVAL", "REPLIED"]},
         "type": {"$ne": "outbound"}
     }).sort("created_at", -1))
     
-    for m in waiting_mails: m["_id"] = str(m["_id"])
+    for m in waiting_mails:
+        m["_id"] = str(m["_id"])
+        if "is_read" not in m:
+            m["is_read"] = False
 
     # YENİ: Etiketleri (Tags) çek ve map'le
     # Mail'lerde sadece "slug" tutuyoruz. Ekranda rengini ve ismini göstermek için
@@ -348,6 +415,9 @@ async def mail_editor(request: Request, mail_id: str):
     user = users_col.find_one({"is_active": True})
     mail = mails_col.find_one({"_id": ObjectId(mail_id)})
     if not mail: return RedirectResponse(url="/ui")
+
+    # Mail açıldı -> okundu işaretle (Inbox'tan düşürmez)
+    mark_mail_read(mail_id)
     
     target_email = mail.get("user_email")
     target_account = accounts_col.find_one({"email": target_email})
@@ -372,11 +442,40 @@ async def mail_editor(request: Request, mail_id: str):
             "body": draft, "source": "AI", "saved_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }]
 
+    # --- THREAD FETCHING (YENİ) ---
+    subject_norm = mail.get("subject_normalized")
+    if not subject_norm:
+        subject_norm = normalize_subject(mail.get("subject", ""))
+    
+    strict_regex = rf"^\s*(?:(?:re|fw|fwd)\s*:\s*)*{re.escape(subject_norm)}\s*$"
+    
+    query = {
+        "$or": [
+            {"subject_normalized": subject_norm},
+            {"subject": {"$regex": strict_regex, "$options": "i"}}
+        ]
+    }
+    # Thread'i çek ve sırala
+    thread_cursor = mails_col.find(query).sort("created_at", 1)
+    thread = list(thread_cursor)
+    
+    # STRICT FILTERING (YENİ)
+    thread = filter_thread_chain(thread, str(mail_id))
+    
+    # ObjectId -> String ve Owner check
+    for m in thread:
+        m["_id"] = str(m["_id"])
+        is_owner = False
+        if m.get("type") == "outbound": is_owner = True
+        # elif accounts_col.find_one({"email": m.get("from")}): is_owner = True # İPTAL
+        m["is_owner"] = is_owner
+
     return templates.TemplateResponse("editor.html", {
         "request": request, 
         "mail": mail, 
         "user": user, 
-        "account_signature": account_signature
+        "account_signature": account_signature,
+        "thread": thread # <-- Template'e gönder
     })
 
 # --- KARAR MEKANİZMASI ---
@@ -462,11 +561,69 @@ def send_approved_mail(mail_id: str, reply_draft: str = Form(...)):
     signature = account.get("signature", "") if account else user.get("signature", "")
     
     final_body = f"{reply_draft}\n\n---\n{signature}"
-    
-    is_sent, error_msg = send_gmail_via_user(mail["user_email"], mail["from"], f"RE: {mail['subject']}", final_body)
+
+    # --- THREADING (Reply gibi çalışması için KRİTİK) ---
+    def _as_mid(v: str) -> str:
+        v = (v or "").strip()
+        if not v:
+            return ""
+        if not v.startswith("<"):
+            v = "<" + v
+        if not v.endswith(">"):
+            v = v + ">"
+        return v
+
+    parent_mid = _as_mid(mail.get("message_id", ""))
+    # Kendi ürettiğimiz Message-ID'yi hem SMTP header'a hem DB'ye yazıyoruz.
+    # Böylece Sent Listener sonradan aynı Message-ID ile gelirse duplicate oluşmaz.
+    reply_message_id = f"<gen-{uuid.uuid4()}@mail-ai.local>"
+
+    # References: varsa mevcut zinciri koru + parent ekle
+    existing_refs = mail.get("references") or []
+    if isinstance(existing_refs, str):
+        existing_refs = existing_refs.split()
+    refs = []
+    for x in list(existing_refs) + ([parent_mid] if parent_mid else []):
+        mid = _as_mid(str(x))
+        if mid and mid not in refs:
+            refs.append(mid)
+
+    is_sent, error_msg = send_gmail_via_user(
+        mail["user_email"],
+        mail["from"],
+        f"RE: {mail['subject']}",
+        final_body,
+        message_id=reply_message_id,
+        in_reply_to=parent_mid or None,
+        references=refs or None,
+    )
     
     if is_sent:
-        mails_col.update_one({"_id": ObjectId(mail_id)}, {"$set": {"status": "SENT", "handled_at": datetime.utcnow()}})
+        # 1. Orijinal mailin durumunu güncelle
+        mails_col.update_one({"_id": ObjectId(mail_id)}, {"$set": {"status": "REPLIED", "handled_at": datetime.utcnow()}})
+        
+        # 2. Giden cevabı AYRI BİR KAYIT olarak ekle (Thread'de görünmesi için)
+        sent_reply_doc = {
+            # SMTP header ile aynı Message-ID (thread bağlantısı ve dedupe için kritik)
+            "message_id": reply_message_id,
+            "type": "outbound", 
+            "user_email": mail["user_email"], 
+            "from": mail["user_email"],
+            "to": mail["from"],
+            "subject": f"Re: {mail['subject']}",
+            "subject_normalized": mail.get("subject_normalized") or normalize_subject(mail["subject"]),
+            "body": final_body,
+            "body_html": f"<div style='white-space: pre-wrap;'>{final_body}</div>",
+            "created_at": datetime.utcnow(),
+            "status": "SENT",
+            "is_owner": True,
+            "tags": mail.get("tags", []),
+
+            # Threading linkleri (filter_thread_chain için kritik)
+            "in_reply_to": parent_mid,
+            "references": refs,
+        }
+        mails_col.insert_one(sent_reply_doc)
         
         decision = mail.get("decision", "neutral")
         if mail.get("extracted_task") and decision != "reject":
@@ -481,7 +638,8 @@ def send_approved_mail(mail_id: str, reply_draft: str = Form(...)):
                 "is_approved": True,
                 "created_at": datetime.utcnow()
             })
-        return RedirectResponse(url="/ui/history?msg=Gonderildi", status_code=303)
+        # Gmail gibi: cevaplandıktan sonra Inbox listede kalsın
+        return RedirectResponse(url="/ui?msg=Gonderildi", status_code=303)
     else:
         return RedirectResponse(url=f"/ui/editor/{mail_id}?error={error_msg}", status_code=303)
     
@@ -497,12 +655,206 @@ def history(request: Request):
     for m in old_mails: m["_id"] = str(m["_id"])
     return templates.TemplateResponse("history.html", {"request": request, "mails": old_mails, "user": user})
 
+def normalize_subject(subject):
+    """
+    Konu başlığını temizler:
+    - re:, fw:, fwd: gibi ön ekleri kaldırır
+    - Küçük harfe çevirir
+    Örn: "Re: Fwd: Proje Detayları" -> "proje detaylari"
+    """
+    if not subject: return ""
+    s = subject.lower()
+    clean_pattern = r'^\s*(?:re|fw|fwd)\s*:\s*'
+    while re.match(clean_pattern, s):
+        s = re.sub(clean_pattern, '', s)
+    return s.strip()
+
+# --- STRICT THREADING ENGINE ---
+def filter_thread_chain(candidates, target_id):
+    """
+    Sadece kriptografik olarak bağlı mailleri (Message-ID, In-Reply-To, References)
+    birbirine bağlar. Konu benzerliği olsa bile zincir dışındakileri eler.
+    """
+    if not candidates: return []
+    
+    # 1. Node Haritası Oluştur
+    id_map = {} # mail_id -> mail_doc
+    msg_id_map = {} # Message-ID -> mail_id
+    
+    # Hedef mailin Message-ID'sini bul (traverse başlangıcı için)
+    target_msg_id = None
+    
+    for m in candidates:
+        m_id = str(m["_id"])
+        id_map[m_id] = m
+        
+        # Message-ID temizle
+        raw_mid = m.get("message_id")
+        if raw_mid:
+            clean_mid = raw_mid.strip().strip("<>")
+            msg_id_map[clean_mid] = m_id
+            
+        if m_id == target_id:
+            target_msg_id = raw_mid.strip().strip("<>") if raw_mid else None
+
+    # 2. Graph Oluştur (Adjacency List)
+    # Graph: { "mail_id": set(["linked_mail_id_1", "linked_mail_id_2"]) }
+    graph = {mid: set() for mid in id_map}
+    
+    for m in candidates:
+        curr_id = str(m["_id"])
+        
+        # A) In-Reply-To Bağlantısı
+        in_reply_to = m.get("in_reply_to")
+        if in_reply_to:
+            clean_irt = in_reply_to.strip().strip("<>")
+            parent_id = msg_id_map.get(clean_irt)
+            if parent_id:
+                # İki yönlü bağla (Parent <-> Child)
+                graph[curr_id].add(parent_id)
+                graph[parent_id].add(curr_id)
+        
+        # B) References Bağlantısı
+        refs = m.get("references")
+        if refs:
+            if isinstance(refs, str): refs = refs.split()
+            for ref in refs:
+                clean_ref = ref.strip().strip("<>")
+                ref_id = msg_id_map.get(clean_ref)
+                if ref_id:
+                    graph[curr_id].add(ref_id)
+                    graph[ref_id].add(curr_id)
+
+    # 3. BFS/DFS ile Zinciri Gez (Connected Component)
+    # Target ID'den başla, gidebildiğin her yere git.
+    visited = set()
+    queue = [target_id]
+    
+    while queue:
+        node = queue.pop(0)
+        if node in visited: continue
+        visited.add(node)
+        
+        # Komşuları ekle
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                queue.append(neighbor)
+                
+    # 4. Sadece ziyaret edilenleri döndür
+    filtered_thread = [id_map[mid] for mid in visited]
+    
+    # Tarihe göre sırala
+    filtered_thread.sort(key=lambda x: x.get("created_at") or "")
+    
+    return filtered_thread
+
+def clean_reply_body(body):
+    """
+    Mail içeriğindeki 'On ... wrote:' gibi alıntı satırlarını ve sonrasını temizler.
+    Sadece yeni yazılan cevabı göstermek için kullanılır.
+    """
+    if not body: return ""
+    
+    # 1. Yaygın alıntı başlıkları (Regex)
+    # Örnek: "On Thu, Jan 29, 2026 at 9:51 PM Asir Can Aslan <...> wrote:"
+    # Örnek: "Le lun. 29 janv. 2026 à 21:51, Asir Can Aslan <...> a écrit :"
+    
+    quote_patterns = [
+        r'On\s+.*,\s+.*at\s+.*wrote:', # İngilizce standart
+        r'Le\s+.*à\s+.*a\s+écrit\s*:', # Fransızca
+        r'El\s+.*,\s+.*escribió:',    # İspanyolca
+        r'-----\s*Original Message\s*-----', # Outlook vb.
+        r'From:\s*.*Sent:\s*.*To:\s*.*Subject:', # Outlook Header
+        r'________________________________', # Ayırıcı çizgi
+    ]
+    
+    lines = body.split('\n')
+    clean_lines = []
+    
+    for line in lines:
+        is_quote_line = False
+        for pattern in quote_patterns:
+            if re.search(pattern, line, re.IGNORECASE):
+                is_quote_line = True
+                break
+        
+        # Eğer alıntı başlangıcı bulduysak, buradan sonrasını kesip atabiliriz
+        # YA DA sadece o satırı atabiliriz. Genelde sonrası full alıntıdır.
+        if is_quote_line:
+            # Bazen alıntı işaretleri (>) ile devam eder.
+            # Şimdilik "On ... wrote:" gördüğümüz yerden sonrasını komple kesiyoruz.
+            # Ancak çok agresif olabilir, opsiyonel yapalım.
+            # Kullanıcı "maildekini almasak" dediği için kesiyoruz.
+            break 
+            
+        clean_lines.append(line)
+    
+    return "\n".join(clean_lines).strip()
+
 @router.get("/ui/view/{mail_id}", response_class=HTMLResponse)
 async def view_mail(request: Request, mail_id: str):
     user = users_col.find_one({"is_active": True})
-    mail = mails_col.find_one({"_id": ObjectId(mail_id)})
-    if not mail: return RedirectResponse(url="/ui/history")
-    return templates.TemplateResponse("view_mail.html", {"request": request, "mail": mail, "user": user})
+    
+    # 1. İstenen maili çek
+    try:
+        current_mail = mails_col.find_one({"_id": ObjectId(mail_id)})
+    except:
+        return RedirectResponse(url="/ui/history")
+
+    if not current_mail: return RedirectResponse(url="/ui/history")
+
+    # Thread ekranı açıldı -> okundu işaretle (Inbox'tan düşürmez)
+    mark_mail_read(mail_id)
+
+    # 2. Konuyu Normalize Et
+    # Eğer mail yeni sistemle kaydedildiyse subject_normalized vardır, yoksa biz hesaplarız
+    current_subject_norm = current_mail.get("subject_normalized")
+    if not current_subject_norm:
+        current_subject_norm = normalize_subject(current_mail.get("subject", ""))
+
+    # 3. Thread Araması (Eski ve Yeni Sistemi Kapsa)
+    # Strateji: 
+    # - subject_normalized eşleşenleri getir (YENİ SİSTEM)
+    # - VEYA subject içinde normalize edilmiş metin geçenleri getir (ESKİ SİSTEM - Regex)
+    #   Ancak "regex" araması çok geniş olabilir (substring match). 
+    #   Bu yüzden başa ve sona çapa (anchor) atarak "Tam Eşleşme" arıyoruz.
+    #   (Sadece Re, Fwd gibi ön ekleri görmezden geliyoruz)
+    
+    strict_regex = rf"^\s*(?:(?:re|fw|fwd)\s*:\s*)*{re.escape(current_subject_norm)}\s*$"
+    
+    query = {
+        "$or": [
+            {"subject_normalized": current_subject_norm}, # Yeni kayıtlar
+            {"subject": {"$regex": strict_regex, "$options": "i"}} # Eski kayıtlar (Strict Regex)
+        ]
+    }
+    
+    # Sadece ilgili kullanıcıya/hesaba ait olanları çek (Güvenlik/Karmaşıklık önlemi)
+    # Not: user_email filtresi eklemek iyi olabilir ama thread farklı hesaplar arasında dönüyorsa (cc vs) bunu engeller.
+    # Şimdilik genel bırakıyoruz.
+
+    # 4. Verileri Çek ve Sırala (Eskiden Yeniye)
+    thread_cursor = mails_col.find(query).sort("created_at", 1)
+    thread = list(thread_cursor)
+    
+    # 5. STRICT FILTERING (YENİ)
+    # Konuyla bulduklarımızı, gerçek bağlantı kontrolünden geçiriyoruz.
+    thread = filter_thread_chain(thread, str(mail_id))
+
+    # 6. ObjectId -> String dönüşümü ve Ek İşlemler
+    for m in thread:
+        m["_id"] = str(m["_id"])
+    
+        is_owner = False
+        if m.get("type") == "outbound":
+            is_owner = True  
+        m["is_owner"] = is_owner
+
+        # GÖRÜNÜM İÇİN TEMİZLİK
+        if m.get("body"):
+            m["body"] = clean_reply_body(m["body"])
+
+    return templates.TemplateResponse("view_mail.html", {"request": request, "thread": thread, "user": user})
 
 # --- REHBER (GÜNCELLENEN KISIM) ---
 @router.get("/ui/contacts", response_class=HTMLResponse)

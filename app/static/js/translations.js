@@ -100,6 +100,16 @@ const translations = {
         "editor_version_history": "Versiyon Geçmişi",
         "badge_user": "Sen",
 
+        "lbl_subject": "KONU",
+        "lbl_you": "(Siz)",
+        "status_draft_ready": "✨ Taslak Hazır",
+        "lbl_attachments": "📎 EKLER:",
+        "btn_review_reply": "İncele & Cevapla",
+        "btn_reply": "Cevapla",
+        "btn_edit_draft": "Taslağı Düzenle",
+        "lbl_start_reply": "Bu konuşmaya yeni bir cevap yazmak ister misiniz?",
+        "btn_write_reply": "Cevap Yaz",
+
         "view_label_from": "Kimden:",
         "view_label_to": "Kime:",
         "view_label_date": "Tarih:",
@@ -370,6 +380,16 @@ const translations = {
         "btn_archive": "Archive",
         "editor_version_history": "Version History",
         "badge_user": "You",
+
+        "lbl_subject": "SUBJECT",
+        "lbl_you": "(You)",
+        "status_draft_ready": "✨ Draft Ready",
+        "lbl_attachments": "📎 ATTACHMENTS:",
+        "btn_review_reply": "Review & Reply",
+        "btn_reply": "Reply",
+        "btn_edit_draft": "Edit Draft",
+        "lbl_start_reply": "Would you like to write a new reply to this conversation?",
+        "btn_write_reply": "Write Reply",
 
         "view_label_from": "From:",
         "view_label_to": "To:",

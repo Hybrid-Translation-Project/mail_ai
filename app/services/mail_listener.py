@@ -4,6 +4,8 @@ from email.header import decode_header
 from email.utils import parseaddr
 from datetime import datetime
 import os
+import base64
+import re
 import time
 from dotenv import load_dotenv
 
@@ -25,6 +27,48 @@ except ImportError:
 
 # Güvenlik
 from app.core.security import decrypt_password
+
+def _normalize_mid(value: str) -> str:
+    return (value or "").strip().strip("<>").strip()
+
+def _mid_variants(value: str) -> list:
+    clean = _normalize_mid(value)
+    if not clean:
+        return []
+    variants = {value.strip(), clean, f"<{clean}>"}
+    return [v for v in variants if v]
+
+def _find_mail_by_message_id(message_id: str):
+    mids = _mid_variants(message_id)
+    if not mids:
+        return None
+    return mails_col.find_one({"message_id": {"$in": mids}})
+
+def _find_thread_tags(in_reply_to: str, references: list) -> list:
+    """
+    Thread'e bağlı yeni bir mail gelirse, zincirin tag'lerini sabitlemek için
+    daha önce kaydedilmiş bir parent/root mailin tag'lerini döndürür.
+    """
+    refs = references or []
+    if isinstance(refs, str):
+        refs = refs.split()
+
+    # Öncelik: root (References[0]) -> son referans -> In-Reply-To
+    candidates = []
+    if refs:
+        candidates.append(refs[0])
+        candidates.append(refs[-1])
+    if in_reply_to:
+        candidates.append(in_reply_to)
+
+    for mid in candidates:
+        parent = _find_mail_by_message_id(str(mid))
+        if parent and isinstance(parent.get("tags"), list) and parent["tags"]:
+            return parent["tags"]
+        if parent and "tags" in parent and isinstance(parent.get("tags"), list):
+            # parent var ama tags boş ise, boş liste döndürmeyelim; aramaya devam edelim
+            continue
+    return []
 
 def decode_mime_words(s):
     return u''.join(
@@ -92,6 +136,14 @@ def process_account_inbox(account):
                 # Başlık ve Gönderen Bilgileri
                 subject = decode_mime_words(msg["Subject"] or "")
                 sender_name, sender_email = parseaddr(msg.get("From"))
+                
+                # KENDİNE GÖNDERİLEN MAİLLERİ ATLA
+                # Eğer gönderen adresi hesap adresiyle aynıysa, bu mail zaten Sent folder'dan işlenecek.
+                # Inbox'tan da yakalıyoruz ama gereksiz duplicatedan kaçınmak için atlıyoruz.
+                if sender_email.lower() == email_user.lower():
+                    print(f"⏭️ Kendine gönderilen mail, Sent Listener'a bırakılıyor: {subject}")
+                    continue
+                
                 message_id = msg.get("Message-ID") # Message-ID çekiyoruz
 
                 # Eğer Message-ID yoksa (çok nadir), benzersiz bir ID üretelim
@@ -99,15 +151,96 @@ def process_account_inbox(account):
                      import uuid
                      message_id = f"gen-{uuid.uuid4()}"
 
-                # Mail Gövdesini Çekme
-                body = ""
+                # Threading header'ları (Reply zinciri için kritik)
+                in_reply_to = (msg.get("In-Reply-To") or "").strip()
+                references_header = msg.get("References") or ""
+                references = references_header.split() if references_header else []
+
+                # --- Gelişmiş Parsing (Stream Destekli) ---
+                body_text = ""
+                body_html = ""
+                cid_map = {} # cid -> replacement_url (Stream API)
+                attachments = [] # Ek dosyalar (metadata)
+
                 if msg.is_multipart():
                     for part in msg.walk():
-                        if part.get_content_type() == "text/plain":
-                            body = part.get_payload(decode=True).decode(errors="ignore")
-                            break
+                        ctype = part.get_content_type()
+                        cdisp = str(part.get("Content-Disposition"))
+                        
+                        # Content-ID Yakala (Inline Resimler için)
+                        content_id = part.get("Content-ID")
+                        
+                        try:
+                            part_data = part.get_payload(decode=True)
+                            payload = part_data.decode(errors="ignore")
+                        except:
+                            part_data = None
+                            payload = ""
+
+                        # BASE64 EMBEDDING (HIZ İÇİN)
+                        if content_id and part_data:
+                            clean_cid = content_id.strip("<> ")
+                            if clean_cid:
+                                try:
+                                    b64_str = base64.b64encode(part_data).decode('utf-8')
+                                    # data:image/png;base64,....
+                                    embed_src = f"data:{ctype};base64,{b64_str}"
+                                    cid_map[clean_cid] = embed_src
+                                except Exception as e:
+                                    print(f"Base64 error: {e}")
+
+                        # ATTACHMENT DETECTION (EK DOSYALAR)
+                        # Eğer "attachment" veya dosya adı varsa bu bir ektir
+                        if "attachment" in cdisp or part.get_filename():
+                            filename = part.get_filename()
+                            if filename:
+                                try:
+                                    # Dosya adı decode et (MIME encoded olabilir)
+                                    filename = decode_mime_words(filename)
+                                    file_size = len(part_data) if part_data else 0
+                                    
+                                    # BASE64 DATA URI (İndirme için)
+                                    if part_data:
+                                        b64_data = base64.b64encode(part_data).decode('utf-8')
+                                        data_uri = f"data:{ctype};base64,{b64_data}"
+                                    else:
+                                        data_uri = "#"
+                                    
+                                    attachments.append({
+                                        "filename": filename,
+                                        "content_type": ctype,
+                                        "size": file_size,
+                                        "url": data_uri
+                                    })
+                                except Exception as e:
+                                    print(f"Attachment parse error: {e}")
+
+                        if ctype == "text/plain" and "attachment" not in cdisp:
+                            body_text += payload
+                        elif ctype == "text/html" and "attachment" not in cdisp:
+                            body_html += payload
                 else:
-                    body = msg.get_payload(decode=True).decode(errors="ignore")
+                    # Tek parça
+                    try: 
+                        payload = msg.get_payload(decode=True).decode(errors="ignore")
+                        if msg.get_content_type() == "text/html":
+                            body_html = payload
+                        else:
+                            body_text = payload
+                    except:
+                        pass
+
+                # HTML içindeki cid referanslarını Base64 ile değiştir
+                if body_html and cid_map:
+                    for cid, embed_url in cid_map.items():
+                        # src="cid:..." formatını değiştir
+                        body_html = body_html.replace(f"cid:{cid}", embed_url)
+
+                # AI ve Özet için temiz metin
+                body = body_text.strip()
+                if not body and body_html:
+                    # HTML'den text çıkar (Basit regex)
+                    body = re.sub('<[^<]+?>', '', body_html).strip()
 
                 # Çifte Kayıt Kontrolü (Aynı mail tekrar işlenmesin - Message-ID ile daha güvenli)
                 # Önce message_id ile kontrol et, yoksa eski yöntemle
@@ -116,16 +249,8 @@ def process_account_inbox(account):
                     print(f"⚠️ Mail zaten kayıtlı (ID: {message_id}), atlanıyor.")
                     continue
 
-                # Yedek kontrol (Eski yöntem) - Silebiliriz ama dursun
-                exists_old = mails_col.find_one({
-                    "subject": subject, 
-                    "user_email": email_user, 
-                    "created_at": {"$gte": datetime.now().replace(hour=0, minute=0, second=0)}
-                })
-                
-                if exists_old:
-                    print(f"⚠️ Mail zaten kayıtlı (Konu: {subject}), atlanıyor.")
-                    continue
+                # Yedek kontrol (Eski yöntem) - Silindi
+                # Artık sadece Message-ID güvenilirliği kullanılıyor.
 
                 # 1. AI Sınıflandırma (Cevap verilmeli mi?)
                 classify_result = should_reply(body)
@@ -149,6 +274,11 @@ def process_account_inbox(account):
                 available_tags = list(tags_col.find({}, {"_id": 0, "slug": 1, "description": 1}))
 
                 analysis = extract_insights_and_tasks(body, available_tags=available_tags)
+                
+                # Thread'e bağlıysa, tag'leri zincirde sabitle (ticket mantığı)
+                thread_tags = _find_thread_tags(in_reply_to, references)
+                analysis_tags = analysis.get("tags", []) if isinstance(analysis.get("tags", []), list) else []
+                tags_for_mail = thread_tags if thread_tags else analysis_tags
 
                 # --- Şirket Hafızası Güncelleme ---
                 if analysis.get('insight'):
@@ -165,18 +295,25 @@ def process_account_inbox(account):
                 # 4. Ana Mail Kaydı
                 mail_doc = {
                     "message_id": message_id, # <-- ARTIK KAYDEDİYORUZ
+                    "in_reply_to": in_reply_to,
+                    "references": references,
                     "user_email": email_user, # Hangi hesaba geldi? (ÇOK ÖNEMLİ)
                     "account_id": str(account["_id"]), # Hesabın ID'si
                     "from": sender_email,
                     "subject": subject,
+                    "subject": subject,
                     "body": body,
+                    "body_html": body_html if body_html else body, # HTML yoksa düz metni koy
                     "category": analysis.get('category', 'Diğer'),
                     "urgency_score": analysis.get('urgency_score', 0),
-                    "tags": analysis.get("tags", []), # YENİ: Etiketler
+                    "tags": tags_for_mail, # Thread boyunca sabit etiketler
                     "status": "WAITING_APPROVAL", 
                     "classifier": classify_result,
                     "extracted_task": analysis.get('task') if analysis.get('task') else None,
                     "created_at": datetime.utcnow(),
+                    
+                    # Ekler (Attachments)
+                    "attachments": attachments,
                     
                     # Vektör Verisi (Arama için kritik)
                     "embedding": vector_embedding 

@@ -1,5 +1,4 @@
 import os
-from sentence_transformers import SentenceTransformer
 
 # Modelin diskteki yolu (download_model.py ile buraya indirdik)
 MODEL_PATH = os.path.join("models", "embedding_model")
@@ -14,6 +13,12 @@ def get_model():
     """
     global _embedding_model
     
+    # Varsayılan: embeddings AÇIK.
+    # Login gecikmesini önlemek için model import'u ve yükleme lazy (ilk kullanımda) yapılır.
+    # İstersen kapatmak için: .env içine EMBEDDINGS_ENABLED=0
+    if os.getenv("EMBEDDINGS_ENABLED", "1").strip() != "1":
+        raise RuntimeError("Embeddings disabled (set EMBEDDINGS_ENABLED=1 to enable).")
+
     if _embedding_model is None:
         if not os.path.exists(MODEL_PATH):
             raise FileNotFoundError(
@@ -23,6 +28,7 @@ def get_model():
         
         print(f"🧠 Embedding modeli yükleniyor... ({MODEL_PATH})")
         # Local modeli yükle
+        from sentence_transformers import SentenceTransformer  # lazy import (startup hızlansın)
         _embedding_model = SentenceTransformer(MODEL_PATH)
         print("✅ Model belleğe yüklendi.")
     
@@ -36,7 +42,11 @@ def get_embedding(text: str) -> list[float]:
     if not text or not isinstance(text, str):
         return []
 
-    model = get_model()
+    # Embeddings kapalıysa veya model yüklenemiyorsa sessizce boş dön (fallback)
+    try:
+        model = get_model()
+    except Exception:
+        return []
     
     # Metni temizle (Yeni satırları boşlukla değiştir - önerilen pratik)
     text = text.replace("\n", " ")
