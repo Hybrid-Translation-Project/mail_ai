@@ -1,192 +1,189 @@
 {% extends "base.html" %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/settings.css?v=5">
+<link rel="stylesheet" href="/static/css/settings.css?v=6">
 {% endblock %}
 
 {% block content %}
 <div class="settings-container">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="header-area mb-4">
         <h2>⚙️ <span data-i18n="settings_title">Sistem Ayarları</span></h2>
     </div>
 
-    <div class="settings-card mb-4">
-        <h3><i class="fas fa-globe"></i> <span data-i18n="settings_general_header">Genel Tercihler</span></h3>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label class="form-label" data-i18n="settings_lang">Uygulama Dili</label>
-                    <select id="languageSelect" class="form-control">
-                        <option value="tr">🇹🇷 Türkçe</option>
-                        <option value="en">🇬🇧 English</option>
-                    </select>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label class="form-label" data-i18n="settings_theme">Görünüm Modu</label>
-                    <select class="form-control input-disabled" disabled>
-                        <option>Dark Mode (Varsayılan)</option>
-                    </select>
-                </div>
-            </div>
-        </div>
+    <div class="settings-tabs">
+        <button class="tab-btn active" onclick="openTab(event, 'tab-appearance')">
+            <i class="fas fa-paint-brush"></i> <span data-i18n="tab_appearance">Görünüm & Etiketler</span>
+        </button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-profile')">
+            <i class="fas fa-user-circle"></i> <span data-i18n="tab_profile">Profil Bilgileri</span>
+        </button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-security')">
+            <i class="fas fa-shield-alt"></i> <span data-i18n="tab_security">Güvenlik</span>
+        </button>
     </div>
 
-
-    <!-- TAG YÖNETİMİ-->
-    <div class="settings-card mb-4">
-        <h3><i class="fas fa-tags"></i> <span data-i18n="settings_tags_header">Etiket Yönetimi</span></h3>
-        <p class="text-muted mb-4" data-i18n="settings_tags_desc">AI'nın maillerinizi otomatik olarak etiketlemesi için
-            aşağıdan kategoriler oluşturun.
-        </p>
-
-        <!-- Dynamic Grid Layout -->
-        <div class="tag-grid">
-            {% for tag in tags %}
-            <div class="tag-item-card">
-                <div class="tag-color-strip" data-bg-color="{{ tag.color }}"></div>
-
-                <div class="tag-info">
-                    <div class="tag-name-row">
-                        <span class="tag-pill" data-bg-color="{{ tag.color }}">
-                            <span data-i18n="tag_name_{{ tag.slug }}">{{ tag.name }}</span>
-                        </span>
+    <div id="tab-appearance" class="tab-content active">
+        
+        <div class="settings-card mb-4">
+            <h3><i class="fas fa-globe"></i> <span data-i18n="settings_general_header">Genel Tercihler</span></h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="settings_lang">Uygulama Dili</label>
+                        <select id="languageSelect" class="form-control">
+                            <option value="tr">🇹🇷 Türkçe</option>
+                            <option value="en">🇬🇧 English</option>
+                        </select>
                     </div>
-                    <div class="tag-desc" data-i18n="tag_desc_{{ tag.slug }}">{{ tag.description }}</div>
                 </div>
-
-                <div class="tag-actions">
-                    <button type="button" title="Düzenle"
-                        onclick="openEditModal('{{ tag._id }}', '{{ tag.name }}', '{{ tag.color }}', '{{ tag.description }}')">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <form action="/ui/settings/tags/delete/{{ tag._id }}" method="post" class="d-inline">
-                        <button type="submit" title="Sil"
-                            onclick="return confirm('Bu etiketi silmek istediğinize emin misiniz?');">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </form>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="settings_theme">Görünüm Modu</label>
+                        <select class="form-control input-disabled" disabled>
+                            <option>Dark Mode (Varsayılan)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-            {% else %}
-            <div class="col-12 text-center py-4">
-                <p class="text-muted" data-i18n="settings_tags_empty">Henüz hiç etiket tanımlanmamış. Aşağıdan ilk
-                    etiketinizi oluşturun.</p>
-            </div>
-            {% endfor %}
         </div>
 
-        <!-- Add Tag Form (Styled) -->
-        <div class="add-tag-box">
-            <h5 class="mb-3 text-muted"><i class="fas fa-plus-circle"></i> <span
-                    data-i18n="settings_tags_add_header">Yeni Etiket Ekle</span></h5>
-            <form action="/ui/settings/tags/add" method="post" class="row align-items-end">
-                <div class="col-md-3 mb-2">
-                    <label class="form-label small" data-i18n="settings_tags_label_name">Etiket Adı</label>
-                    <input type="text" name="name" class="form-control"
-                        data-i18n="[placeholder]settings_tags_placeholder_name" placeholder="Örn: Fatura" required>
+        <div class="settings-card mb-4">
+            <h3><i class="fas fa-tags"></i> <span data-i18n="settings_tags_header">Etiket Yönetimi</span></h3>
+            <p class="text-muted mb-4" data-i18n="settings_tags_desc">AI'nın maillerinizi otomatik olarak etiketlemesi için aşağıdan kategoriler oluşturun.</p>
+
+            <div class="tag-grid">
+                {% for tag in tags %}
+                <div class="tag-item-card">
+                    <div class="tag-color-strip" data-bg-color="{{ tag.color }}"></div>
+                    <div class="tag-info">
+                        <div class="tag-name-row">
+                            <span class="tag-pill" data-bg-color="{{ tag.color }}">
+                                <span data-i18n="tag_name_{{ tag.slug }}">{{ tag.name }}</span>
+                            </span>
+                        </div>
+                        <div class="tag-desc" data-i18n="tag_desc_{{ tag.slug }}">{{ tag.description }}</div>
+                    </div>
+                    <div class="tag-actions">
+                        <button type="button" title="Düzenle" onclick="openEditModal('{{ tag._id }}', '{{ tag.name }}', '{{ tag.color }}', '{{ tag.description }}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <form action="/ui/settings/tags/delete/{{ tag._id }}" method="post" class="d-inline">
+                            <button type="submit" title="Sil" onclick="return confirm('Bu etiketi silmek istediğinize emin misiniz?');">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <div class="col-md-2 mb-2">
-                    <label class="form-label small" data-i18n="settings_tags_label_color">Renk Seçin</label>
-                    <input type="color" name="color" class="form-control" value="#3498db" title="Etiket Rengi"
-                        style="height: 42px; padding: 2px;">
+                {% else %}
+                <div class="col-12 text-center py-4">
+                    <p class="text-muted" data-i18n="settings_tags_empty">Henüz hiç etiket tanımlanmamış.</p>
                 </div>
-                <div class="col-md-5 mb-2">
-                    <label class="form-label small" data-i18n="settings_tags_label_desc">Açıklama (AI Kriteri)</label>
-                    <input type="text" name="description" class="form-control"
-                        data-i18n="[placeholder]settings_tags_placeholder_desc"
-                        placeholder="Örn: Ödeme ve dekont mailleri..." required>
-                </div>
-                <div class="col-md-2 mb-2">
-                    <button type="submit" class="btn btn-primary btn-block" style="height: 42px;">
-                        <i class="fas fa-plus"></i> <span data-i18n="btn_add">Ekle</span>
-                    </button>
-                </div>
-            </form>
+                {% endfor %}
+            </div>
+
+            <div class="add-tag-box">
+                <h5 class="mb-3 text-muted"><i class="fas fa-plus-circle"></i> <span data-i18n="settings_tags_add_header">Yeni Etiket Ekle</span></h5>
+                <form action="/ui/settings/tags/add" method="post" class="row align-items-end">
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label small">Etiket Adı</label>
+                        <input type="text" name="name" class="form-control" placeholder="Örn: Fatura" required>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <label class="form-label small">Renk</label>
+                        <input type="color" name="color" class="form-control" value="#3498db" style="height: 42px; padding: 2px;">
+                    </div>
+                    <div class="col-md-5 mb-2">
+                        <label class="form-label small">Açıklama (AI Kriteri)</label>
+                        <input type="text" name="description" class="form-control" placeholder="Örn: Ödeme ve dekont mailleri..." required>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button type="submit" class="btn btn-primary btn-block" style="height: 42px;">
+                            <i class="fas fa-plus"></i> <span data-i18n="btn_add">Ekle</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <form action="/ui/settings/update-profile" method="post">
-        <div class="settings-card">
-            <h3><i class="fas fa-user-circle"></i> <span data-i18n="settings_profile_header">Profil Bilgileri</span>
-            </h3>
+    <div id="tab-profile" class="tab-content" style="display: none;">
+        <form action="/ui/settings/update-profile" method="post">
+            <div class="settings-card">
+                <h3><i class="fas fa-user-circle"></i> <span data-i18n="settings_profile_header">Profil Bilgileri</span></h3>
 
-            <div class="form-group">
-                <label data-i18n="settings_label_fullname" class="form-label">Tam Adınız</label>
-                <input type="text" name="full_name" value="{{ user.full_name }}" required>
+                <div class="form-group">
+                    <label data-i18n="settings_label_fullname" class="form-label">Tam Adınız</label>
+                    <input type="text" name="full_name" value="{{ user.full_name }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="settings_label_signature" class="form-label">E-posta İmzanız</label>
+                    <textarea name="signature">{{ user.signature }}</textarea>
+                    <p class="helper-text" data-i18n="settings_helper_signature">Onayladığınız taslakların sonuna bu imza otomatik eklenir.</p>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="settings_label_verify" class="form-label">Doğrulama: Panel Şifreniz</label>
+                    <input type="password" name="current_password" placeholder="Değişiklikleri kaydetmek için şifrenizi girin" required>
+                </div>
+
+                <button type="submit" class="save-btn">
+                    <i class="fas fa-user-check"></i> <span data-i18n="btn_update_profile">Profili Güncelle</span>
+                </button>
             </div>
+        </form>
+    </div>
 
-            <div class="form-group">
-                <label data-i18n="settings_label_signature" class="form-label">E-posta İmzanız</label>
-                <textarea name="signature">{{ user.signature }}</textarea>
-                <p class="helper-text" data-i18n="settings_helper_signature">Onayladığınız taslakların sonuna bu imza
-                    otomatik eklenir.</p>
+    <div id="tab-security" class="tab-content" style="display: none;">
+        <form action="/ui/settings/update-password" method="post">
+            <div class="settings-card">
+                <h3><i class="fas fa-lock"></i> <span data-i18n="settings_password_header">Panel Giriş Şifresi</span></h3>
+
+                <div class="form-group">
+                    <label data-i18n="settings_label_old_pass" class="form-label">Mevcut Şifre</label>
+                    <input type="password" name="old_password" required>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="settings_label_new_pass" class="form-label">Yeni Şifre</label>
+                    <input type="password" name="new_password" required>
+                </div>
+
+                <button type="submit" class="save-btn btn-warning">
+                    <i class="fas fa-key"></i> <span data-i18n="btn_change_password">Şifreyi Değiştir</span>
+                </button>
             </div>
-
-            <div class="form-group">
-                <label data-i18n="settings_label_verify" class="form-label">Doğrulama: Panel Şifreniz</label>
-                <input type="password" name="current_password" data-i18n="placeholder_password_verify"
-                    placeholder="Değişiklikleri kaydetmek için şifrenizi girin" required>
-            </div>
-
-            <button type="submit" class="save-btn">
-                <i class="fas fa-user-check"></i> <span data-i18n="btn_update_profile">Profili Güncelle</span>
-            </button>
-        </div>
-    </form>
-
-    <form action="/ui/settings/update-password" method="post" class="mt-4">
-        <div class="settings-card">
-            <h3><i class="fas fa-lock"></i> <span data-i18n="settings_password_header">Panel Giriş Şifresi</span></h3>
-
-            <div class="form-group">
-                <label data-i18n="settings_label_old_pass" class="form-label">Mevcut Şifre</label>
-                <input type="password" name="old_password" required>
-            </div>
-
-            <div class="form-group">
-                <label data-i18n="settings_label_new_pass" class="form-label">Yeni Şifre</label>
-                <input type="password" name="new_password" required>
-            </div>
-
-            <button type="submit" class="save-btn btn-warning">
-                <i class="fas fa-key"></i> <span data-i18n="btn_change_password">Şifreyi Değiştir</span>
-            </button>
-        </div>
-    </form>
+        </form>
+    </div>
 
 </div>
 
-<!-- Edit Tag Modal -->
 <div class="modal fade" id="editTagModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" data-i18n="settings_tags_edit_header">Etiketi Düzenle</h5>
+                <h5 class="modal-title">Etiketi Düzenle</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="editTagForm" method="post">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label" data-i18n="settings_tags_label_name">Etiket Adı</label>
+                        <label class="form-label">Etiket Adı</label>
                         <input type="text" name="name" id="editName" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" data-i18n="settings_tags_label_color">Renk</label>
-                        <input type="color" name="color" id="editColor" class="form-control" style="height: 40px;"
-                            required>
+                        <label class="form-label">Renk</label>
+                        <input type="color" name="color" id="editColor" class="form-control" style="height: 40px;" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" data-i18n="settings_tags_label_desc">Açıklama (AI Kriteri)</label>
+                        <label class="form-label">Açıklama</label>
                         <textarea name="description" id="editDesc" class="form-control" rows="3" required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                        data-i18n="btn_cancel">İptal</button>
-                    <button type="submit" class="btn btn-primary" data-i18n="btn_save">Değişiklikleri Kaydet</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
                 </div>
             </form>
         </div>
@@ -195,17 +192,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    function openEditModal(id, name, color, desc) {
-        document.getElementById('editTagForm').action = "/ui/settings/tags/update/" + id;
-        document.getElementById('editName').value = name;
-        document.getElementById('editColor').value = color;
-        document.getElementById('editDesc').value = desc;
-
-        var modal = new bootstrap.Modal(document.getElementById('editTagModal'));
-        modal.show();
-    }
-</script>
+<script src="/static/js/settings.js"></script>
 <script src="/static/js/translations.js?v=6"></script>
 <script src="/static/js/language_engine.js?v=6"></script>
 {% endblock %}

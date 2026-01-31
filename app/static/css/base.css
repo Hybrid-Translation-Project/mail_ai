@@ -9,10 +9,10 @@
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --danger: #ef4444;
+    --sidebar-width: 260px;
+    --sidebar-width-collapsed: 70px;
 }
 
-/* 🛑 İŞTE BU SATIR HAYAT KURTARIR 🛑 */
-/* Tüm elemanların padding'ini genişliğe dahil eder, taşmayı önler */
 *, *::before, *::after {
     box-sizing: border-box;
 }
@@ -23,61 +23,105 @@ body {
     font-family: 'Inter', sans-serif;
     margin: 0;
     padding: 0;
-    /* Flex yapısını koruyoruz */
     display: flex;
     min-height: 100vh;
-    overflow-x: hidden; /* Gereksiz yatay kaydırmayı engeller */
+    overflow-x: hidden;
 }
 
 /* --- SIDEBAR (YAN MENÜ) --- */
 .sidebar {
-    width: 260px;
+    width: var(--sidebar-width);
     height: 100vh;
     background: var(--card-bg);
     border-right: 1px solid rgba(255,255,255,0.05);
-    padding: 20px;
+    /* Padding'i azalttım (Dikeyde yer kazancı) */
+    padding: 15px 10px; 
     position: fixed;
     top: 0;
     left: 0;
     display: flex;
     flex-direction: column;
     z-index: 1000;
-    transition: transform 0.3s ease;
+    transition: width 0.3s ease;
 }
 
-/* Logo Alanı */
-.logo {
-    margin-bottom: 30px;
-    padding-left: 10px;
+/* 1. Header Alanı */
+.logo-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* Alt boşluğu azalttım */
+    margin-bottom: 10px; 
+    padding: 0 5px;
 }
 
 .logo a {
     text-decoration: none;
-    font-size: 1.5rem;
+    font-size: 1.3rem; /* Fontu bi tık küçülttüm */
     font-weight: 800;
     color: var(--text-main);
     display: flex;
     align-items: center;
     gap: 10px;
+    white-space: nowrap;
 }
 
-/* Menü Linkleri */
+.toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    transition: 0.2s;
+}
+
+.toggle-btn:hover {
+    color: var(--text-main);
+    background: rgba(255,255,255,0.05);
+}
+
+/* 2. Menü Alanı (SCROLLBAR GİZLENDİ) */
+.sidebar nav {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-bottom: 5px;
+
+    /* Firefox için scrollbar gizleme */
+    scrollbar-width: none; 
+}
+
+/* Chrome, Safari, Edge için scrollbar gizleme */
+.sidebar nav::-webkit-scrollbar {
+    display: none;
+}
+
+/* Menü Linkleri (SIKIŞTIRMA OPERASYONU) */
 .nav-link {
     display: flex;
     align-items: center;
-    padding: 12px 15px;
+    /* Dikey padding'i 12px'den 8px'e indirdim */
+    padding: 8px 10px; 
     color: var(--text-muted);
     text-decoration: none;
     border-radius: 8px;
     transition: all 0.2s ease;
-    margin-bottom: 4px;
-    font-size: 0.95rem;
+    /* Linkler arası boşluğu azalttım */
+    margin-bottom: 2px; 
+    font-size: 0.9rem;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
 }
 
 .nav-link i {
-    width: 24px;
+    min-width: 30px;
     text-align: center;
-    margin-right: 12px;
+    font-size: 1rem; /* İkonları azıcık kibarlaştırdım */
+    margin-right: 10px;
 }
 
 .nav-link:hover {
@@ -91,80 +135,134 @@ body {
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-/* Menü Başlıkları */
+/* Bölüm Başlıkları (SIKIŞTIRMA) */
 .nav-section {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     text-transform: uppercase;
     color: #64748b;
-    margin: 24px 0 8px 15px;
+    /* Üst boşluğu 24px'den 15px'e indirdim */
+    margin: 15px 0 5px 15px; 
     letter-spacing: 1px;
     font-weight: 700;
+    white-space: nowrap;
+    transition: opacity 0.2s;
 }
 
-/* Çıkış Linki */
-.logout-link {
-    margin-top: auto;
-    color: var(--danger) !important;
-}
-
-.logout-link:hover {
-    background: rgba(239, 68, 68, 0.1) !important;
-}
-
-/* Kullanıcı Profil Alanı */
+/* 3. Profil Alanı */
 .user-profile-nav {
-    margin-top: 20px;
-    padding: 15px;
+    flex: 0 0 auto;
+    padding: 10px; /* Padding azaldı */
     background: rgba(0,0,0,0.2);
     border-radius: 12px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     border: 1px solid rgba(255,255,255,0.05);
+    overflow: hidden;
+    white-space: nowrap;
+    margin-top: 5px;
 }
 
 .user-profile-nav i {
-    font-size: 2rem;
+    font-size: 1.6rem;
     color: var(--text-muted);
+    min-width: 30px;
+    text-align: center;
 }
 
 .user-info-text {
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    transition: opacity 0.2s;
 }
 
 .user-name {
     font-weight: 600;
-    font-size: 0.9rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 0.85rem;
 }
-
 .user-company {
     font-size: 0.75rem;
     color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-/* --- MAIN CONTENT (ANA İÇERİK) --- */
+/* Çıkış linki */
+.logout-link {
+    /* Çıkış butonu ile profil arasını biraz kıstım */
+    margin-top: 10px; 
+    color: var(--danger) !important;
+}
+
+
+/* --- MAIN CONTENT --- */
 .main-content {
-    margin-left: 260px;
+    margin-left: var(--sidebar-width);
     padding: 30px 40px;
     width: 100%;
-    flex-grow: 1; /* Sidebar yoksa bile tüm alanı kapla */
+    flex-grow: 1;
+    transition: margin-left 0.3s ease;
 }
 
-/* Responsive (Mobil) */
-@media (max-width: 768px) {
-    .sidebar {
-        transform: translateX(-100%);
-    }
-    .main-content {
-        margin-left: 0;
-        padding: 20px;
-    }
+/* =========================================
+   COLLAPSED DURUM
+   ========================================= */
+
+body.sb-collapsed .sidebar {
+    width: var(--sidebar-width-collapsed);
+}
+
+body.sb-collapsed .main-content {
+    margin-left: var(--sidebar-width-collapsed);
+}
+
+body.sb-collapsed .link-text,
+body.sb-collapsed .nav-section,
+body.sb-collapsed .logo-text,
+body.sb-collapsed .user-info-text {
+    opacity: 0;
+    width: 0;
+    display: none;
+}
+
+body.sb-collapsed .nav-link {
+    justify-content: center;
+    padding: 12px 0;
+}
+
+body.sb-collapsed .nav-link i {
+    margin-right: 0;
+}
+
+body.sb-collapsed .logo-header {
+    justify-content: center;
+    flex-direction: column-reverse;
+    gap: 10px;
+    padding: 0;
+}
+
+body.sb-collapsed .logo {
+    display: none;
+}
+
+body.sb-collapsed .user-profile-nav {
+    justify-content: center;
+    padding: 12px 5px;
+}
+
+/* TOOLTIP */
+body.sb-collapsed .nav-link:hover::after {
+    content: attr(title);
+    position: absolute;
+    left: 60px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--card-bg);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    z-index: 1001;
+    pointer-events: none;
 }

@@ -17,50 +17,56 @@
 
 <body>
     <div class="sidebar">
-        <div class="logo">
-            <a href="/ui/dashboard">
-                📧 <span data-i18n="app_name">Mail AI</span>
-            </a>
+        <div class="logo-header">
+            <div class="logo">
+                <a href="/ui/dashboard">
+                    <span class="logo-icon">📧</span> 
+                    <span class="logo-text" data-i18n="app_name">Mail AI</span>
+                </a>
+            </div>
+            <button id="sidebarToggle" class="toggle-btn">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
 
         <nav>
             <div class="nav-section" data-i18n="nav_section_main">ANA MENÜ</div>
 
-            <a href="/ui/dashboard" class="nav-link">
-                <i class="fas fa-home"></i> <span data-i18n="menu_dashboard">Komuta Merkezi</span>
+            <a href="/ui/dashboard" class="nav-link" title="Komuta Merkezi">
+                <i class="fas fa-home"></i> <span class="link-text" data-i18n="menu_dashboard">Komuta Merkezi</span>
             </a>
-            <a href="/ui" class="nav-link">
-                <i class="fas fa-inbox"></i> <span data-i18n="menu_inbox">Gelen Kutusu</span>
+            <a href="/ui" class="nav-link" title="Gelen Kutusu">
+                <i class="fas fa-inbox"></i> <span class="link-text" data-i18n="menu_inbox">Gelen Kutusu</span>
             </a>
-            <a href="/ui/drafts" class="nav-link">
-                <i class="fas fa-file-signature"></i> <span data-i18n="menu_drafts">Taslaklar</span>
+            <a href="/ui/drafts" class="nav-link" title="Taslaklar">
+                <i class="fas fa-file-signature"></i> <span class="link-text" data-i18n="menu_drafts">Taslaklar</span>
             </a>
-            <a href="/ui/history" class="nav-link">
-                <i class="fas fa-history"></i> <span data-i18n="menu_history">Geçmiş / Arşiv</span>
+            <a href="/ui/history" class="nav-link" title="Geçmiş / Arşiv">
+                <i class="fas fa-history"></i> <span class="link-text" data-i18n="menu_history">Geçmiş / Arşiv</span>
             </a>
 
             <div class="nav-section" data-i18n="nav_section_ai">AI YÖNETİM</div>
 
-            <a href="/ui/contacts" class="nav-link">
-                <i class="fas fa-address-book"></i> <span data-i18n="menu_contacts">Rehber & Şirketler</span>
+            <a href="/ui/contacts" class="nav-link" title="Rehber & Şirketler">
+                <i class="fas fa-address-book"></i> <span class="link-text" data-i18n="menu_contacts">Rehber & Şirketler</span>
             </a>
-            <a href="/ui/tasks" class="nav-link">
-                <i class="fas fa-tasks"></i> <span data-i18n="menu_tasks">Görevler & Ajanda</span>
+            <a href="/ui/tasks" class="nav-link" title="Görevler & Ajanda">
+                <i class="fas fa-tasks"></i> <span class="link-text" data-i18n="menu_tasks">Görevler & Ajanda</span>
             </a>
-            <a href="/ui/writer" class="nav-link">
-                <i class="fas fa-pen-nib"></i> <span data-i18n="menu_writer">AI Mail Yazarı</span>
+            <a href="/ui/writer" class="nav-link" title="AI Mail Yazarı">
+                <i class="fas fa-pen-nib"></i> <span class="link-text" data-i18n="menu_writer">AI Mail Yazarı</span>
             </a>
 
             <div class="nav-section" data-i18n="nav_section_system">SİSTEM</div>
 
-            <a href="/ui/accounts" class="nav-link">
-                <i class="fas fa-users-cog"></i> <span data-i18n="menu_accounts">Bağlı Hesaplar</span>
+            <a href="/ui/accounts" class="nav-link" title="Bağlı Hesaplar">
+                <i class="fas fa-users-cog"></i> <span class="link-text" data-i18n="menu_accounts">Bağlı Hesaplar</span>
             </a>
-            <a href="/ui/settings" class="nav-link">
-                <i class="fas fa-cog"></i> <span data-i18n="menu_settings">Genel Ayarlar</span>
+            <a href="/ui/settings" class="nav-link" title="Genel Ayarlar">
+                <i class="fas fa-cog"></i> <span class="link-text" data-i18n="menu_settings">Genel Ayarlar</span>
             </a>
-            <a href="/login" class="nav-link logout-link">
-                <i class="fas fa-sign-out-alt"></i> <span data-i18n="menu_logout">Güvenli Çıkış</span>
+            <a href="/login" class="nav-link logout-link" title="Güvenli Çıkış">
+                <i class="fas fa-sign-out-alt"></i> <span class="link-text" data-i18n="menu_logout">Güvenli Çıkış</span>
             </a>
         </nav>
 
@@ -78,16 +84,14 @@
     <div class="main-content">
         {% if request.query_params.get('msg') %}
         <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle"></i> <span data-i18n="{{ request.query_params.get('msg') }}">{{
-                request.query_params.get('msg') }}</span>
+            <i class="fas fa-check-circle"></i> <span data-i18n="{{ request.query_params.get('msg') }}">{{ request.query_params.get('msg') }}</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         {% endif %}
 
         {% if request.query_params.get('error') %}
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-triangle"></i> <span data-i18n="{{ request.query_params.get('error') }}">{{
-                request.query_params.get('error') }}</span>
+            <i class="fas fa-exclamation-triangle"></i> <span data-i18n="{{ request.query_params.get('error') }}">{{ request.query_params.get('error') }}</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         {% endif %}
@@ -95,10 +99,12 @@
         {% block content %}{% endblock %}
 
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/translations.js?v=6"></script>
     <script src="/static/js/language_engine.js?v=6"></script>
     <script src="/static/js/tags.js"></script>
+    <script src="/static/js/base.js"></script>
 
     {% block extra_js %}{% endblock %}
 </body>
