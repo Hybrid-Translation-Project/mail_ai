@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from fastapi.staticfiles import StaticFiles
+from datetime import datetime, timedelta
 
 # --- DİZİN AYARLARI ---
 # Bu dosyanın bulunduğu dizin (Proje Kök Dizini)
@@ -25,6 +26,7 @@ load_dotenv(ENV_PATH)
 # UI ve YENİ VOICE (Ses) Rotalarını içeri alıyoruz
 from app.routes import ui, voice 
 from app.services.mail_listener import check_all_inboxes
+from app.services.sent_mail_listener import check_all_sent
 
 # --- Zamanlayıcı (Scheduler) ---
 scheduler = BackgroundScheduler()
@@ -36,18 +38,22 @@ async def lifespan(app: FastAPI):
     
     # .env kontrolü ve Mail Dinleyici Başlatma
     if os.path.exists(ENV_PATH):
-        print("🔄 Başlangıç mail kontrolü yapılıyor...", flush=True)
-        
-        # 1. Hemen kontrol et (Beklemeden)
-        try:
-            check_all_inboxes()
-        except Exception as e:
-            print(f"⚠️ Başlangıç kontrolünde hata (Önemli değil): {e}", flush=True)
+        # Startup'ı BLOKLAMAMAK için ilk taramaları arka plana atıyoruz.
+        # Böylece login sayfası hemen açılır; taramalar 1-2 sn sonra başlar.
+        print("🕑 Mail kontrolü arka planda başlatılıyor...", flush=True)
 
-        # 2. Periyodik kontrolü başlat (15 saniyede bir)
+        # Periyodik kontrolü başlat (15 saniyede bir)
         scheduler.add_job(check_all_inboxes, 'interval', seconds=15)
+        # Sent kutusu biraz daha seyrek taransın (Gmail UI reply'leri buradan yakalanır)
+        scheduler.add_job(check_all_sent, 'interval', seconds=20)
+
+        # İlk taramaları scheduler'a "hemen çalıştır" olarak ekle (arka plan thread'inde)
+        scheduler.add_job(check_all_inboxes, 'date', run_date=datetime.now() + timedelta(seconds=1))
+        scheduler.add_job(check_all_sent, 'date', run_date=datetime.now() + timedelta(seconds=2))
+
         scheduler.start()
         print("📥 Multi-Account Mail Dinleyicisi Aktif! (Periyot: 15 sn)", flush=True)
+        print("📤 Sent Mail Dinleyicisi Aktif! (Periyot: 20 sn)", flush=True)
     else:
         print("⚠️ Yapılandırma bulunamadı. Web üzerinden kurulum bekleniyor (/setup)...", flush=True)
     
@@ -79,7 +85,7 @@ app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 # --- ROTALARI SİSTEME DAHİL ET ---
 app.include_router(ui.router)    # Arayüz Rotaları
-app.include_router(voice.router) # 🎙️ YENİ: Sesli Komut Rotaları (Bunu eklemezsek ses çalışmaz!)
+app.include_router(voice.router) # 🎙️ YENİ: Sesli Komut Rotaları
 
 @app.get("/health")
 def health():

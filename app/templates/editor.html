@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="/static/css/editor.css">
+<link rel="stylesheet" href="/mail_ai/app/static/css/editor.css">
 {% endblock %}
 
 {% block content %}
@@ -10,23 +10,58 @@
 </div>
 
 <div class="row editor-container">
-    
+
     <div class="col-md-7">
-        <div class="mail-card">
-            <h3 class="mt-0 text-white">📩 <span data-i18n="editor_mail_header">Gelen Mail</span></h3>
-            <p class="mail-meta"><strong data-i18n="editor_label_from">Kimden:</strong> {{ mail.from }}</p>
-            <p class="mail-meta"><strong data-i18n="editor_label_subject">Konu:</strong> {{ mail.subject }}</p>
-            <hr class="border-secondary">
-            
-            <div class="mail-body" style="background-color: #ffffff; color: #000000; padding: 20px; border-radius: 5px; overflow: auto; max-height: 600px;">
-                {{ mail.body | safe }}
+        <h4 class="text-white mb-3">💬 <span data-i18n="editor_conversation">Konuşma Geçmişi</span></h4>
+        <div class="thread-container" style="max-height: 85vh; overflow-y: auto; padding-right: 5px;">
+            {% for m in thread %}
+            <div class="message-bubble {% if m.is_owner %}message-sent{% else %}message-received{% endif %} mb-3">
+
+                <div class="bubble-header">
+                    <div>
+                        <span class="sender-name">{{ m.from }}</span>
+                        {% if m.is_owner %}
+                        <span class="small text-muted">(Siz)</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-end">
+                        <span class="message-date">{{ m.created_at.strftime('%d.%m %H:%M') if m.created_at else ''
+                            }}</span>
+                    </div>
+                </div>
+
+                <div class="bubble-content">
+                    <div class="mail-content-render" style="overflow: auto; max-height: 500px;">
+                        {% if m.body_html %}
+                        {{ m.body_html | safe }}
+                        {% else %}
+                        {{ m.body | safe }}
+                        {% endif %}
+                    </div>
+
+                    <!-- Attachments -->
+                    {% if m.attachments %}
+                    <div class="mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                        <small class="text-white d-block mb-2">📎 EKLER:</small>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for att in m.attachments %}
+                            <a href="{{ att.url }}" target="_blank" class="btn btn-sm btn-outline-light" download
+                                style="font-size: 0.75rem;">
+                                <i class="fas fa-paperclip"></i> {{ att.filename }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
+            {% endfor %}
         </div>
     </div>
 
     <div class="col-md-5">
         <div class="mail-card sticky-panel">
-            
+
             <div class="action-header">
                 <h3 class="m-0 text-white">🤖 <span data-i18n="editor_ai_panel">AI Cevap Paneli</span></h3>
                 <div class="text-end">
@@ -37,29 +72,33 @@
             </div>
 
             <div class="ai-actions">
-                <button type="button" onclick="handleAction('regenerate', '{{ mail._id }}')" class="btn-ai-action btn-regenerate" title="AI Taslağını Yenile">
+                <button type="button" onclick="handleAction('regenerate', '{{ mail._id }}')"
+                    class="btn-ai-action btn-regenerate" title="AI Taslağını Yenile">
                     🔄 <span data-i18n="btn_regenerate">Yenile</span>
                 </button>
-                <button type="button" onclick="handleAction('approve', '{{ mail._id }}')" class="btn-ai-action btn-approve">
+                <button type="button" onclick="handleAction('approve', '{{ mail._id }}')"
+                    class="btn-ai-action btn-approve">
                     ✅ <span data-i18n="btn_approve_short">Onayla</span>
                 </button>
-                <button type="button" onclick="handleAction('reject', '{{ mail._id }}')" class="btn-ai-action btn-reject">
+                <button type="button" onclick="handleAction('reject', '{{ mail._id }}')"
+                    class="btn-ai-action btn-reject">
                     ❌ <span data-i18n="btn_reject">Reddet</span>
                 </button>
             </div>
 
             <form action="/ui/update/{{ mail._id }}" method="post" id="replyForm">
-                <textarea id="replyDraft" name="reply_draft" rows="12" data-mail-id="{{ mail._id }}" class="editor-textarea">{{ mail.reply_draft }}</textarea>
-                
+                <textarea id="replyDraft" name="reply_draft" rows="12" data-mail-id="{{ mail._id }}"
+                    class="editor-textarea">{{ mail.reply_draft }}</textarea>
+
                 <div class="editor-actions">
                     <button type="button" onclick="forceSave()" class="btn btn-save">
                         💾 <span data-i18n="btn_save_now">Şimdi Kaydet</span>
                     </button>
-                    
+
                     <button type="submit" formaction="/ui/approve/{{ mail._id }}" class="btn btn-send">
                         🚀 <span data-i18n="btn_send">Gönder</span>
                     </button>
-                    
+
                     <button type="submit" formaction="/ui/cancel/{{ mail._id }}" class="btn btn-cancel">
                         🚫 <span data-i18n="btn_archive">Arşive At</span>
                     </button>
@@ -70,12 +109,11 @@
             <div class="version-section">
                 <h5 class="version-title">🕒 <span data-i18n="editor_version_history">Versiyon Geçmişi</span></h5>
                 <div class="version-list">
-                    
+
                     {% for version in mail.draft_history|reverse %}
-                    <div class="version-item" 
-                         onclick="restoreVersion(this.dataset.content)" 
-                         data-content="{{ version.body | e }}">
-                        
+                    <div class="version-item" onclick="restoreVersion(this.dataset.content)"
+                        data-content="{{ version.body | e }}">
+
                         <div class="version-header">
                             <span>
                                 {% if version.source == 'AI' %}
@@ -103,7 +141,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="/static/js/translations.js"></script>
-    <script src="/static/js/language_engine.js"></script>
-    <script src="/static/js/editor.js"></script>
+<script src="/mail_ai/app/static/js/translations.js"></script>
+<script src="/mail_ai/app/static/js/language_engine.js"></script>
+<script src="/mail_ai/app/static/js/editor.js"></script>
 {% endblock %}

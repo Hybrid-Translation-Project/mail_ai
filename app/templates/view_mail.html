@@ -2,87 +2,124 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="/static/css/view_html.css">
-<style>
-   
-</style>
+<link rel="stylesheet" href="/static/css/view_mail.css">
 {% endblock %}
 
 {% block content %}
 <div class="view-container">
-    <div class="d-flex justify-content-between mb-3 align-items-center">
-        <button onclick="history.back()" class="btn btn-outline-secondary btn-sm" style="color: #ccc; border-color: #444;">
-            <i class="fas fa-arrow-left"></i> <span data-i18n="btn_back">Geri Dön</span>
-        </button>
-        <span class="text-muted small">Mail ID: {{ mail._id }}</span>
-    </div>
 
-    <div class="mail-header mb-4">
-        <h4 class="text-white mb-3">{{ mail.subject }}</h4>
-        
-        <div class="p-3 rounded" style="background-color: #2c2c2c;">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-1"><strong data-i18n="view_label_from">Kimden:</strong> <span class="text-primary">{{ mail.from }}</span></div>
-                    <div class="mb-1"><strong data-i18n="view_label_to">Kime:</strong> <span class="text-light">{{ mail.to }}</span></div>
-                    <div><strong data-i18n="view_label_date">Tarih:</strong> <span class="text-muted">{{ mail.created_at }}</span></div>
-                </div>
-                
-                <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                    <div class="mb-2">
-                        <strong data-i18n="status_label">Durum:</strong> 
-                        {% if mail.status == 'SENT' %}
-                            <span class="status-badge sent"><i class="fas fa-check"></i> <span data-i18n="status_sent">GÖNDERİLDİ</span></span>
-                        {% elif mail.status == 'CANCELED' %}
-                            <span class="status-badge canceled"><i class="fas fa-ban"></i> <span data-i18n="status_cancelled">İPTAL / TASLAK SİLİNDİ</span></span>
-                        {% elif mail.status == 'WAITING_APPROVAL' %}
-                            <span class="status-badge waiting"><i class="fas fa-clock"></i> <span data-i18n="status_waiting">ONAY BEKLİYOR</span></span>
-                        {% elif mail.status == 'DRAFT' %}
-                             <span class="badge bg-secondary"><i class="fas fa-pencil-alt"></i> <span data-i18n="badge_draft">TASLAK</span></span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ mail.status }}</span>
-                        {% endif %}
-                    </div>
-
-                    {% if mail.decision %}
-                    <div>
-                        <span class="small text-muted" data-i18n="view_ai_decision">AI Kararı:</span>
-                        {% if mail.decision == 'approve' %} 
-                            <span class="text-success fw-bold" data-i18n="decision_approve">Kabul</span>
-                        {% elif mail.decision == 'reject' %} 
-                            <span class="text-danger fw-bold" data-i18n="decision_reject">Ret</span>
-                        {% else %} 
-                            <span class="text-secondary" data-i18n="decision_neutral">Nötr</span> 
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+    <div class="task-header d-flex justify-content-between align-items-center">
+        <div>
+            <button onclick="history.back()" class="btn btn-outline-secondary btn-sm text-light border-secondary mb-2">
+                <i class="fas fa-arrow-left"></i> <span data-i18n="btn_back">Geri Dön</span>
+            </button>
+            <h4 class="m-0" style="color: #e6edf3;">
+                <span
+                    style="font-size: 0.8rem; color: #8b949e; display: block; margin-bottom: 4px; letter-spacing: 0.5px;"
+                    data-i18n="lbl_subject">KONU</span>
+                {{ thread[-1].subject }}
+            </h4>
         </div>
     </div>
 
-    <h6 class="text-muted mb-2">📩 <span data-i18n="view_mail_content">Mail İçeriği:</span></h6>
-    <div class="mail-content-box shadow-sm">
-        {{ mail.body | safe }}
+    <div class="timeline-container">
+        {% for mail in thread %}
+
+        <div class="action-card {% if mail.is_owner %}card-sent{% else %}card-received{% endif %}">
+
+            <div class="card-header-row">
+                <div class="sender-info">
+                    {{ mail.from }}
+                </div>
+
+                <div class="meta-info">
+                    {% if mail.is_owner %}
+                    <span class="badge-status badge-you" data-i18n="lbl_you">SİZ</span>
+                    {% endif %}
+
+                    {% if mail.status == "WAITING_APPROVAL" %}
+                    <span class="badge-status badge-draft" data-i18n="status_draft_ready">TASLAK HAZIR</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="mail-content-render">
+                    {% if mail.body_html %}
+                    {{ mail.body_html | safe }}
+                    {% else %}
+                    {{ mail.body | safe }}
+                    {% endif %}
+                </div>
+
+                {% if mail.attachments %}
+                <div class="attachment-box">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-white fw-bold" style="opacity: 0.8;">
+                            <i class="fas fa-paperclip"></i> EKLER ({{ mail.attachments|length }} Dosya)
+                        </small>
+                        
+                        <button onclick="downloadAllFiles(this)" class="btn btn-sm btn-outline-primary" 
+                                style="font-size: 0.75rem; border-color: #58a6ff; color: #58a6ff;">
+                            <i class="fas fa-download"></i> Tümünü İndir
+                        </button>
+                    </div>
+
+                    <div class="download-container d-none">
+                        {% for att in mail.attachments %}
+                        <a href="{{ att.url }}" class="download-link" download="{{ att.filename }}">
+                            {{ att.filename }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="message-time">
+                    {{ mail.created_at.strftime('%d.%m %H:%M') if mail.created_at else '' }}
+                </div>
+            </div>
+
+            {% if not mail.is_owner %}
+            <div class="card-actions">
+                {% if mail.status == "WAITING_APPROVAL" %}
+                <a href="/ui/editor/{{ mail._id }}" class="btn-action btn-primary-action">
+                    <i class="fas fa-bolt"></i> <span data-i18n="btn_review_reply">İncele & Cevapla</span>
+                </a>
+                {% else %}
+                <a href="/ui/editor/{{ mail._id }}" class="btn-action btn-secondary-action">
+                    <i class="fas fa-reply"></i> <span data-i18n="btn_reply">Cevapla</span>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if mail.status == "DRAFT" %}
+            <div class="card-actions">
+                <a href="/ui/writer?draft_id={{ mail._id }}" class="btn-action btn-secondary-action">
+                    <i class="fas fa-edit"></i> <span data-i18n="btn_edit_draft">Taslağı Düzenle</span>
+                </a>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endfor %}
     </div>
 
-    {% if mail.reply_draft and mail.status == 'SENT' %}
-    <div class="mt-4 p-3 rounded" style="border-left: 5px solid #28a745; background: #1a2e1e;">
-        <h6 class="text-success mb-2"><i class="fas fa-reply"></i> <span data-i18n="view_sent_reply">Gönderilen Cevap:</span></h6>
-        <div style="color: #e2e2e2; white-space: pre-wrap; font-family: sans-serif;">{{ mail.reply_draft | safe }}</div>
+    {% set last_mail = thread[-1] %}
+    {% if not last_mail.is_owner and last_mail.status != 'WAITING_APPROVAL' %}
+    <div class="quick-reply-box">
+        <p class="text-secondary mb-3" data-i18n="lbl_start_reply">Yeni bir görev veya yanıt oluşturmak ister misiniz?
+        </p>
+        <a href="/ui/editor/{{ last_mail._id }}" class="btn-action btn-primary-action">
+            <i class="fas fa-plus"></i> <span data-i18n="btn_write_reply">Yanıt Oluştur</span>
+        </a>
     </div>
     {% endif %}
-    
-    {% if mail.decision == 'reject' and mail.status == 'SENT' %}
-    <div class="mt-4 p-3 rounded" style="border-left: 5px solid #dc3545; background: #2c1a1a;">
-        <h6 class="text-danger mb-2"><i class="fas fa-times-circle"></i> <span data-i18n="view_reject_reply">Red Cevabı Gönderildi:</span></h6>
-        <div style="color: #e2e2e2; white-space: pre-wrap;">{{ mail.reply_draft | safe }}</div>
-        <p class="small text-muted mt-2 mb-0">* <span data-i18n="view_reject_note">Bu işlem için görev oluşturulmamıştır.</span></p>
-    </div>
-    {% endif %}
+
 </div>
 {% endblock %}
 
 {% block extra_js %}
-    <script src="/static/js/translations.js"></script>
-    <script src="/static/js/language_engine.js"></script>
+<script src="/static/js/view_mail.js"></script>
 {% endblock %}

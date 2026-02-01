@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/settings.css?v=6">
+<link rel="stylesheet" href="/mail_ai/app/static/css/settings.css?v=5">
 {% endblock %}
 
 {% block content %}
@@ -192,7 +192,17 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="/static/js/settings.js"></script>
-<script src="/static/js/translations.js?v=6"></script>
-<script src="/static/js/language_engine.js?v=6"></script>
+<script>
+    function openEditModal(id, name, color, desc) {
+        document.getElementById('editTagForm').action = "/ui/settings/tags/update/" + id;
+        document.getElementById('editName').value = name;
+        document.getElementById('editColor').value = color;
+        document.getElementById('editDesc').value = desc;
+
+        var modal = new bootstrap.Modal(document.getElementById('editTagModal'));
+        modal.show();
+    }
+</script>
+<script src="/mail_ai/app/static/js/translations.js?v=6"></script>
+<script src="/mail_ai/app/static/js/language_engine.js?v=6"></script>
 {% endblock %}
