@@ -15,7 +15,7 @@ from app.database import mails_col, accounts_col, users_col
 # Güvenlik
 from app.core.security import decrypt_password
 
-# Yardımcı Fonksiyonlar (mail_listener'dan kopyalandı/import edilebilir ama bağımsız olması için buraya da ekliyoruz veya ortak bir utils'e taşımalıyız. Şimdilik buraya ekliyorum)
+# Yardımcı Fonksiyonlar
 def decode_mime_words(s):
     return u''.join(
         word.decode(encoding or 'utf-8') if isinstance(word, bytes) else word
@@ -41,21 +41,18 @@ def _normalize_mid(value: str) -> str:
 
 def _mid_variants(value: str) -> list:
     clean = _normalize_mid(value)
-    if not clean:
-        return []
+    if not clean: return []
     variants = {value.strip(), clean, f"<{clean}>"}
     return [v for v in variants if v]
 
 def _find_mail_by_message_id(message_id: str):
     mids = _mid_variants(message_id)
-    if not mids:
-        return None
+    if not mids: return None
     return mails_col.find_one({"message_id": {"$in": mids}})
 
 def _find_thread_tags(in_reply_to: str, references: list) -> list:
     refs = references or []
-    if isinstance(refs, str):
-        refs = refs.split()
+    if isinstance(refs, str): refs = refs.split()
 
     candidates = []
     if refs:
@@ -151,7 +148,7 @@ def process_account_sent(account):
 
         for mail_id in recent_ids:
             try:
-                # Sadece Headerı çekip DB kontrolü
+                # Önce sadece Header çekip DB kontrolü yapalım (HIZ İÇİN)
                 _, msg_header = mail.fetch(mail_id, "(BODY.PEEK[HEADER.FIELDS (MESSAGE-ID)])")
                 header_txt = msg_header[0][1].decode()
                 
@@ -164,20 +161,21 @@ def process_account_sent(account):
                      if exist:
                          continue 
                 
-                # Fetch Full
+                # DB'de yoksa Full Fetch yapalım
                 _, msg_data = mail.fetch(mail_id, "(RFC822)")
                 msg = email.message_from_bytes(msg_data[0][1])
                 
                 if not message_id:
                     message_id = msg.get("Message-ID", "").strip() or f"gen-{uuid.uuid4()}"
 
+                # İkinci kontrol (Fetch sonrası garanti olsun)
                 if mails_col.find_one({"message_id": message_id}): continue
 
                 subject = decode_mime_words(msg["Subject"] or "")
                 print(f"📤 Sent Mail Eşleşti: {subject}")
                 sender_name, sender_email = parseaddr(msg.get("From"))
                 
-                # --- Gelişmiş Parsing (Stream Destekli) ---
+                # --- 🚀 STREAM MANTIĞI (SENT İÇİN) ---
                 body_text = ""
                 body_html = ""
                 cid_map = {}
@@ -187,53 +185,40 @@ def process_account_sent(account):
                     for part in msg.walk():
                         ctype = part.get_content_type()
                         cdisp = str(part.get("Content-Disposition"))
-
-
-                        # Content-ID Yakala
                         content_id = part.get("Content-ID")
                         
+                        # Payload decode (Sadece text ise al, dosya ise ALMA)
+                        payload = ""
                         try:
-                            part_data = part.get_payload(decode=True)
-                            payload = part_data.decode(errors="ignore")
+                            if ctype.startswith("text/"):
+                                part_data = part.get_payload(decode=True)
+                                payload = part_data.decode(errors="ignore")
+                            else:
+                                part_data = None # İndirmeyi iptal et
                         except:
                             part_data = None
                             payload = ""
 
-                        # BASE64 EMBEDDING (HIZ İÇİN)
-                        if content_id and part_data:
+                        # 1. INLINE RESİMLER (CID) -> STREAM URL
+                        # Base64 iptal -> /ui/stream linki geldi
+                        if content_id and ctype.startswith("image/"):
                             clean_cid = content_id.strip("<> ")
                             if clean_cid:
-                                try:
-                                    b64_str = base64.b64encode(part_data).decode('utf-8')
-                                    # data:image/png;base64,....
-                                    embed_src = f"data:{ctype};base64,{b64_str}"
-                                    cid_map[clean_cid] = embed_src
-                                except Exception as e:
-                                    print(f"Base64 error: {e}")
+                                stream_url = f"/ui/stream/{message_id}/{clean_cid}"
+                                cid_map[clean_cid] = stream_url
 
-                        # ATTACHMENT DETECTION (EK DOSYALAR)
+                        # 2. ATTACHMENTS (EKLER) -> DOWNLOAD URL
+                        # Base64 iptal -> /ui/download linki geldi
                         if "attachment" in cdisp or part.get_filename():
                             filename = part.get_filename()
                             if filename:
-                                try:
-                                    filename = decode_mime_words(filename)
-                                    file_size = len(part_data) if part_data else 0
-                                    
-                                    # BASE64 DATA URI (İndirme için)
-                                    if part_data:
-                                        b64_data = base64.b64encode(part_data).decode('utf-8')
-                                        data_uri = f"data:{ctype};base64,{b64_data}"
-                                    else:
-                                        data_uri = "#"
-                                    
-                                    attachments.append({
-                                        "filename": filename,
-                                        "content_type": ctype,
-                                        "size": file_size,
-                                        "url": data_uri
-                                    })
-                                except Exception as e:
-                                    print(f"Attachment parse error: {e}")
+                                filename = decode_mime_words(filename)
+                                attachments.append({
+                                    "filename": filename,
+                                    "content_type": ctype,
+                                    "size": 0, # Boyut şimdilik 0
+                                    "url": f"/ui/download/{message_id}/{filename}"
+                                })
 
                         if ctype == "text/plain" and "attachment" not in cdisp:
                             body_text += payload
@@ -246,7 +231,7 @@ def process_account_sent(account):
                         else: body_text = payload
                     except: pass
                 
-                # CID Replacement
+                # HTML içindeki CID referanslarını Stream URL ile değiştir
                 if body_html and cid_map:
                     for cid, url in cid_map.items():
                         body_html = body_html.replace(f"cid:{cid}", url)
@@ -276,7 +261,7 @@ def process_account_sent(account):
                     "is_owner": True,
                     "in_reply_to": msg.get("In-Reply-To", ""), 
                     "references": msg.get("References", "").split() if msg.get("References") else [],
-                    "attachments": attachments,
+                    "attachments": attachments, # Base64 YOK!
                     "embedding": vector_embedding
                 }
 
@@ -319,7 +304,6 @@ def check_all_sent():
             return
     
     if not active_accounts:
-        # Kurulum yoksa veya aktif hesap yoksa sessiz çık
         return
     
     print(f"🔄 Toplam {len(active_accounts)} hesabın Sent kutusu taranıyor...")

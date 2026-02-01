@@ -1,0 +1,270 @@
+/* =========================================
+   VIEW MAIL ANA KONTEYNER & HEADER
+========================================= */
+.view-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    /* Base.html'den gelen arka plan rengi varsayılıyor */
+}
+
+/* Başlık Alanı */
+.task-header {
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #30363d; /* Koyu gri çizgi */
+}
+
+/* Geri Dön Butonu Stili (Bootstrap override) */
+.btn-outline-secondary {
+    color: #c9d1d9 !important;
+    border-color: #30363d !important;
+}
+.btn-outline-secondary:hover {
+    background-color: #30363d !important;
+}
+
+/* =========================================
+   TIMELINE (Zaman Çizelgesi) YAPISI
+========================================= */
+.timeline-container {
+    display: flex;
+    flex-direction: column;
+    gap: 25px; /* Mesajlar arası boşluk */
+    margin-bottom: 40px;
+}
+
+/* =========================================
+   MESAJ KARTLARI (ACTION CARD) GENEL
+========================================= */
+.action-card {
+    position: relative; /* Hover aksiyonları için gerekli */
+    max-width: 85%;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease-in-out;
+    border: 1px solid transparent;
+}
+
+/* Kartın üzerine gelince */
+.action-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-color: #30363d;
+}
+
+/* --- GELEN MESAJ (SOLDA) --- */
+.card-received {
+    align-self: flex-start;
+    background-color: #161b22; /* Daha koyu gri */
+    border-bottom-left-radius: 2px; /* WhatsApp tarzı köşe */
+}
+
+/* --- GİDEN MESAJ (SAĞDA - SİZ) --- */
+.card-sent {
+    align-self: flex-end;
+    background-color: #21262d; /* Hafif maviye çalan gri */
+    border-bottom-right-radius: 2px;
+}
+
+/* =========================================
+   KART İÇERİĞİ (HEADER, BODY, FOOTER)
+========================================= */
+
+/* Kart Başlığı (Gönderen ve Rozetler) */
+.card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+.sender-info {
+    font-weight: 600;
+    color: #58a6ff; /* Mavi isim rengi */
+}
+
+.meta-info {
+    display: flex;
+    gap: 8px;
+}
+
+/* Rozetler (Badges) */
+.badge-status {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.badge-you {
+    background-color: rgba(88, 166, 255, 0.2);
+    color: #58a6ff;
+    border: 1px solid rgba(88, 166, 255, 0.4);
+}
+
+.badge-draft {
+    background-color: rgba(210, 153, 34, 0.2); /* Turuncu/Sarı */
+    color: #d29922;
+    border: 1px solid rgba(210, 153, 34, 0.4);
+}
+
+/* Kart Gövdesi */
+.card-body {
+    padding: 0; /* Bootstrap padding'ini sıfırla */
+    color: #c9d1d9; /* Açık gri metin */
+    line-height: 1.6;
+}
+
+/* Mail İçeriği (HTML Render Alanı) */
+.mail-content-render img {
+    max-width: 100%; /* Resimlerin taşmasını önle */
+    height: auto;
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.mail-content-render a {
+    color: #58a6ff;
+    text-decoration: underline;
+}
+
+/* Mesaj Saati */
+.message-time {
+    font-size: 0.75rem;
+    color: #8b949e;
+    text-align: right;
+    margin-top: 10px;
+}
+
+/* =========================================
+   📎 EKLER BÖLÜMÜ (ATTACHMENTS) - YENİ!
+========================================= */
+.attachment-box {
+    background: rgba(0, 0, 0, 0.2); /* Karta göre biraz daha koyu iç zemin */
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 15px; /* Metinden ayır */
+}
+
+/* İndirme Linkleri Konteyneri (Gizli olabilir ama CSS yine de dursun) */
+.download-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Tekil Dosya Hapı (Pill) - Eğer tek tek indirmek gerekirse diye */
+.attachment-pill {
+    background: #30363d;
+    border: 1px solid #484f58;
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: #e6edf3;
+    font-size: 0.85rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px; /* İkon ve yazı arası boşluk */
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+/* Dosya üzerine gelince */
+.attachment-pill:hover {
+    background: #58a6ff;
+    border-color: #58a6ff;
+    color: #ffffff;
+    transform: translateY(-2px); /* Hafif yukarı kalkma efekti */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Toplu İndirme Butonu (Bootstrap override) */
+.attachment-box .btn-outline-primary {
+    border-color: #58a6ff;
+    color: #58a6ff;
+}
+.attachment-box .btn-outline-primary:hover {
+    background-color: #58a6ff;
+    color: white;
+}
+
+/* Eğer linkleri JS ile gizlemezsek diye d-none sınıfı için destek (Bootstrap'te var ama garanti olsun) */
+.d-none {
+    display: none !important;
+}
+
+
+/* =========================================
+   HOVER AKSİYONLARI (Cevapla, İncele)
+========================================= */
+.card-actions {
+    position: absolute;
+    top: -10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+    
+    /* Varsayılan olarak gizle */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(5px);
+    transition: all 0.2s ease-in-out;
+}
+
+/* Kartın üzerine gelince göster */
+.action-card:hover .card-actions {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Aksiyon Butonları Genel */
+.btn-action {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: transform 0.1s;
+}
+.btn-action:hover {
+    transform: scale(1.05);
+}
+
+/* Birincil Aksiyon (Mor/Mavi - İncele) */
+.btn-primary-action {
+    background: linear-gradient(45deg, #8957e5, #b392f0);
+    color: white;
+    border: none;
+}
+
+/* İkincil Aksiyon (Gri - Cevapla/Düzenle) */
+.btn-secondary-action {
+    background: #30363d;
+    color: #c9d1d9;
+    border: 1px solid #484f58;
+}
+.btn-secondary-action:hover {
+    background: #484f58;
+    color: white;
+}
+
+/* =========================================
+   HIZLI CEVAP KUTUSU (EN ALTTA)
+========================================= */
+.quick-reply-box {
+    margin-top: 40px;
+    padding: 25px;
+    background-color: #161b22;
+    border-radius: 12px;
+    text-align: center;
+    border: 2px dashed #30363d;
+}
