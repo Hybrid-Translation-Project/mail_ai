@@ -41,7 +41,12 @@
 
 /* Tab İçerik Animasyonu */
 .tab-content {
+    display: none;
     animation: fadeIn 0.4s ease;
+}
+
+.tab-content.active {
+    display: block;
 }
 
 @keyframes fadeIn {
