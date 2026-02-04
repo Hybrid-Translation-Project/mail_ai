@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="login_page_title">Mail Asistanı - Giriş</title>
+    <title data-i18n="login_page_title">Mail Asistani - Giris</title>
 
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/login.css">
@@ -27,10 +27,10 @@
             </span>
         </div>
 
-        <h2><span data-i18n="login_header_title">Mail Asistanı</span></h2>
+        <h2><span data-i18n="login_header_title">Mail Asistani</span></h2>
 
         <p class="login-subtitle" data-i18n="login_subtitle">
-            Devam etmek için panel yetkilerinizi doğrulayın.
+            Devam etmek icin panel yetkilerinizi dogrulayin.
         </p>
 
         {% if request.query_params.get('msg') %}
@@ -42,22 +42,13 @@
         <form action="/login" method="post" class="login-form">
             <div class="input-group">
                 <label><span data-i18n="login_label_email">E-posta Adresi</span></label>
-                <input type="email" name="username" required data-i18n="login_placeholder_email"
-                    placeholder="ornek@gmail.com">
+                <input type="email" name="username" required data-i18n="login_placeholder_email" placeholder="ornek@gmail.com">
             </div>
 
             <div class="input-group">
-                <label><span data-i18n="login_label_password">Panel Giriş
-                        Şifresi</span></label>
-                <input type="password" name="password" required data-i18n="login_placeholder_password"
-                    placeholder="Panel şifrenizi girin">
+                <label><span data-i18n="login_label_password">Panel Giris Sifresi</span></label>
+                <input type="password" name="password" required data-i18n="login_placeholder_password" placeholder="Panel sifrenizi girin">
             </div>
-
-            {% if request.query_params.get('msg') %}
-            <div class="status-msg success">
-                <i class="fas fa-check"></i> {{ request.query_params.get('msg') }}
-            </div>
-            {% endif %}
 
             {% if error %}
             <div class="status-msg error">
@@ -65,28 +56,11 @@
             </div>
             {% endif %}
 
-            <form action="/login" method="post" class="login-form">
-                
-                <div class="input-row">
-                    <label data-i18n="login_label_email">E-Posta :</label>
-                    <input type="email" name="username" required 
-                           class="pill-input"
-                           placeholder="ornek@gmail.com">
-                </div>
-
-                <div class="input-row">
-                    <label data-i18n="login_label_password">Şifre :</label>
-                    <input type="password" name="password" required 
-                           class="pill-input"
-                           placeholder="******">
-                </div>
-
-                <button type="submit" class="btn-lilac">
-                    <span data-i18n="login_btn_enter">Giriş Yap</span>
-                </button>
-
-            </form>
-        </div>
+            <button type="submit" class="login-btn">
+                <i class="fas fa-shield-alt"></i>
+                <span data-i18n="login_btn_enter">Giris Yap</span>
+            </button>
+        </form>
     </div>
 
     <script src="/static/js/translations.js"></script>
