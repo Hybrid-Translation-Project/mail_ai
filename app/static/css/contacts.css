@@ -1,97 +1,237 @@
-/* --- ARAMA KUTUSU (Modern Beyaz Tasarım) --- */
-/* Bootstrap form-control sınıfını temel alarak modernleştiriyoruz */
-div.container input.form-control {
-    background-color: #ffffff !important; /* İstediğin gibi beyaz tutuyoruz */
-    border: 1px solid #dee2e6 !important; /* İnce, modern bir çerçeve */
-    color: #212529 !important; /* Koyu metin rengi */
-    border-radius: 10px !important; /* Köşeleri yumuşattık */
-    padding: 12px 20px !important;
-    height: auto !important;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important; /* Hafif bir derinlik ekledik */
-    transition: all 0.3s ease !important;
+.contact-tab-link {
+    text-decoration: none;
 }
 
-/* Kutuya Tıklandığında (Mavi Odaklanma Efekti) */
-div.container input.form-control:focus {
-    border-color: #86b7fe !important;
-    background-color: #ffffff !important;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important; /* Bootstrap tarzı şık parlama */
-    outline: none !important;
+.contact-card-item {
+    transition: transform 0.2s ease;
 }
 
-/* Placeholder (İpucu Metni) */
-div.container input.form-control::placeholder {
-    color: #adb5bd !important;
-    font-style: italic;
-    opacity: 0.8;
+.contact-card-item:hover {
+    transform: translateY(-3px);
 }
 
-/* --- REHBER KARTLARI (Karanlık Tema ile Uyumlu) --- */
-/* Kartlar sidebar ile uyumlu koyu tonda kalmaya devam ediyor */
-.card {
-    background-color: #1e1e1e !important; /* styles.css'deki --card-bg ile uyumlu */
-    border: 1px solid #333 !important;
-    border-radius: 16px !important;
-    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-    overflow: hidden;
+.contact-card {
+    position: relative;
+    border-radius: 14px !important;
 }
 
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4) !important;
-    border-color: #bb86fc !important; /* styles.css'deki accent rengi */
+.contact-delete-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid #444;
+    background: rgba(0, 0, 0, 0.2);
+    color: #dc3545;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-.card-title {
-    color: #bb86fc !important; /* Mor aksan */
-    font-weight: 600;
+.contact-delete-btn:hover {
+    background: #dc3545;
+    color: #fff;
+    border-color: #dc3545;
 }
 
-.text-muted {
-    color: #a0a0a0 !important;
+.contact-delete-icon {
+    font-size: 0.9rem;
 }
 
-/* Alt Çizgi Stilini Yumuşat */
-.card hr {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    opacity: 0.5;
-}
-
-/* --- BUTONLAR --- */
-.btn-outline-primary {
-    border-color: #bb86fc !important;
-    color: #bb86fc !important;
-    border-radius: 8px !important;
-}
-
-.btn-outline-primary:hover {
-    background-color: #bb86fc !important;
-    color: #000 !important;
-}
 .avatar-circle {
-            width: 45px;
-            height: 45px;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .contact-card-item {
-            transition: all 0.3s ease;
-        }
-        .nav-pills .nav-link {
-            background: #1a1a1a;
-            color: #aaa;
-            border: 1px solid #333;
-            margin-right: 8px;
-            transition: all 0.2s;
-        }
-        .nav-pills .nav-link:hover {
-            background: #252525;
-            color: #fff;
-        }
-        .nav-pills .nav-link.active {
-            background-color: #0d6efd;
-            color: white !important;
-            border-color: #0d6efd;
-        }
+    width: 45px;
+    height: 45px;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.contact-meta-wrap {
+    overflow: hidden;
+    width: 75%;
+}
+
+.nav-pills .nav-link {
+    background: #1a1a1a;
+    color: #aaa;
+    border: 1px solid #333;
+    transition: all 0.2s;
+}
+
+.nav-pills .nav-link:hover {
+    background: #252525;
+    color: #fff;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: #121212 !important;
+    font-weight: 700;
+}
+
+.delete-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+}
+
+.delete-modal.is-open {
+    display: flex;
+}
+
+.delete-modal-dialog {
+    width: min(450px, calc(100% - 24px));
+    background: #212529;
+    border: 1px solid #444;
+    border-radius: 16px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+    text-align: center;
+    padding: 30px;
+}
+
+.delete-modal-icon-wrap {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: rgba(220, 53, 69, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-modal-icon {
+    font-size: 2.5rem;
+}
+
+.delete-only-contact-btn {
+    border-color: #444 !important;
+    background: #2c3036;
+}
+
+.contacts-toolbar {
+    gap: 1rem;
+}
+
+.contacts-search-wrap {
+    width: 26%;
+    min-width: 260px;
+}
+
+.contacts-title {
+    margin-bottom: 0.35rem;
+}
+
+.contacts-subtitle {
+    color: #8f97a4 !important;
+}
+
+.contacts-search-group .form-control {
+    min-height: 40px;
+}
+
+.contacts-search-icon {
+    width: 42px;
+    justify-content: center;
+    color: #9fb2c8 !important;
+    border-right: 0;
+}
+
+.contacts-search-group .form-control {
+    border-left: 0;
+}
+
+.contacts-search-group .form-control:focus {
+    border-left: 1px solid var(--accent);
+}
+
+.contact-owner-badge {
+    color: #d0d8e4 !important;
+    background: #2a2f36 !important;
+}
+
+.contact-tag-badge {
+    color: #b8c0cd !important;
+    background: #23272d !important;
+}
+
+.contact-tag-badge span {
+    color: inherit;
+}
+
+.contacts-account-tabs {
+    gap: 0.4rem;
+}
+
+@media (max-width: 991.98px) {
+    .contacts-toolbar {
+        align-items: flex-start !important;
+        flex-wrap: wrap;
+    }
+
+    .contacts-search-wrap {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .contacts-account-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 0.35rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .contacts-account-tabs .nav-link {
+        white-space: nowrap;
+        flex: 0 0 auto;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .contact-meta-wrap {
+        width: calc(100% - 56px);
+    }
+
+    .contact-card .card-body {
+        padding: 0.9rem;
+    }
+
+    .delete-modal-dialog {
+        padding: 20px 18px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .contacts-toolbar h2 {
+        font-size: 1.25rem;
+    }
+
+    .contacts-toolbar .text-muted.small {
+        font-size: 0.78rem;
+    }
+
+    .contacts-account-tabs .nav-link {
+        padding: 0.45rem 0.8rem !important;
+        font-size: 0.85rem;
+    }
+
+    .contact-delete-btn {
+        width: 30px;
+        height: 30px;
+    }
+
+    .contacts-search-icon {
+        width: 38px;
+    }
+}

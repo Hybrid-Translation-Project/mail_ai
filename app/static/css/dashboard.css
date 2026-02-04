@@ -1,63 +1,156 @@
- .alert-pulse {
-     animation: pulse-border 2s infinite;
- }
+.alert-pulse {
+    animation: pulse-border 2s infinite;
+}
 
- @keyframes pulse-border {
-     0% {
-         transform: scale(1);
-         box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4);
-     }
+@keyframes pulse-border {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(251, 192, 45, 0.35);
+    }
 
-     70% {
-         transform: scale(1.01);
-         box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
-     }
+    70% {
+        transform: scale(1.01);
+        box-shadow: 0 0 0 10px rgba(251, 192, 45, 0);
+    }
 
-     100% {
-         transform: scale(1);
-         box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
-     }
- }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(251, 192, 45, 0);
+    }
+}
 
- .btn-sm {
-     padding: 5px 10px;
-     border-radius: 4px;
-     font-size: 0.85rem;
-     cursor: pointer;
-     border: none;
- }
+.refresh-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+    padding: 0.4rem 0.75rem;
+    background: #1a1a1a;
+    border: 1px solid var(--border);
+    border-radius: var(--app-radius);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
 
- .btn-primary {
-     background: #bb86fc;
-     color: #000;
- }
+.refresh-chip-value {
+    color: var(--accent);
+    font-weight: 700;
+}
 
- .btn-danger {
-     background: #cf6679;
-     color: #fff;
- }
+.dashboard-alert {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: var(--app-radius);
+    background: rgba(251, 192, 45, 0.1);
+    border: 1px solid rgba(251, 192, 45, 0.68);
+    color: #ffd768;
+}
 
- .btn-warning {
-     background: #ffc107;
-     color: #000;
-     text-decoration: none;
- }
+.dashboard-alert-btn {
+    font-weight: 700;
+}
 
- /* Tag Badge Stili  */
- .tag-badge {
-     color: #fff;
-     font-size: 0.7rem;
-     margin-right: 4px;
-     padding: 2px 5px;
-     border-radius: 3px;
-     border: 1px solid rgba(255, 255, 255, 0.2);
- }
+.mail-date {
+    color: #8f8f8f;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
 
-/* Inbox satır durumları */
+.mail-from-link {
+    color: #f2f2f2;
+    text-decoration: none;
+    border-bottom: 1px dashed #444;
+}
+
+.mail-from-link:hover {
+    color: #fff;
+    border-bottom-color: var(--accent);
+}
+
+.mail-account {
+    margin-bottom: 0.35rem;
+}
+
+.mail-account-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: #bcbcbc;
+    font-size: 0.72rem;
+}
+
+.mail-subject-link {
+    color: #8ec5ff;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.mail-subject-link:hover {
+    color: #b7ddff;
+    text-decoration: underline;
+}
+
+.mail-tag-list {
+    margin-top: 0.35rem;
+}
+
+.tag-badge {
+    color: #fff;
+    font-size: 0.7rem;
+    margin-right: 0.25rem;
+    padding: 0.16rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.status-badge {
+    padding: 0.26rem 0.58rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+
+.status-badge-replied {
+    background: rgba(74, 222, 128, 0.2);
+    color: #99f8b7;
+}
+
+.status-badge-draft {
+    background: rgba(187, 134, 252, 0.26);
+    color: #e0c8ff;
+}
+
+.btn-icon {
+    min-width: 2rem;
+}
+
 .mail-row--read {
     opacity: 0.88;
 }
 
 .mail-row--replied {
-    opacity: 0.70;
+    opacity: 0.74;
+}
+
+.empty-title {
+    margin: 0.5rem 0;
+}
+
+.empty-actions {
+    margin-top: 1.25rem;
+}
+
+@media (max-width: 991.98px) {
+    .dashboard-alert {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }

@@ -1,91 +1,79 @@
 {% extends "base.html" %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="/static/css/history.css">
+<link rel="stylesheet" href="/static/css/history.css">
 {% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+<section class="page-header">
     <div>
-        <h2 style="margin: 0;">📂 <span data-i18n="history_title">Gönderilen & İptal Edilenler</span></h2>
-        <p style="color: #666; font-size: 0.9rem; margin-top: 5px;" data-i18n="history_subtitle">Son 50 işlem listeleniyor.</p>
+        <h2 class="page-title">📂 <span data-i18n="history_title">Gönderilen & İptal Edilenler</span></h2>
+        <p class="page-subtitle" data-i18n="history_subtitle">Son 50 işlem listeleniyor.</p>
     </div>
+</section>
+
+<div class="search-toolbar">
+    <div class="search-input-wrap">
+        <i class="fas fa-search search-input-icon"></i>
+        <input type="text" id="searchInput" class="form-control search-input"
+            placeholder="Geçmişte Ara: 'Ahmet Bey teklifi', 'Geçen ayki sunum'...">
+    </div>
+    <button id="searchBtn" class="btn btn-primary search-btn">Ara</button>
 </div>
 
-<div style="margin-bottom: 25px; display: flex; gap: 10px;">
-    <div style="position: relative; flex-grow: 1;">
-        <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666;"></i>
-        <input type="text" id="searchInput" 
-               placeholder="Geçmişte Ara: 'Ahmet Bey teklifi', 'Geçen ayki sunum'..." 
-               style="width: 100%; padding: 12px 12px 12px 40px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 1rem;">
+<div id="search-view" class="search-view">
+    <div class="search-results-header">
+        <h3 class="search-results-title">🔍 Arama Sonuçları</h3>
+        <button id="clearSearchBtn" class="btn btn-sm btn-secondary">❌ Kapat</button>
     </div>
-    <button id="searchBtn" class="btn btn-primary" style="background: #bb86fc; color: #000; font-weight: bold; border: none;">
-        Ara
-    </button>
-</div>
-
-<div id="search-view" style="display: none;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h3 style="margin: 0;">🔍 Arama Sonuçları</h3>
-        <button id="clearSearchBtn" class="btn btn-sm btn-secondary" style="border: 1px solid #444;">
-            ❌ Kapat
-        </button>
-    </div>
-    <div id="searchResultsContainer">
-        </div>
+    <div id="searchResultsContainer"></div>
 </div>
 
 <div id="default-view">
-    <div class="table-responsive" style="background: #1a1a1a; border-radius: 8px; border: 1px solid #333;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead style="background: #252525; border-bottom: 1px solid #333;">
+    <div class="table-responsive app-table-wrapper">
+        <table class="table app-table align-middle mb-0">
+            <thead>
                 <tr>
-                    <th style="padding: 15px; text-align: left;" data-i18n="history_th_date">Tarih</th>
-                    <th style="padding: 15px; text-align: left;" data-i18n="history_th_to">Kime / Muhatap</th>
-                    <th style="padding: 15px; text-align: left;" data-i18n="history_th_subject">Konu (İncelemek için tıkla)</th>
-                    <th style="padding: 15px; text-align: center;" data-i18n="history_th_status">Durum</th>
-                    <th style="padding: 15px; text-align: center;" data-i18n="history_th_action">İşlem</th>
+                    <th scope="col" data-i18n="history_th_date">Tarih</th>
+                    <th scope="col" data-i18n="history_th_to">Kime / Muhatap</th>
+                    <th scope="col" data-i18n="history_th_subject">Konu (İncelemek için tıkla)</th>
+                    <th scope="col" class="text-center" data-i18n="history_th_status">Durum</th>
+                    <th scope="col" class="text-center" data-i18n="history_th_action">İşlem</th>
                 </tr>
             </thead>
             <tbody>
                 {% for mail in mails %}
-                <tr style="border-bottom: 1px solid #222;">
-                    <td style="padding: 15px; color: #888; font-size: 0.9rem;">{{ mail.created_at.strftime('%d.%m %H:%M') }}</td>
-                    <td style="padding: 15px; font-weight: 500;">{{ mail.from }}</td>
-                    
-                    <td style="padding: 15px;">
-                        <a href="/ui/view/{{ mail._id }}" style="color: #fff; text-decoration: none; font-weight: bold; display: block;">
-                            {{ mail.subject }} <span style="font-size: 0.8em; color: #bb86fc;">🔗</span>
+                <tr>
+                    <td class="history-date">{{ mail.created_at.strftime('%d.%m %H:%M') }}</td>
+                    <td class="history-to">{{ mail.from }}</td>
+                    <td>
+                        <a href="/ui/view/{{ mail._id }}" class="history-subject-link">
+                            {{ mail.subject }} <span class="history-link-icon">🔗</span>
                         </a>
                     </td>
-
-                    <td style="padding: 15px; text-align: center;">
+                    <td class="text-center">
                         {% if mail.status == 'SENT' %}
-                            <span style="background: rgba(40, 167, 69, 0.2); color: #28a745; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;" data-i18n="badge_sent">
-                                GÖNDERİLDİ
-                            </span>
+                        <span class="history-status history-status-sent" data-i18n="badge_sent">GÖNDERİLDİ</span>
                         {% else %}
-                            <span style="background: rgba(220, 53, 69, 0.2); color: #dc3545; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;" data-i18n="badge_cancelled">
-                                İPTAL EDİLDİ
-                            </span>
+                        <span class="history-status history-status-canceled" data-i18n="badge_cancelled">İPTAL
+                            EDİLDİ</span>
                         {% endif %}
                     </td>
-                    
-                    <td style="padding: 15px; text-align: center;">
-                        
-                        {% if mail.status == 'CANCELED' %}
-                        <form action="/ui/restore/{{ mail._id }}" method="post" style="display:inline; margin-right: 8px;">
-                            <button type="submit" style="background: #28a745; border: none; color: white; cursor: pointer; font-size: 1rem; padding: 5px 10px; border-radius: 4px;" title="Gelen Kutusuna Geri Yükle">
-                                ♻️
-                            </button>
-                        </form>
-                        {% endif %}
+                    <td class="text-center">
+                        <div class="history-actions">
+                            {% if mail.status == 'CANCELED' %}
+                            <form action="/ui/restore/{{ mail._id }}" method="post" class="inline-form">
+                                <button type="submit" class="btn btn-success btn-sm restore-btn"
+                                    title="Gelen Kutusuna Geri Yükle">♻️</button>
+                            </form>
+                            {% endif %}
 
-                        <form action="/ui/mail/delete/{{ mail._id }}" method="post" style="display:inline;" onsubmit="return confirm('Delete this record? / Bu kaydı silmek istediğine emin misin?');">
-                            <button type="submit" style="background: none; border: none; color: #cf6679; cursor: pointer; font-size: 1rem;" title="Arşivden Kaldır">
-                                🗑️
-                            </button>
-                        </form>
+                            <form action="/ui/mail/delete/{{ mail._id }}" method="post" class="inline-form"
+                                onsubmit="return confirm('Delete this record? / Bu kaydı silmek istediğine emin misin?');">
+                                <button type="submit" class="btn btn-danger btn-sm delete-btn"
+                                    title="Arşivden Kaldır">🗑️</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -94,14 +82,15 @@
     </div>
 
     {% if not mails %}
-    <div style="text-align: center; padding: 50px; color: #666;">
-        <p data-i18n="history_empty">Henüz işlem geçmişi bulunmuyor.</p>
+    <div class="empty-state">
+        <p class="empty-text" data-i18n="history_empty">Henüz işlem geçmişi bulunmuyor.</p>
     </div>
     {% endif %}
-</div> {% endblock %}
+</div>
+{% endblock %}
 
 {% block extra_js %}
-    <script src="/static/js/translations.js"></script>
-    <script src="/static/js/language_engine.js"></script>
-    <script src="/static/js/search.js"></script>
+<script src="/static/js/translations.js"></script>
+<script src="/static/js/language_engine.js"></script>
+<script src="/static/js/search.js"></script>
 {% endblock %}

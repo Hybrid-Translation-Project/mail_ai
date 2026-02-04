@@ -301,3 +301,21 @@ textarea:focus,
     border-color: #555;
     color: white;
 }
+
+.modal-body .form-control:focus {
+    background-color: #252525;
+    border-color: #3b82f6;
+}
+
+.settings-color-input {
+    height: 42px;
+    padding: 2px;
+}
+
+.settings-color-input-sm {
+    height: 40px;
+}
+
+.settings-tag-submit {
+    height: 42px;
+}

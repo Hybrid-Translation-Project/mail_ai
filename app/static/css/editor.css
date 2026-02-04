@@ -528,3 +528,87 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
+
+.thread-scroll {
+    max-height: 85vh;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.editor-mail-content {
+    overflow: auto;
+    max-height: 500px;
+}
+
+.attachment-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.editor-attachment-link {
+    font-size: 0.75rem;
+}
+
+@media (max-width: 991.98px) {
+    .editor-layout {
+        row-gap: 1rem;
+    }
+
+    .sticky-panel {
+        position: static;
+        top: auto;
+    }
+
+    .thread-scroll {
+        max-height: 50vh;
+        padding-right: 0;
+    }
+
+    .editor-mail-content {
+        max-height: 320px;
+    }
+
+    .message-bubble {
+        max-width: 100%;
+    }
+
+    .ai-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .editor-actions {
+        flex-direction: column;
+    }
+
+    .editor-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .mail-card.sticky-panel {
+        padding: 14px;
+    }
+
+    .action-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .back-btn-wrapper {
+        margin-top: 8px;
+    }
+
+    .thread-scroll {
+        max-height: 46vh;
+    }
+
+    .editor-textarea {
+        min-height: 220px;
+        padding: 12px;
+    }
+
+    .btn-ai-action {
+        font-size: 0.8rem;
+    }
+}

@@ -29,6 +29,10 @@
 .task-item:hover {
     transform: translateX(10px);
 }
+
+.task-date-fixed {
+    min-width: 80px;
+}
 .category-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
         .urgency-high { color: #ff4757; font-weight: bold; }
         .urgency-mid { color: #ffa502; }

@@ -5,121 +5,101 @@
 {% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+<section class="page-header">
     <div>
-        <h2 style="margin: 0;">📥 <span data-i18n="dashboard_title">Gelen Kutusu (Birleşik)</span></h2>
-        <p style="color: #a0a0a0; margin: 5px 0 0 0;" data-i18n="dashboard_desc">Tüm hesaplarından toplanan ve AI
-            tarafından işlenen mailler.</p>
+        <h2 class="page-title">📥 <span data-i18n="dashboard_title">Gelen Kutusu (Birleşik)</span></h2>
+        <p class="page-subtitle" data-i18n="dashboard_desc">Tüm hesaplarından toplanan ve AI tarafından işlenen mailler.
+        </p>
     </div>
-    <div
-        style="text-align: right; font-size: 0.85rem; color: #666; background: #1e1e1e; padding: 5px 10px; border-radius: 4px; border: 1px solid #333;">
+    <div class="refresh-chip">
         <span data-i18n="dashboard_auto_refresh">Otomatik yenileme:</span>
-        <span id="countdown" style="color: #bb86fc; font-weight: bold;">15</span> sn
+        <span id="countdown" class="refresh-chip-value">15</span> sn
     </div>
-</div>
+</section>
 
 <div id="searchResultsContainer"></div>
 
 <div id="default-view">
-
     {% set pending_tasks = tasks|selectattr("status", "equalto", "WAITING_APPROVAL")|list|length if tasks else 0 %}
     {% if pending_tasks > 0 %}
-    <div class="alert-pulse"
-        style="background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; color: #ffc107; padding: 12px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+    <div class="dashboard-alert alert-pulse">
         <span>
             ⚠️ <strong data-i18n="dashboard_alert_ai">AI Bildirimi:</strong>
             <span data-i18n="alert_pending_start">Onayını bekleyen</span>
             <strong>{{ pending_tasks }}</strong>
             <span data-i18n="alert_pending_end">yeni görev/teklif var!</span>
         </span>
-        <a href="/ui/tasks" class="btn btn-sm btn-warning" style="font-weight: bold; color: #000;"
+        <a href="/ui/tasks" class="btn btn-sm btn-warning dashboard-alert-btn"
             data-i18n="dashboard_btn_review_tasks">İncele ve Karar Ver</a>
     </div>
     {% endif %}
 
     {% if mails %}
-    <div class="table-responsive" style="background: #1a1a1a; border-radius: 8px; border: 1px solid #333;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead style="background: #252525; border-bottom: 1px solid #333;">
+    <div class="table-responsive app-table-wrapper">
+        <table class="table app-table align-middle mb-0">
+            <thead>
                 <tr>
-                    <th style="padding: 15px; text-align: left; width: 10%;" data-i18n="table_date">Tarih</th>
-                    <th style="padding: 15px; text-align: left; width: 20%;" data-i18n="table_from">Kimden</th>
-                    <th style="padding: 15px; text-align: left; width: 35%;" data-i18n="table_subject_account">Konu &
-                        Hedef Hesap</th>
-                    <th style="padding: 15px; text-align: center; width: 15%;" data-i18n="table_ai_status">AI Durumu
-                    </th>
-                    <th style="padding: 15px; text-align: center; width: 20%;" data-i18n="table_action">İşlem</th>
+                    <th scope="col" data-i18n="table_date">Tarih</th>
+                    <th scope="col" data-i18n="table_from">Kimden</th>
+                    <th scope="col" data-i18n="table_subject_account">Konu & Hedef Hesap</th>
+                    <th scope="col" class="text-center" data-i18n="table_ai_status">AI Durumu</th>
+                    <th scope="col" class="text-center" data-i18n="table_action">İşlem</th>
                 </tr>
             </thead>
             <tbody>
                 {% for mail in mails %}
-                <tr class="mail-row{% if mail.status == 'REPLIED' %} mail-row--replied{% elif mail.is_read %} mail-row--read{% endif %}"
-                    style="border-bottom: 1px solid #222;">
-                    <td style="padding: 15px; font-size: 0.9rem; color: #888;">{{ mail.created_at.strftime('%d.%m %H:%M') }}</td>
-
-                    <td style="padding: 15px; font-weight: 500;">
-                        <a href="/ui/contact/{{ mail.from }}"
-                            style="color: #fff; text-decoration: none; border-bottom: 1px dashed #444;">{{ mail.from
-                            }}</a>
+                <tr
+                    class="mail-row{% if mail.status == 'REPLIED' %} mail-row--replied{% elif mail.is_read %} mail-row--read{% endif %}">
+                    <td class="mail-date">{{ mail.created_at.strftime('%d.%m %H:%M') }}</td>
+                    <td>
+                        <a href="/ui/contact/{{ mail.from }}" class="mail-from-link">{{ mail.from }}</a>
                     </td>
-
-                    <td style="padding: 15px;">
-                        <div style="margin-bottom: 4px;">
-                            <span
-                                style="font-size: 0.7rem; background: #333; color: #bbb; padding: 2px 6px; border-radius: 4px; border: 1px solid #444;">
-                                <i class="fas fa-inbox" style="color: #bb86fc; margin-right: 3px;"></i> {{
-                                mail.user_email }}
+                    <td>
+                        <div class="mail-account">
+                            <span class="mail-account-pill">
+                                <i class="fas fa-inbox"></i> {{ mail.user_email }}
                             </span>
                         </div>
-                        <div style="font-size: 1rem; color: #e0e0e0;">
-                            <a href="/ui/view/{{ mail._id }}"
-                                style="color: #66b0ff; text-decoration: none; font-weight: bold;"
-                                title="Tüm yazışmayı gör">{{ mail.subject }}</a>
+                        <a href="/ui/view/{{ mail._id }}" class="mail-subject-link" title="Tüm yazışmayı gör">{{
+                            mail.subject }}</a>
 
-                            {# TAGLERİ GÖSTER (%100 GÜVENLİ) #}
-                            {% if mail.tags %}
-                            <div style="margin-top: 4px;">
-                                {% for tag_slug in mail.tags %}
-                                {% set tag_info = tags_map.get(tag_slug) %}
-                                {% if tag_info %}
-                                <span class="badge tag-badge" data-bg-color="{{ tag_info.color }}">
-                                    <span data-i18n="tag_name_{{ tag_slug }}">{{ tag_info.name }}</span>
-                                </span>
-                                {% endif %}
-                                {% endfor %}
-                            </div>
+                        {# TAGLERİ GÖSTER (%100 GÜVENLİ) #}
+                        {% if mail.tags %}
+                        <div class="mail-tag-list">
+                            {% for tag_slug in mail.tags %}
+                            {% set tag_info = tags_map.get(tag_slug) %}
+                            {% if tag_info %}
+                            <span class="badge tag-badge" data-bg-color="{{ tag_info.color }}">
+                                <span data-i18n="tag_name_{{ tag_slug }}">{{ tag_info.name }}</span>
+                            </span>
                             {% endif %}
+                            {% endfor %}
                         </div>
-                    </td>
-
-                    <td style="padding: 15px; text-align: center;">
-                        {% if mail.status == "REPLIED" %}
-                        <span class="badge"
-                            style="background: rgba(46, 160, 67, 0.9); color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">
-                            CEVAPLANDI
-                        </span>
-                        {% else %}
-                        <span class="badge"
-                            style="background: #bb86fc; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;"
-                            data-i18n="badge_draft_ready">
-                            TASLAK HAZIR
-                        </span>
                         {% endif %}
                     </td>
 
-                    <td style="padding: 15px; text-align: center;">
-                        <div style="display: flex; gap: 8px; justify-content: center;">
+                    <td class="text-center">
+                        {% if mail.status == "REPLIED" %}
+                        <span class="badge status-badge status-badge-replied">CEVAPLANDI</span>
+                        {% else %}
+                        <span class="badge status-badge status-badge-draft" data-i18n="badge_draft_ready">TASLAK
+                            HAZIR</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-center">
+                        <div class="row-actions">
                             {% if mail.status == "REPLIED" %}
-                            <a href="/ui/view/{{ mail._id }}" class="btn btn-secondary btn-sm"
-                                style="text-decoration: none;">Görüntüle</a>
+                            <a href="/ui/view/{{ mail._id }}" class="btn btn-secondary btn-sm">Görüntüle</a>
                             {% else %}
                             <a href="/ui/editor/{{ mail._id }}" class="btn btn-primary btn-sm"
-                                style="text-decoration: none;" data-i18n="btn_inspect">İncele</a>
+                                data-i18n="btn_inspect">İncele</a>
                             {% endif %}
 
-                            <form action="/ui/mail/delete/{{ mail._id }}" method="post" style="display:inline;"
+                            <form action="/ui/mail/delete/{{ mail._id }}" method="post" class="inline-form"
                                 onsubmit="return confirm('Delete completely? / Bu maili kalıcı olarak silmek istediğine emin misin?');">
-                                <button type="submit" class="btn btn-danger btn-sm" title="Tamamen Sil">🗑️</button>
+                                <button type="submit" class="btn btn-danger btn-sm btn-icon"
+                                    title="Tamamen Sil">🗑️</button>
                             </form>
                         </div>
                     </td>
@@ -130,20 +110,17 @@
     </div>
 
     {% else %}
-    <div
-        style="text-align: center; margin-top: 40px; padding: 60px; border: 2px dashed #333; border-radius: 12px; background: #1a1a1a;">
-        <div style="font-size: 4rem; margin-bottom: 15px; opacity: 0.5;">📭</div>
-        <h3 style="margin: 10px 0; color: #fff;" data-i18n="dashboard_empty_title">Bekleyen mail yok!</h3>
-        <p style="color: #666;" data-i18n="dashboard_empty_desc">Tüm bağlı hesapların kontrol ediliyor...</p>
-        <div style="margin-top: 25px;">
-            <button onclick="window.location.reload()" class="btn btn-sm"
-                style="background-color: #333; color: #fff; border: 1px solid #444; padding: 8px 20px;">
+    <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h3 class="empty-title" data-i18n="dashboard_empty_title">Bekleyen mail yok!</h3>
+        <p class="empty-text" data-i18n="dashboard_empty_desc">Tüm bağlı hesapların kontrol ediliyor...</p>
+        <div class="empty-actions">
+            <button onclick="window.location.reload()" class="btn btn-secondary btn-sm">
                 🔄 <span data-i18n="dashboard_btn_check_now">Şimdi Kontrol Et</span>
             </button>
         </div>
     </div>
     {% endif %}
-
 </div>
 {% endblock %}
 

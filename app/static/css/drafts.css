@@ -1,0 +1,20 @@
+.draft-col-recipient {
+    width: 25%;
+}
+
+.draft-col-subject {
+    width: 45%;
+}
+
+.draft-col-date,
+.draft-col-actions {
+    width: 15%;
+}
+
+.draft-meta-text {
+    font-size: 0.8rem;
+}
+
+.draft-preview-text {
+    max-width: 400px;
+}

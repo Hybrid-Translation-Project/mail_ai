@@ -9,11 +9,11 @@
     <a href="/ui" class="back-btn">← <span data-i18n="editor_back">Gelen Kutusuna Dön</span></a>
 </div>
 
-<div class="row editor-container">
+<div class="row editor-container editor-layout">
 
-    <div class="col-md-7">
+    <div class="col-md-7 editor-thread-col">
         <h4 class="text-white mb-3">💬 <span data-i18n="editor_conversation">Konuşma Geçmişi</span></h4>
-        <div class="thread-container" style="max-height: 85vh; overflow-y: auto; padding-right: 5px;">
+        <div class="thread-container thread-scroll">
             {% for m in thread %}
             <div class="message-bubble {% if m.is_owner %}message-sent{% else %}message-received{% endif %} mb-3">
 
@@ -31,7 +31,7 @@
                 </div>
 
                 <div class="bubble-content">
-                    <div class="mail-content-render" style="overflow: auto; max-height: 500px;">
+                    <div class="mail-content-render editor-mail-content">
                         {% if m.body_html %}
                         {{ m.body_html | safe }}
                         {% else %}
@@ -41,12 +41,11 @@
 
                     <!-- Attachments -->
                     {% if m.attachments %}
-                    <div class="mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div class="mt-3 pt-3 attachment-divider">
                         <small class="text-white d-block mb-2">📎 EKLER:</small>
                         <div class="d-flex flex-wrap gap-2">
                             {% for att in m.attachments %}
-                            <a href="{{ att.url }}" target="_blank" class="btn btn-sm btn-outline-light" download
-                                style="font-size: 0.75rem;">
+                            <a href="{{ att.url }}" target="_blank" class="btn btn-sm btn-outline-light editor-attachment-link" download>
                                 <i class="fas fa-paperclip"></i> {{ att.filename }}
                             </a>
                             {% endfor %}
@@ -59,7 +58,7 @@
         </div>
     </div>
 
-    <div class="col-md-5">
+    <div class="col-md-5 editor-panel-col">
         <div class="mail-card sticky-panel">
 
             <div class="action-header">

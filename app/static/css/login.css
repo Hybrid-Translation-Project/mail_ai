@@ -1,149 +1,256 @@
-/* =========================================
-   GENEL AYARLAR (Sıfırlama)
-   ========================================= */
-body {
+.login-page {
     margin: 0;
-    padding: 0;
-    font-family: 'Poppins', sans-serif;
-    background-color: #2e1065;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-}
-
-.main-container {
-    width: 100%;
-    height: 100%;
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, #0a1430 0%, #08132a 100%);
+    color: #e8eef9;
 }
 
-/* =========================================
-   KART TASARIMI
-   ========================================= */
-.glass-card {
-    background-color: #4c1d95;
-    width: 90%;
-    max-width: 600px;
-    min-height: 480px; /* Yüksekliği biraz artırdım */
-    border-radius: 40px;
-    padding: 40px;
+.login-page::before,
+.login-page::after {
+    content: "";
+    position: absolute;
+    border-radius: 999px;
+    pointer-events: none;
+}
+
+.login-page::before {
+    width: 560px;
+    height: 560px;
+    left: -180px;
+    top: -180px;
+    background: radial-gradient(circle, rgba(79, 121, 255, 0.2) 0%, rgba(79, 121, 255, 0) 68%);
+}
+
+.login-page::after {
+    width: 520px;
+    height: 520px;
+    right: -170px;
+    bottom: -190px;
+    background: radial-gradient(circle, rgba(96, 76, 255, 0.18) 0%, rgba(96, 76, 255, 0) 70%);
+}
+
+.auth-container {
+    width: min(430px, calc(100% - 24px));
+    position: relative;
+    z-index: 1;
+    background: rgba(12, 24, 52, 0.9);
+    border: 1px solid rgba(115, 141, 207, 0.22);
+    border-radius: 20px;
+    padding: 28px 24px 20px;
+    box-shadow: 0 24px 66px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
+}
+
+.language-switcher {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 0 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(112, 137, 201, 0.35);
+    background: rgba(18, 32, 64, 0.75);
+    color: #d5e0f7;
+}
+
+.language-switcher i {
+    font-size: 0.9rem;
+    opacity: 0.85;
+}
+
+.lang-select {
+    border: 0;
+    background: transparent;
+    color: #dce6fb;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding-right: 2px;
+    min-width: 46px;
+}
+
+.lang-select:focus {
+    outline: none;
+}
+
+.logo-container {
     text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    
-    display: flex;
-    flex-direction: column;
+    margin: 0 0 12px;
+}
+
+.logo-badge {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    border-radius: 16px;
+    background: linear-gradient(160deg, rgba(70, 53, 168, 0.8), rgba(45, 54, 130, 0.82));
+    border: 1px solid rgba(123, 126, 255, 0.45);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
-/* =========================================
-   LOGO VE BAŞLIK
-   ========================================= */
-.logo-box { margin-bottom: 20px; }
-
-.logo-placeholder {
-    width: 80px;
-    height: 50px;
-    background-color: red;
-    margin: 0 auto;
-    border-radius: 4px;
+.logo-icon {
+    font-size: 1.9rem;
+    color: #7d9bff;
 }
 
-.app-title {
+.auth-container h2 {
+    margin: 0;
+    text-align: center;
     font-size: 2rem;
-    font-weight: 500;
-    margin: 0 0 40px 0;
-    letter-spacing: 0.5px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #f3f7ff;
 }
 
-/* =========================================
-   🛑 KAYA GİBİ SAĞLAM DÜZEN 🛑
-   ========================================= */
-.login-form {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 25px; /* Satırlar arası boşluk */
-    align-items: stretch;
-}
-
-/* Satırı Tablo gibi davranmaya zorluyoruz */
-.input-row {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    width: 100%;
-    max-width: 550px;
-}
-
-.input-row label {
+.login-subtitle {
+    margin: 8px auto 20px;
+    max-width: 320px;
+    text-align: center;
+    color: #9eb0d2;
     font-size: 0.9rem;
-    color: white;
-    text-align: left;
 }
 
-/* Giriş Alanı (Input) - Sağ Taraf */
-.pill-input {
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.5) !important;
-    border-radius: 50px !important;
-    padding: 12px 20px !important;
-    color: white !important;
-    font-family: 'Poppins', sans-serif;
-    outline: none;
+.success {
+    margin-bottom: 12px;
+    background: rgba(46, 160, 67, 0.16);
+    border: 1px solid rgba(46, 160, 67, 0.35);
+    border-radius: 10px;
+    padding: 9px 11px;
+    color: #9df0b3;
+}
+
+.login-form {
+    margin-top: 2px;
+}
+
+.input-group {
+    margin-bottom: 12px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: #c8d5ee;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.input-group input {
     width: 100%;
-    /* Kalan alanı doldur ama taşma */
-    flex: 1 !important; 
-    width: auto !important; 
-    
-    display: block !important;
-    position: relative !important;
-    background-clip: padding-box !important;
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid #2f466f;
+    background: #132440;
+    color: #edf3ff;
+    font-size: 0.98rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
-.pill-input:focus {
-    border-color: #fff !important;
-    background: rgba(255, 255, 255, 0.1) !important;
+.input-group input::placeholder {
+    color: #6f84aa;
 }
 
-/* Placeholder Rengi */
-.pill-input::placeholder {
-    color: rgba(255, 255, 255, 0.4) !important;
-    font-size: 0.85rem;
+.input-group input:focus {
+    outline: none;
+    border-color: #6f97ff;
+    box-shadow: 0 0 0 3px rgba(111, 151, 255, 0.2);
+    background: #12223d;
 }
 
-/* =========================================
-   DİĞER BİLEŞENLER
-   ========================================= */
-.btn-lilac {
-    margin-top: 25px;
-    background-color: #a78bfa;
-    color: white;
-    border: none;
-    padding: 14px 60px;
-    border-radius: 8px;
+.input-group input:-webkit-autofill,
+.input-group input:-webkit-autofill:hover,
+.input-group input:-webkit-autofill:focus,
+.input-group input:-webkit-autofill:active {
+    -webkit-text-fill-color: #edf2fc;
+    -webkit-box-shadow: 0 0 0 1000px #132440 inset;
+    transition: background-color 9999s ease-in-out 0s;
+}
+
+.login-btn {
+    width: 100%;
+    min-height: 48px;
+    margin-top: 8px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #4c39ea 0%, #6162f2 100%);
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    box-shadow: 0 12px 26px rgba(83, 85, 235, 0.3);
+    transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+    box-shadow: 0 14px 30px rgba(83, 85, 235, 0.35);
+}
+
+.login-btn i {
+    margin-right: 6px;
     font-size: 1rem;
-    cursor: pointer;
-    font-family: 'Poppins', sans-serif;
-    transition: 0.2s;
-}
-.btn-lilac:hover {
-    background-color: #8b5cf6;
-    transform: translateY(-2px);
 }
 
-.lang-wrapper { position: absolute; top: 20px; right: 20px; }
-.lang-select {
-    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);
-    color: white; padding: 5px 10px; border-radius: 8px; cursor: pointer;
+.error {
+    margin-top: 10px;
+    color: #ff9aa9;
+    font-size: 0.9rem;
 }
-.lang-select option { background: #2e1065; color: white; }
 
-.status-msg { padding: 10px; border-radius: 8px; margin-bottom: 20px; width: 80%; font-size: 0.9rem; }
-.status-msg.error { background: rgba(220, 38, 38, 0.8); color: white; }
-.status-msg.success { background: rgba(22, 163, 74, 0.8); color: white; }
+.login-footer {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(115, 141, 207, 0.2);
+    text-align: center;
+}
+
+.login-footer p {
+    margin: 0;
+    color: #7e93bb;
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+.login-footer code {
+    color: #dce7ff;
+    background: rgba(93, 112, 171, 0.24);
+    border-radius: 7px;
+    padding: 1px 6px;
+}
+
+@media (max-width: 575.98px) {
+    .auth-container {
+        padding: 22px 14px 16px;
+        border-radius: 18px;
+    }
+
+    .logo-badge {
+        width: 66px;
+        height: 66px;
+    }
+
+    .auth-container h2 {
+        font-size: 1.8rem;
+    }
+
+    .input-group input {
+        min-height: 42px;
+    }
+
+    .login-btn {
+        min-height: 46px;
+        font-size: 1rem;
+    }
+}

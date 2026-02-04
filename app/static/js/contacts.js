@@ -79,13 +79,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if(deleteContactIdInput) deleteContactIdInput.value = contactId;
         
         // Modalı görünür yap
-        deleteModal.style.display = 'flex';
+        deleteModal.classList.add('is-open');
     };
 
     // Modalı KAPAT
     window.closeDeleteModal = function() {
         if (!deleteModal) return;
-        deleteModal.style.display = 'none';
+        deleteModal.classList.remove('is-open');
     };
 
     // Silme İşlemini ONAYLA ve GÖNDER
@@ -98,10 +98,16 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Modalın dışına (gri alana) tıklanırsa kapat
-    window.onclick = function(event) {
-        if (event.target == deleteModal) {
+    window.addEventListener('click', function(event) {
+        if (event.target === deleteModal) {
             window.closeDeleteModal();
         }
-    };
+    });
+
+    window.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            window.closeDeleteModal();
+        }
+    });
 
 });

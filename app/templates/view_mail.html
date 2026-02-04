@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="/static/css/view_html.css">
 <link rel="stylesheet" href="/static/css/view_mail.css">
 {% endblock %}
 
@@ -13,10 +12,8 @@
             <button onclick="history.back()" class="btn btn-outline-secondary btn-sm text-light border-secondary mb-2">
                 <i class="fas fa-arrow-left"></i> <span data-i18n="btn_back">Geri Dön</span>
             </button>
-            <h4 class="m-0" style="color: #e6edf3;">
-                <span
-                    style="font-size: 0.8rem; color: #8b949e; display: block; margin-bottom: 4px; letter-spacing: 0.5px;"
-                    data-i18n="lbl_subject">KONU</span>
+            <h4 class="m-0 mail-subject-title">
+                <span class="mail-subject-label" data-i18n="lbl_subject">KONU</span>
                 {{ thread[-1].subject }}
             </h4>
         </div>
@@ -55,12 +52,11 @@
                 {% if mail.attachments %}
                 <div class="attachment-box">
                     <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-white fw-bold" style="opacity: 0.8;">
+                        <small class="text-white fw-bold attachment-title">
                             <i class="fas fa-paperclip"></i> EKLER ({{ mail.attachments|length }} Dosya)
                         </small>
                         
-                        <button onclick="downloadAllFiles(this)" class="btn btn-sm btn-outline-primary" 
-                                style="font-size: 0.75rem; border-color: #58a6ff; color: #58a6ff;">
+                        <button onclick="downloadAllFiles(this)" class="btn btn-sm btn-outline-primary attachment-download-btn">
                             <i class="fas fa-download"></i> Tümünü İndir
                         </button>
                     </div>

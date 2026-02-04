@@ -139,9 +139,10 @@ graph TD
 
 
 5. **🏷️ Dinamik Etiketleme Sistemi**
-- **Kişiselleştirilebilir:** Ayarlar menüsünden "Fatura", "Acil", "İK" gibi kendi etiketlerinizi oluşturun.
-- **Otomatik Algılama:** AI, gelen maili analiz eder ve tanımladığınız etiketlerden en uygun olanı (veya olanları) seçip mailinize yapıştırır.
-- **Görsel Takip:** Dashboard üzerinde renkli rozetlerle (badges) hangi mailin neyle ilgili olduğunu tek bakışta anlayın.
+- **Canlı Etiket Havuzu:** Etiketler Ayarlar > Etiket Yönetimi'nden eklenir/güncellenir/silinir; yeni gelen mailler analiz edilirken bu güncel liste doğrudan veritabanından okunur.
+- **AI + Thread Takibi:** AI yalnızca tanımlı `slug` listesinden etiket seçer. Mail bir konuşma zincirine aitse, tutarlılık için önce zincirdeki mevcut etiketler devralınır.
+- **Görsel Takip:** Dashboard'da etiket renkleri dinamik rozet olarak gösterilir; konu takibi tek bakışta yapılır.
+- **Kapsam Notu:** Değişiklikler yeni maillerde anında etkilidir. Eski maillerdeki etiketler geriye dönük yeniden yazılmaz (slug değişirse eski kayıtlardaki rozet görünmeyebilir).
 
 ---
 

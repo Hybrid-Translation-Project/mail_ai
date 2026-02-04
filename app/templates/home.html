@@ -58,7 +58,7 @@
                     {% for task in urgent_tasks %}
                     <div class="task-item d-flex align-items-center justify-content-between p-3 border-bottom">
                         <div class="d-flex align-items-center">
-                            <div class="task-date me-3 text-center" style="min-width: 80px;">
+                            <div class="task-date me-3 text-center task-date-fixed">
                                 <small class="d-block text-muted">{{ task.due_date or 'Yakında' }}</small>
                             </div>
                             <div class="task-info">

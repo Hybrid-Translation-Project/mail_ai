@@ -9,24 +9,49 @@
     <link rel="stylesheet" href="/static/css/login.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
 
-    <div class="main-container">
-        
-        <div class="lang-wrapper">
+<body class="login-page">
+    <div class="auth-container">
+
+        <div class="language-switcher">
+            <i class="fas fa-globe"></i>
             <select id="languageSelect" class="lang-select">
-                <option value="tr">🇹🇷 TR</option>
-                <option value="en">🇬🇧 EN</option>
+                <option value="tr">TR</option>
+                <option value="en">EN</option>
             </select>
         </div>
 
-        <div class="glass-card">
-            
-            <div class="logo-box">
-                <div class="logo-placeholder"></div>
+        <div class="logo-container">
+            <span class="logo-badge">
+                <i class="fas fa-robot logo-icon"></i>
+            </span>
+        </div>
+
+        <h2><span data-i18n="login_header_title">Mail Asistanı</span></h2>
+
+        <p class="login-subtitle" data-i18n="login_subtitle">
+            Devam etmek için panel yetkilerinizi doğrulayın.
+        </p>
+
+        {% if request.query_params.get('msg') %}
+        <div class="success">
+            <i class="fas fa-check-circle"></i> {{ request.query_params.get('msg') }}
+        </div>
+        {% endif %}
+
+        <form action="/login" method="post" class="login-form">
+            <div class="input-group">
+                <label><span data-i18n="login_label_email">E-posta Adresi</span></label>
+                <input type="email" name="username" required data-i18n="login_placeholder_email"
+                    placeholder="ornek@gmail.com">
             </div>
 
-            <h1 class="app-title" data-i18n="login_header_title">Mail Asistanı</h1>
+            <div class="input-group">
+                <label><span data-i18n="login_label_password">Panel Giriş
+                        Şifresi</span></label>
+                <input type="password" name="password" required data-i18n="login_placeholder_password"
+                    placeholder="Panel şifrenizi girin">
+            </div>
 
             {% if request.query_params.get('msg') %}
             <div class="status-msg success">
@@ -67,4 +92,5 @@
     <script src="/static/js/translations.js"></script>
     <script src="/static/js/language_engine.js"></script>
 </body>
+
 </html>

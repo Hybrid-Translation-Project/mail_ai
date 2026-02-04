@@ -71,8 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Boş arama yapılmasını engelle
         if (query.length < 2) {
             // Basit bir sarsılma efekti veya uyarı verilebilir
-            searchInput.style.borderColor = 'red';
-            setTimeout(() => searchInput.style.borderColor = '#333', 1000);
+            searchInput.classList.add('search-input-invalid');
+            setTimeout(() => searchInput.classList.remove('search-input-invalid'), 1000);
             return;
         }
 
@@ -115,10 +115,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Sonuç yoksa
         if (!results || results.length === 0) {
             resultsContainer.innerHTML = `
-                <div style="text-align: center; padding: 60px; color: #666;">
-                    <div style="font-size: 3rem; margin-bottom: 10px;">🤷‍♂️</div>
-                    <h3 style="color: #fff;">Sonuç Bulunamadı</h3>
-                    <p>Farklı kelimelerle aramayı deneyebilirsin.</p>
+                <div class="search-empty-state">
+                    <div class="search-empty-icon">🤷‍♂️</div>
+                    <h3 class="search-empty-title">Sonuç Bulunamadı</h3>
+                    <p class="search-empty-text">Farklı kelimelerle aramayı deneyebilirsin.</p>
                 </div>`;
             return;
         }
@@ -138,24 +138,24 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Kart İçeriği
             card.innerHTML = `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <strong style="color: #fff; font-size: 1.1rem;">${mail.subject || '(Konusuz)'}</strong>
-                    <span style="color: #888; font-size: 0.85rem;">${dateStr}</span>
+                <div class="search-result-top">
+                    <strong class="search-result-subject">${mail.subject || '(Konusuz)'}</strong>
+                    <span class="search-result-date">${dateStr}</span>
                 </div>
                 
-                <div style="font-size: 0.9rem; color: #bbb; margin-bottom: 8px;">
-                    <span style="color: #bb86fc;">Kimden:</span> ${mail.sender || 'Bilinmiyor'}
+                <div class="search-result-meta">
+                    <span class="search-result-meta-label">Kimden:</span> ${mail.sender || 'Bilinmiyor'}
                 </div>
                 
-                <div style="font-size: 0.9rem; color: #888; border-left: 3px solid #333; padding-left: 10px; margin-bottom: 12px; font-style: italic;">
+                <div class="search-result-snippet">
                     "${mail.snippet}..."
                 </div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #333; padding-top: 8px;">
+                <div class="search-result-footer">
                     <span class="similarity-score" title="Yapay zeka eşleşme oranı">
                         🎯 Uyumluluk: %${scorePercent}
                     </span>
-                    <a href="/ui/view/${mail._id}" class="btn btn-sm btn-primary" style="text-decoration: none; padding: 4px 12px;">
+                    <a href="/ui/view/${mail._id}" class="btn btn-sm btn-primary search-result-action">
                         Görüntüle
                     </a>
                 </div>

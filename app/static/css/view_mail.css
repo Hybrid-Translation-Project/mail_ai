@@ -15,6 +15,18 @@
     border-bottom: 1px solid #30363d; /* Koyu gri çizgi */
 }
 
+.mail-subject-title {
+    color: #e6edf3;
+}
+
+.mail-subject-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    color: #8b949e;
+}
+
 /* Geri Dön Butonu Stili (Bootstrap override) */
 .btn-outline-secondary {
     color: #c9d1d9 !important;
@@ -190,6 +202,16 @@
 .attachment-box .btn-outline-primary:hover {
     background-color: #58a6ff;
     color: white;
+}
+
+.attachment-title {
+    opacity: 0.8;
+}
+
+.attachment-download-btn {
+    font-size: 0.75rem;
+    border-color: #58a6ff !important;
+    color: #58a6ff !important;
 }
 
 /* Eğer linkleri JS ile gizlemezsek diye d-none sınıfı için destek (Bootstrap'te var ama garanti olsun) */

@@ -1,6 +1,26 @@
+.tasks-page {
+    --tasks-amber: #d5a64a;
+    --tasks-amber-border: #b8872f;
+    --tasks-amber-text: #221a0d;
+}
+
 .card-pending {
     border-left: 5px solid #fbbf24;
     background: #1e293b;
+}
+
+.pending-suggestions-card {
+    background: #1e1e1e;
+    border-left: 5px solid var(--tasks-amber-border);
+}
+
+.pending-suggestions-card .card-header {
+    background: var(--tasks-amber) !important;
+    color: var(--tasks-amber-text) !important;
+}
+
+.pending-task-content {
+    flex-grow: 1;
 }
 
 .badge-category {
@@ -14,14 +34,26 @@ table {
     border-spacing: 0 10px;
 }
 
-tr {
+.tasks-table tbody tr {
     background: #1e293b;
     border-radius: 10px;
 }
 
-td {
+.tasks-table td {
     padding: 15px !important;
     vertical-align: middle;
+}
+
+.task-index-col {
+    width: 50px;
+}
+
+.account-badge {
+    font-size: 0.7rem;
+}
+
+.btn-delete-link {
+    text-decoration: none !important;
 }
 .animate-pulse { animation: pulse-red 2s infinite; }
         @keyframes pulse-red {
@@ -44,8 +76,106 @@ td {
             color: #fff;
         }
         .nav-pills .nav-link.active {
-            background-color: #ffc107; /* Warning Rengi */
-            color: black !important;
-            border-color: #ffc107;
+            background-color: var(--tasks-amber);
+            color: var(--tasks-amber-text) !important;
+            border-color: var(--tasks-amber-border);
             font-weight: bold;
         }
+
+.tasks-header {
+    gap: 0.75rem;
+}
+
+.tasks-pending-count {
+    white-space: nowrap;
+}
+
+.tasks-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.4rem;
+    padding-bottom: 0.35rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tasks-tabs .nav-item {
+    flex: 0 0 auto;
+}
+
+.tasks-tabs .nav-link {
+    white-space: nowrap;
+}
+
+.tasks-table {
+    min-width: 920px;
+}
+
+.tasks-table-head th {
+    background: #252525 !important;
+    color: #c8ccd4 !important;
+    border-bottom: 1px solid #35383f !important;
+}
+
+.pending-task-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+@media (max-width: 991.98px) {
+    .tasks-header {
+        flex-wrap: wrap;
+        align-items: flex-start !important;
+    }
+
+    .pending-suggestions-card .card-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.35rem;
+    }
+
+    .task-item-pending {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.8rem;
+    }
+
+    .pending-task-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .pending-task-actions form {
+        flex: 1 1 220px;
+    }
+
+    .pending-task-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .tasks-header h2 {
+        font-size: 1.25rem;
+    }
+
+    .tasks-header .text-muted.small {
+        font-size: 0.78rem;
+    }
+
+    .tasks-pending-count {
+        font-size: 0.75rem;
+    }
+
+    .task-item-pending {
+        padding: 0.85rem !important;
+    }
+
+    .pending-task-actions form {
+        flex: 1 1 100%;
+    }
+
+    .tasks-tabs .nav-link {
+        padding: 0.45rem 0.85rem !important;
+        font-size: 0.85rem;
+    }
+}

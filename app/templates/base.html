@@ -11,22 +11,19 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
 
     {% block extra_css %}{% endblock %}
 </head>
 
 <body>
-    <div class="sidebar">
-        <div class="logo-header">
-            <div class="logo">
-                <a href="/ui/dashboard">
-                    <span class="logo-icon">📧</span> 
-                    <span class="logo-text" data-i18n="app_name">Mail AI</span>
-                </a>
-            </div>
-            <button id="sidebarToggle" class="toggle-btn">
-                <i class="fas fa-bars"></i>
-            </button>
+    <button class="sidebar-backdrop" id="sidebarBackdrop" type="button" aria-label="Menüyü kapat"></button>
+
+    <div class="sidebar" id="appSidebar">
+        <div class="logo">
+            <a href="/ui/dashboard">
+                📧 <span data-i18n="app_name">Mail AI</span>
+            </a>
         </div>
 
         <nav>
@@ -82,6 +79,16 @@
     </div>
 
     <div class="main-content">
+        <div class="mobile-topbar">
+            <button type="button" class="mobile-menu-btn btn btn-outline-secondary" id="sidebarToggle"
+                aria-label="Menüyü aç/kapat" aria-expanded="false" aria-controls="appSidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a href="/ui/dashboard" class="mobile-brand">
+                📧 <span data-i18n="app_name">Mail AI</span>
+            </a>
+        </div>
+
         {% if request.query_params.get('msg') %}
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="fas fa-check-circle"></i> <span data-i18n="{{ request.query_params.get('msg') }}">{{ request.query_params.get('msg') }}</span>
@@ -104,7 +111,54 @@
     <script src="/static/js/translations.js?v=6"></script>
     <script src="/static/js/language_engine.js?v=6"></script>
     <script src="/static/js/tags.js"></script>
-    <script src="/static/js/base.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('appSidebar');
+            const toggleButton = document.getElementById('sidebarToggle');
+            const backdrop = document.getElementById('sidebarBackdrop');
+
+            if (!sidebar || !toggleButton || !backdrop) return;
+
+            const isMobileViewport = () => window.matchMedia('(max-width: 991.98px)').matches;
+
+            const closeSidebar = () => {
+                sidebar.classList.remove('sidebar-open');
+                backdrop.classList.remove('is-visible');
+                document.body.classList.remove('sidebar-open');
+                toggleButton.setAttribute('aria-expanded', 'false');
+            };
+
+            const openSidebar = () => {
+                sidebar.classList.add('sidebar-open');
+                backdrop.classList.add('is-visible');
+                document.body.classList.add('sidebar-open');
+                toggleButton.setAttribute('aria-expanded', 'true');
+            };
+
+            toggleButton.addEventListener('click', function () {
+                if (!isMobileViewport()) return;
+
+                if (sidebar.classList.contains('sidebar-open')) {
+                    closeSidebar();
+                    return;
+                }
+
+                openSidebar();
+            });
+
+            backdrop.addEventListener('click', closeSidebar);
+
+            sidebar.querySelectorAll('.nav-link').forEach((link) => {
+                link.addEventListener('click', function () {
+                    if (isMobileViewport()) closeSidebar();
+                });
+            });
+
+            window.addEventListener('resize', function () {
+                if (!isMobileViewport()) closeSidebar();
+            });
+        });
+    </script>
 
     {% block extra_js %}{% endblock %}
 </body>

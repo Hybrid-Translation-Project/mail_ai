@@ -75,35 +75,23 @@
                         </form>
                     </div>
                 </div>
-                {% else %}
-                <div class="col-12 text-center py-4">
-                    <p class="text-muted" data-i18n="settings_tags_empty">Henüz hiç etiket tanımlanmamış.</p>
+                <div class="col-md-2 mb-2">
+                    <label class="form-label small" data-i18n="settings_tags_label_color">Renk Seçin</label>
+                    <input type="color" name="color" class="form-control settings-color-input" value="#3498db"
+                        title="Etiket Rengi">
                 </div>
-                {% endfor %}
-            </div>
-
-            <div class="add-tag-box">
-                <h5 class="mb-3 text-muted"><i class="fas fa-plus-circle"></i> <span data-i18n="settings_tags_add_header">Yeni Etiket Ekle</span></h5>
-                <form action="/ui/settings/tags/add" method="post" class="row align-items-end">
-                    <div class="col-md-3 mb-2">
-                        <label class="form-label small">Etiket Adı</label>
-                        <input type="text" name="name" class="form-control" placeholder="Örn: Fatura" required>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <label class="form-label small">Renk</label>
-                        <input type="color" name="color" class="form-control" value="#3498db" style="height: 42px; padding: 2px;">
-                    </div>
-                    <div class="col-md-5 mb-2">
-                        <label class="form-label small">Açıklama (AI Kriteri)</label>
-                        <input type="text" name="description" class="form-control" placeholder="Örn: Ödeme ve dekont mailleri..." required>
-                    </div>
-                    <div class="col-md-2 mb-2">
-                        <button type="submit" class="btn btn-primary btn-block" style="height: 42px;">
-                            <i class="fas fa-plus"></i> <span data-i18n="btn_add">Ekle</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div class="col-md-5 mb-2">
+                    <label class="form-label small" data-i18n="settings_tags_label_desc">Açıklama (AI Kriteri)</label>
+                    <input type="text" name="description" class="form-control"
+                        data-i18n="[placeholder]settings_tags_placeholder_desc"
+                        placeholder="Örn: Ödeme ve dekont mailleri..." required>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <button type="submit" class="btn btn-primary btn-block settings-tag-submit">
+                        <i class="fas fa-plus"></i> <span data-i18n="btn_add">Ekle</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -173,8 +161,8 @@
                         <input type="text" name="name" id="editName" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Renk</label>
-                        <input type="color" name="color" id="editColor" class="form-control" style="height: 40px;" required>
+                        <label class="form-label" data-i18n="settings_tags_label_color">Renk</label>
+                        <input type="color" name="color" id="editColor" class="form-control settings-color-input settings-color-input-sm" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Açıklama</label>
@@ -205,5 +193,4 @@
 </script>
 <script src="/static/js/translations.js?v=6"></script>
 <script src="/static/js/language_engine.js?v=6"></script>
-<script src="/static/js/settings.js?v=6"></script>
 {% endblock %}
