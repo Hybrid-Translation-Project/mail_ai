@@ -22,6 +22,7 @@
 
 <div id="default-view">
 
+    {# --- MEVCUT: ONAY BEKLEYEN GÖREV UYARISI --- #}
     {% set pending_tasks = tasks|selectattr("status", "equalto", "WAITING_APPROVAL")|list|length if tasks else 0 %}
     {% if pending_tasks > 0 %}
     <div class="alert-pulse"
@@ -36,6 +37,26 @@
             data-i18n="dashboard_btn_review_tasks">İncele ve Karar Ver</a>
     </div>
     {% endif %}
+
+    {# --- YENİ EKLENEN: TAKİP (FOLLOW-UP) HATIRLATICI UYARISI --- #}
+    {% if stats.followup_needed > 0 %}
+    <div class="alert-pulse" 
+         style="background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; color: #ffc107; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+        
+        <div style="display: flex; align-items: center;">
+            <i class="fas fa-bullhorn me-3" style="font-size: 1.5rem; margin-right: 15px;"></i>
+            <div>
+                <h5 class="alert-heading mb-1" style="margin: 0; font-size: 1.1rem;">Takip Gereken {{ stats.followup_needed }} Mail Var!</h5>
+                <p class="mb-0 small" style="margin: 0;">3 günden uzun süredir cevap alamadığın mailler var. Dürtmek ister misin?</p>
+            </div>
+        </div>
+        
+        <a href="/ui/history?filter=no_reply" class="btn btn-sm btn-warning" style="font-weight: bold; color: #000; text-decoration: none; padding: 5px 15px; border-radius: 4px; background: #ffc107;">
+            İncele & Dürt
+        </a>
+    </div>
+    {% endif %}
+    {# ------------------------------------------------------------- #}
 
     {% if mails %}
     <div class="table-responsive" style="background: #1a1a1a; border-radius: 8px; border: 1px solid #333;">

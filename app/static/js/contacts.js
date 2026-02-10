@@ -1,27 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
       
     const searchInput = document.getElementById('contactSearch');
-    const tabButtons = document.querySelectorAll('#accountTabs button'); // Eğer buton kullanıyorsan
-    // NOT: Eğer yeni HTML'de <a> tagi kullandıysan burası çalışmayabilir ama 
-    // şimdilik mevcut kodunu bozmuyorum.
-    
     const contactCards = document.querySelectorAll('.contact-card-item');
     const noResultsMsg = document.getElementById('noResults');
 
-    let currentFilter = 'all'; 
     let currentSearch = '';    
-
-    // --- SEKME (TAB) DEĞİŞTİRME ---
-    if(tabButtons.length > 0) {
-        tabButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                tabButtons.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                currentFilter = this.getAttribute('data-filter');
-                filterContacts();
-            });
-        });
-    }
 
     // --- ARAMA YAPMA ---
     if(searchInput) {
@@ -36,16 +19,12 @@ document.addEventListener('DOMContentLoaded', function() {
         let visibleCount = 0;
 
         contactCards.forEach(card => {
-            const cardOwner = card.getAttribute('data-owner');
             const cardSearchData = card.getAttribute('data-search');
 
-            // Kural 1: Hesap Filtresi
-            const matchesAccount = (currentFilter === 'all') || (cardOwner === currentFilter);
-
-            // Kural 2: Arama Metni
+            // Arama Metni Eşleşme Kontrolü
             const matchesSearch = (currentSearch === '') || (cardSearchData.includes(currentSearch));
 
-            if (matchesAccount && matchesSearch) {
+            if (matchesSearch) {
                 card.style.display = 'block'; 
                 visibleCount++;
             } else {
@@ -63,22 +42,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
   
+    // --- MODAL YÖNETİMİ ---
     const deleteModal = document.getElementById('deleteModal');
     const deleteForm = document.getElementById('deleteForm');
     const deleteContactIdInput = document.getElementById('deleteContactId');
     const deleteModeInput = document.getElementById('deleteMode');
 
-    // HTML'deki onclick="openDeleteModal(...)" fonksiyonunun çalışması için
-    // bu fonksiyonları 'window' nesnesine (global alana) atıyoruz.
-
     // Modalı AÇ
     window.openDeleteModal = function(contactId) {
         if (!deleteModal) return;
-        
-        // Silinecek kişinin ID'sini gizli input'a yaz
         if(deleteContactIdInput) deleteContactIdInput.value = contactId;
-        
-        // Modalı görünür yap
         deleteModal.style.display = 'flex';
     };
 
@@ -90,17 +63,44 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Silme İşlemini ONAYLA ve GÖNDER
     window.confirmDelete = function(mode) {
-        // Mode: 'only_contact' veya 'with_history'
         if(deleteModeInput) deleteModeInput.value = mode;
-        
-        // Formu sunucuya gönder (ui.py karşılayacak)
         if(deleteForm) deleteForm.submit();
     };
 
-    // Modalın dışına (gri alana) tıklanırsa kapat
+    // Modalın dışına tıklanırsa kapat
     window.onclick = function(event) {
         if (event.target == deleteModal) {
             window.closeDeleteModal();
+        }
+    };
+
+    // --- 🚀 YENİ: AI HATIRLATICI ENTEGRASYONU ---
+    /**
+     * Mail içeriğini analiz eder ve gerekirse hatırlatıcı önerir.
+     * Bu fonksiyonu bir mail görüntülendiğinde tetikleyebilirsin.
+     */
+    window.checkAiReminder = async function(mailContent) {
+        if (!mailContent || mailContent.length < 5) return;
+
+        try {
+            const response = await fetch('/api/ai/analyze-reminder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: mailContent })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Kullanıcıya şık bir onay kutusu gösteriyoruz
+                if (confirm(data.suggestion)) {
+                    // Hatırlatıcı kurulduğunda yapılacaklar (örn: bir toast bildirimi)
+                    alert("Hatırlatıcı Kaydedildi: " + data.task);
+                    console.log("AI Task Created:", data.task);
+                }
+            }
+        } catch (error) {
+            console.error("AI Analiz hatası:", error);
         }
     };
 

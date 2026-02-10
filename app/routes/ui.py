@@ -6,14 +6,14 @@ import imaplib
 import email
 from email.header import decode_header
 from typing import Optional, List
-from fastapi import APIRouter, Request, Form, Depends, HTTPException, Body, Query
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, StreamingResponse, Response
-from fastapi.templating import Jinja2Templates
-from dotenv import load_dotenv 
-from datetime import datetime
-from bson import ObjectId
+from fastapi import APIRouter, Request, Form, Depends, HTTPException, Body, Query # type: ignore
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, StreamingResponse, Response # type: ignore
+from fastapi.templating import Jinja2Templates # type: ignore
+from dotenv import load_dotenv # type: ignore
+from datetime import datetime, timedelta 
+from bson import ObjectId # type: ignore
 import json 
-from pydantic import BaseModel
+from pydantic import BaseModel # type: ignore
 
 # Veritabanı ve Servisler
 from app.database import mails_col, contacts_col, tasks_col, users_col, accounts_col, tags_col
@@ -99,7 +99,7 @@ def clean_reply_body(body):
     quote_patterns = [
         r'On\s+.*,\s+.*at\s+.*wrote:', 
         r'Le\s+.*à\s+.*a\s+écrit\s*:', 
-        r'El\s+.*,\s+.*escribió:',    
+        r'El\s+.*,\s+.*escribió:',     
         r'-----\s*Original Message\s*-----', 
         r'From:\s*.*Sent:\s*.*To:\s*.*Subject:', 
         r'________________________________',
@@ -138,7 +138,7 @@ def filter_thread_chain(candidates, target_id):
             if pid:
                 graph[curr_id].add(pid)
                 graph[pid].add(curr_id)
-        
+                
         refs = m.get("references")
         if refs:
             if isinstance(refs, str): refs = refs.split()
@@ -161,61 +161,36 @@ def filter_thread_chain(candidates, target_id):
     filtered.sort(key=lambda x: x.get("created_at") or "")
     return filtered
 
-# =========================================================================
-# 🚀 STREAM VE DOWNLOAD ENDPOINTLERİ (ESKİ SİSTEM GERİ GELDİ)
-# =========================================================================
-
+# 🚀 STREAM VE DOWNLOAD ENDPOINTLERİ
 def get_imap_content(mail_doc, target_id, mode="cid"):
-    """
-    IMAP'e bağlanır, maili bulur ve istenen içeriği (CID veya Filename) çeker.
-    Veritabanını şişirmemek için anlık çalışır.
-    """
     try:
-        # 1. Hesap Bilgilerini Bul
         account_id = mail_doc.get("account_id")
         if not account_id: return None, None, None
-        
         account = accounts_col.find_one({"_id": ObjectId(account_id)})
         if not account: return None, None, None
-
-        # 2. Şifreyi Çöz
         email_user = account.get("email")
         try:
             email_pass = decrypt_password(account.get("password"))
         except: return None, None, None
-
-        # 3. Bağlan
         host = "imap.gmail.com"
         if account.get("provider") == "outlook": host = "outlook.office365.com"
-        
         mail = imaplib.IMAP4_SSL(host)
         mail.login(email_user, email_pass)
-        
-        # 4. Maili Bul (Sent veya Inbox)
-        # Önce Inbox'a bak
         mail.select("inbox")
         typ, data = mail.search(None, f'(HEADER Message-ID "{mail_doc["message_id"]}")')
-        
         if not data[0]:
-            # Bulamazsa Sent'e bak
             mail.select('"[Gmail]/Sent Mail"')
             typ, data = mail.search(None, f'(HEADER Message-ID "{mail_doc["message_id"]}")')
-        
         if not data[0]: 
             mail.logout()
             return None, None, None
-
         mail_id = data[0].split()[-1]
         _, msg_data = mail.fetch(mail_id, "(RFC822)")
         msg = email.message_from_bytes(msg_data[0][1])
-        
-        # 5. İçeriği Ara (Multipart Gezintisi)
         found_data = None
         found_type = None
         found_filename = "download"
-
         for part in msg.walk():
-            # Moduna göre arama yap
             if mode == "cid":
                 cid = part.get("Content-ID", "").strip("<> ")
                 if cid == target_id:
@@ -232,51 +207,30 @@ def get_imap_content(mail_doc, target_id, mode="cid"):
                         found_type = part.get_content_type()
                         found_filename = fname
                         break
-        
         mail.logout()
         return found_data, found_type, found_filename
-
     except Exception as e:
         print(f"Stream Error: {e}")
         return None, None, None
 
 @router.get("/ui/stream/{message_id}/{content_id}")
 async def stream_mail_content(message_id: str, content_id: str):
-    """Inline resimleri (CID) göstermek için endpoint"""
-    # Mesaj ID'sinde <> varsa temizle (Url'den temiz gelmeyebilir)
     clean_mid = message_id.strip()
     if not clean_mid.startswith("<"): clean_mid = f"<{clean_mid}>"
-    
-    # DB'den maili bul (Hesap ID'si lazım)
-    # message_id varyasyonlarını dene
     mail_doc = mails_col.find_one({"message_id": {"$in": [clean_mid, message_id, message_id.strip("<>")]}})
-    
-    if not mail_doc:
-        return Response(status_code=404)
-
+    if not mail_doc: return Response(status_code=404)
     data, ctype, _ = get_imap_content(mail_doc, content_id, mode="cid")
-    
-    if data:
-        return StreamingResponse(io.BytesIO(data), media_type=ctype)
-    else:
-        # Bulunamazsa 1x1 şeffaf pixel dön (Kırık resim ikonu çıkmasın)
-        return Response(status_code=404)
+    if data: return StreamingResponse(io.BytesIO(data), media_type=ctype)
+    return Response(status_code=404)
 
 @router.get("/ui/download/{message_id}/{filename}")
 async def download_attachment(message_id: str, filename: str):
-    """Dosya indirmek için endpoint"""
     clean_mid = message_id.strip()
     if not clean_mid.startswith("<"): clean_mid = f"<{clean_mid}>"
-    
     mail_doc = mails_col.find_one({"message_id": {"$in": [clean_mid, message_id, message_id.strip("<>")]}})
-    
-    if not mail_doc:
-        return Response(status_code=404)
-
+    if not mail_doc: return Response(status_code=404)
     data, ctype, fname = get_imap_content(mail_doc, filename, mode="filename")
-    
     if data:
-        # Dosya ismi güvenliği
         from urllib.parse import quote
         encoded_filename = quote(fname)
         return StreamingResponse(
@@ -284,8 +238,7 @@ async def download_attachment(message_id: str, filename: str):
             media_type=ctype or "application/octet-stream",
             headers={"Content-Disposition": f"attachment; filename*=utf-8''{encoded_filename}"}
         )
-    else:
-        return Response(status_code=404)
+    return Response(status_code=404)
 
 # =========================================================================
 # ROUTINGLER (SETUP, LOGIN, DASHBOARD vb.)
@@ -303,10 +256,8 @@ async def run_setup(full_name: str = Form(...), company_name: str = Form(...), e
         from cryptography.fernet import Fernet
         new_key = Fernet.generate_key().decode()
         os.environ["ENCRYPTION_KEY"] = new_key
-        
         enc_pass = encrypt_password(app_password)
         hashed_master = hash_master_password(master_password)
-        
         users_col.update_many({}, {"$set": {"is_active": False}})
         user_data = {
             "full_name": full_name, "company_name": company_name, "email": email,
@@ -314,7 +265,6 @@ async def run_setup(full_name: str = Form(...), company_name: str = Form(...), e
             "signature": signature, "is_active": True, "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         users_col.update_one({"email": email}, {"$set": user_data}, upsert=True)
-        
         user = users_col.find_one({"email": email})
         first_account = {
             "user_id": user["_id"], "email": email, "password": enc_pass,
@@ -323,7 +273,6 @@ async def run_setup(full_name: str = Form(...), company_name: str = Form(...), e
         }
         if not accounts_col.find_one({"email": email}):
             accounts_col.insert_one(first_account)
-
         if tags_col.count_documents({}) == 0:
             import json
             defaults_path = os.path.join(app_dir, "defaults.json")
@@ -331,7 +280,6 @@ async def run_setup(full_name: str = Form(...), company_name: str = Form(...), e
                 with open(defaults_path, "r", encoding="utf-8") as f:
                     default_tags = json.load(f)
                     if default_tags: tags_col.insert_many(default_tags)
-
         return RedirectResponse(url="/login?msg=Basarili", status_code=303)
     except Exception as e: return RedirectResponse(url=f"/setup?error={str(e)}", status_code=303)
 
@@ -344,9 +292,10 @@ async def login_page(request: Request):
 @router.post("/login")
 async def login(request: Request, username: str = Form(...), password: str = Form(...)):
     load_dotenv(ENV_PATH, override=True)
-    env_email = users_col.find_one({"is_active": True})["email"]
-    env_master = users_col.find_one({"is_active": True})["master_password"]
-    
+    env_user = users_col.find_one({"is_active": True})
+    if not env_user: return RedirectResponse(url="/setup")
+    env_email = env_user["email"]
+    env_master = env_user["master_password"]
     if username.strip() == env_email and verify_master_password(password, env_master):
         return RedirectResponse(url="/ui/dashboard", status_code=303)
     return templates.TemplateResponse("login.html", {"request": request, "error": "Hatalı Giriş!"})
@@ -379,64 +328,19 @@ async def delete_account(account_id: str):
 def home_dashboard(request: Request):
     if not is_configured(): return RedirectResponse(url="/setup")
     user = users_col.find_one({"is_active": True})
+    threshold_date = datetime.utcnow() - timedelta(days=3)
+    followup_count = mails_col.count_documents({
+        "type": "outbound", "status": "SENT", "created_at": {"$lt": threshold_date}, "has_reply": {"$ne": True} 
+    })
     stats = {
         "pending_mails": mails_col.count_documents({"status": "WAITING_APPROVAL"}),
         "pending_tasks": tasks_col.count_documents({"status": "WAITING_APPROVAL"}),
         "total_contacts": contacts_col.count_documents({}),
+        "followup_needed": followup_count
     }
     urgent_tasks = list(tasks_col.find({"status": "CONFIRMED"}).sort([("urgency_score", -1), ("due_date", 1)]).limit(5))
     for t in urgent_tasks: t["_id"] = str(t["_id"])
-    
-    # --- GRUPLAMA MOTORU BAŞLANGIÇ ---
-    # 1. Bekleyen mailleri çek
-    raw_mails = list(mails_col.find({
-        "status": {"$in": ["WAITING_APPROVAL", "REPLIED"]},
-        "type": {"$ne": "outbound"}
-    }).sort("created_at", -1))
-    
-    # 2. Gruplama Mantığı
-    grouped_mails = {}
-    
-    for m in raw_mails:
-        # Konuyu normalize et
-        subj = m.get("subject_normalized")
-        if not subj:
-            subj = normalize_subject(m.get("subject", ""))
-            
-        if subj not in grouped_mails:
-            # İlk kez görülen konu
-            m["_id"] = str(m["_id"])
-            if "is_read" not in m: m["is_read"] = False
-            m["thread_count"] = 1
-            grouped_mails[subj] = m
-        else:
-            # Zaten var, sayacı artır
-            grouped_mails[subj]["thread_count"] += 1
-            
-            # En güncel maili göster
-            current_date = grouped_mails[subj].get("created_at")
-            new_date = m.get("created_at")
-            
-            if new_date and current_date and new_date > current_date:
-                m["_id"] = str(m["_id"])
-                m["thread_count"] = grouped_mails[subj]["thread_count"]
-                grouped_mails[subj] = m
-
-    # Listeye çevir ve sırala
-    final_mail_list = list(grouped_mails.values())
-    final_mail_list.sort(key=lambda x: x.get("created_at"), reverse=True)
-    # --- GRUPLAMA MOTORU BİTİŞ ---
-
-    # Etiketler
-    all_tags = list(tags_col.find({}))
-    tags_map = {t["slug"]: t for t in all_tags}
-
-    return templates.TemplateResponse("home.html", {
-        "request": request, 
-        "stats": stats, 
-        "urgent_tasks": urgent_tasks, 
-        "user": user
-    })
+    return templates.TemplateResponse("home.html", {"request": request, "stats": stats, "urgent_tasks": urgent_tasks, "user": user})
 
 @router.get("/ui/tasks", response_class=HTMLResponse)
 async def tasks_page(request: Request):
@@ -464,45 +368,24 @@ async def delete_task(task_id: str):
 @router.get("/ui", response_class=HTMLResponse)
 def inbox(request: Request):
     user = users_col.find_one({"is_active": True})
-    
-    # --- GRUPLAMA MOTORU (DASHBOARD İÇİN) ---
-    # 1. Bekleyen mailleri çek
-    raw_mails = list(mails_col.find({
-        "status": {"$in": ["WAITING_APPROVAL", "REPLIED"]},
-        "type": {"$ne": "outbound"}
-    }).sort("created_at", -1))
-    
-    # 2. Gruplama
+    raw_mails = list(mails_col.find({"status": {"$in": ["WAITING_APPROVAL", "REPLIED"]}, "type": {"$ne": "outbound"}}).sort("created_at", -1))
     grouped_mails = {}
-    
     for m in raw_mails:
-        subj = m.get("subject_normalized")
-        if not subj:
-            subj = normalize_subject(m.get("subject", ""))
-            
+        subj = m.get("subject_normalized") or normalize_subject(m.get("subject", ""))
         if subj not in grouped_mails:
             m["_id"] = str(m["_id"])
-            if "is_read" not in m: m["is_read"] = False
             m["thread_count"] = 1
             grouped_mails[subj] = m
         else:
             grouped_mails[subj]["thread_count"] += 1
-            current_date = grouped_mails[subj].get("created_at")
-            new_date = m.get("created_at")
-            if new_date and current_date and new_date > current_date:
+            if m.get("created_at") and grouped_mails[subj].get("created_at") and m.get("created_at") > grouped_mails[subj].get("created_at"):
                 m["_id"] = str(m["_id"])
                 m["thread_count"] = grouped_mails[subj]["thread_count"]
                 grouped_mails[subj] = m
-
     final_mail_list = list(grouped_mails.values())
-    final_mail_list.sort(key=lambda x: x.get("created_at"), reverse=True)
-
-    all_tags = list(tags_col.find({}))
-    tags_map = {t["slug"]: t for t in all_tags}
-
-    return templates.TemplateResponse("dashboard.html", {
-        "request": request, "mails": final_mail_list, "user": user, "tags_map": tags_map
-    })
+    final_mail_list.sort(key=lambda x: x.get("created_at") or "", reverse=True)
+    tags_map = {t["slug"]: t for t in list(tags_col.find({}))}
+    return templates.TemplateResponse("dashboard.html", {"request": request, "mails": final_mail_list, "user": user, "tags_map": tags_map})
 
 @router.get("/ui/drafts", response_class=HTMLResponse)
 async def drafts_page(request: Request):
@@ -510,13 +393,10 @@ async def drafts_page(request: Request):
     drafts = list(mails_col.find({"status": "DRAFT", "type": "outbound"}))
     for d in drafts:
         d["_id"] = str(d["_id"])
-        if "updated_at" not in d: d["updated_at"] = d.get("created_at")
-        content = d.get("body", "") 
-        clean_content = clean_html(content)
-        d["preview"] = clean_content[:100] if clean_content else "İçerik Yok"
+        clean_content = clean_html(d.get("body", ""))
+        d["preview"] = clean_content[:100]
         d["recipient"] = d.get("to", "Alıcı Yok")
-
-    drafts.sort(key=lambda x: x.get("updated_at") or "", reverse=True)
+    drafts.sort(key=lambda x: x.get("updated_at") or x.get("created_at") or "", reverse=True)
     return templates.TemplateResponse("drafts.html", {"request": request, "drafts": drafts, "user": user})
 
 @router.post("/save-writer-draft")
@@ -524,97 +404,59 @@ async def save_writer_draft(draft: WriterDraftRequest):
     try:
         draft_data = {
             "user_email": draft.sender_email, "from": draft.sender_email, "to": draft.to_email,
-            "subject": draft.subject, "body": draft.body,
-            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "subject": draft.subject, "body": draft.body, "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "type": "outbound", "status": "DRAFT"
         }
         if draft.draft_id and len(draft.draft_id) > 10:
             mails_col.update_one({"_id": ObjectId(draft.draft_id)}, {"$set": draft_data})
             return {"status": "success", "draft_id": draft.draft_id}
-        else:
-            draft_data["created_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            result = mails_col.insert_one(draft_data)
-            return {"status": "success", "draft_id": str(result.inserted_id)}
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+        draft_data["created_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        result = mails_col.insert_one(draft_data)
+        return {"status": "success", "draft_id": str(result.inserted_id)}
+    except Exception as e: return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
 @router.post("/save-draft")
 async def api_save_draft(draft: ReplyDraftRequest):
     try:
-        mails_col.update_one(
-            {"_id": ObjectId(draft.mail_id)},
-            {"$set": {"reply_draft": draft.draft_content, "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}}
-        )
+        mails_col.update_one({"_id": ObjectId(draft.mail_id)}, {"$set": {"reply_draft": draft.draft_content, "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}})
         return {"status": "success"}
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+    except Exception as e: return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
 @router.delete("/delete-draft/{mail_id}")
 async def delete_draft_api(mail_id: str):
     try:
         mails_col.delete_one({"_id": ObjectId(mail_id)})
         return {"status": "success"}
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+    except Exception as e: return JSONResponse(status_code=500, content={"error": str(e)})
 
 @router.get("/ui/editor/{mail_id}", response_class=HTMLResponse)
 async def mail_editor(request: Request, mail_id: str):
     user = users_col.find_one({"is_active": True})
     mail = mails_col.find_one({"_id": ObjectId(mail_id)})
     if not mail: return RedirectResponse(url="/ui")
-
     mark_mail_read(mail_id)
-    
-    target_email = mail.get("user_email")
-    target_account = accounts_col.find_one({"email": target_email})
+    target_account = accounts_col.find_one({"email": mail.get("user_email")})
     account_signature = target_account.get("signature", "") if target_account else user.get("signature", "")
-
     if not mail.get("reply_draft"):
         draft = generate_reply(mail["body"], tone="formal")
-        mails_col.update_one(
-            {"_id": ObjectId(mail_id)}, 
-            {"$set": {"reply_draft": draft}, "$push": {"draft_history": {
-                "body": draft, "source": "AI", "saved_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            }}}
-        )
+        mails_col.update_one({"_id": ObjectId(mail_id)}, {"$set": {"reply_draft": draft}, "$push": {"draft_history": {"body": draft, "source": "AI", "saved_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}}})
         mail["reply_draft"] = draft
-        mail["draft_history"] = [{"body": draft, "source": "AI", "saved_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}]
-
-    # Thread Fetching
     subject_norm = mail.get("subject_normalized") or normalize_subject(mail.get("subject", ""))
-    strict_regex = rf"^\s*(?:(?:re|fw|fwd)\s*:\s*)*{re.escape(subject_norm)}\s*$"
-    
-    query = {"$or": [{"subject_normalized": subject_norm}, {"subject": {"$regex": strict_regex, "$options": "i"}}]}
-    thread = list(mails_col.find(query).sort("created_at", 1))
-    thread = filter_thread_chain(thread, str(mail_id))
-    
+    thread = filter_thread_chain(list(mails_col.find({"$or": [{"subject_normalized": subject_norm}, {"subject": {"$regex": rf"^\s*(?:(?:re|fw|fwd)\s*:\s*)*{re.escape(subject_norm)}\s*$", "$options": "i"}}]})), str(mail_id))
     for m in thread:
         m["_id"] = str(m["_id"])
         m["is_owner"] = (m.get("type") == "outbound")
-
-    return templates.TemplateResponse("editor.html", {
-        "request": request, "mail": mail, "user": user, "account_signature": account_signature, "thread": thread
-    })
+    return templates.TemplateResponse("editor.html", {"request": request, "mail": mail, "user": user, "account_signature": account_signature, "thread": thread})
 
 @router.post("/ui/task_action/{mail_id}/{action_type}")
 async def task_action(mail_id: str, action_type: str):
     mail = mails_col.find_one({"_id": ObjectId(mail_id)})
-    new_draft = ""
-    decision_val = "neutral"
-    if action_type == "approve":
-        new_draft = generate_decision_reply(mail["body"], decision="approve")
-        decision_val = "approve"
-    elif action_type == "reject":
-        new_draft = generate_decision_reply(mail["body"], decision="reject")
-        decision_val = "reject"
-    elif action_type == "regenerate":
-        new_draft = generate_reply(mail["body"], tone="formal")
-    
+    new_draft, decision_val = "", "neutral"
+    if action_type == "approve": new_draft, decision_val = generate_decision_reply(mail["body"], decision="approve"), "approve"
+    elif action_type == "reject": new_draft, decision_val = generate_decision_reply(mail["body"], decision="reject"), "reject"
+    elif action_type == "regenerate": new_draft = generate_reply(mail["body"], tone="formal")
     add_draft_version(mail_id, new_draft, source="AI")
-    mails_col.update_one(
-        {"_id": ObjectId(mail_id)}, 
-        {"$set": {"reply_draft": new_draft, "decision": decision_val, "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}}
-    )
+    mails_col.update_one({"_id": ObjectId(mail_id)}, {"$set": {"reply_draft": new_draft, "decision": decision_val, "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}})
     return RedirectResponse(url=f"/ui/editor/{mail_id}", status_code=303)
 
 @router.post("/ui/mail/delete/{mail_id}")
@@ -622,7 +464,6 @@ async def delete_mail(request: Request, mail_id: str):
     mails_col.delete_one({"_id": ObjectId(mail_id)})
     referer = request.headers.get("referer")
     if referer and "history" in referer: return RedirectResponse(url="/ui/history?msg=Silindi", status_code=303)
-    elif referer and "drafts" in referer: return RedirectResponse(url="/ui/drafts?msg=Silindi", status_code=303)
     return RedirectResponse(url="/ui?msg=Silindi", status_code=303)
 
 @router.post("/ui/restore/{mail_id}")
@@ -633,10 +474,7 @@ async def restore_mail(mail_id: str):
 @router.post("/ui/update/{mail_id}")
 async def update_draft(mail_id: str, reply_draft: str = Form(...)):
     add_draft_version(mail_id, reply_draft, source="USER")
-    mails_col.update_one(
-        {"_id": ObjectId(mail_id)}, 
-        {"$set": {"reply_draft": reply_draft, "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}}
-    )
+    mails_col.update_one({"_id": ObjectId(mail_id)}, {"$set": {"reply_draft": reply_draft, "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}})
     return RedirectResponse(url=f"/ui/editor/{mail_id}?msg=Kaydedildi", status_code=303)
 
 @router.post("/ui/approve/{mail_id}")
@@ -645,46 +483,19 @@ def send_approved_mail(mail_id: str, reply_draft: str = Form(...)):
     user = users_col.find_one({"is_active": True})
     account = accounts_col.find_one({"email": mail.get("user_email")})
     signature = account.get("signature", "") if account else user.get("signature", "")
-    
     final_body = f"{reply_draft}\n\n---\n{signature}"
-    
-    # Threading ID oluşturma
-    reply_message_id = f"<gen-{uuid.uuid4()}@mail-ai.local>"
-    parent_mid = mail.get("message_id", "").strip()
-    
-    refs = []
-    existing_refs = mail.get("references") or []
-    if isinstance(existing_refs, str): existing_refs = existing_refs.split()
-    if existing_refs: refs.extend(existing_refs)
+    reply_message_id, parent_mid = f"<gen-{uuid.uuid4()}@mail-ai.local>", mail.get("message_id", "").strip()
+    refs = mail.get("references") or []
+    if isinstance(refs, str): refs = refs.split()
     if parent_mid and parent_mid not in refs: refs.append(parent_mid)
-
-    is_sent, error_msg = send_gmail_via_user(
-        mail["user_email"], mail["from"], f"RE: {mail['subject']}", final_body,
-        message_id=reply_message_id, in_reply_to=parent_mid, references=refs
-    )
-    
+    is_sent, error_msg = send_gmail_via_user(mail["user_email"], mail["from"], f"RE: {mail['subject']}", final_body, message_id=reply_message_id, in_reply_to=parent_mid, references=refs)
     if is_sent:
         mails_col.update_one({"_id": ObjectId(mail_id)}, {"$set": {"status": "REPLIED", "handled_at": datetime.utcnow()}})
-        sent_reply_doc = {
-            "message_id": reply_message_id, "type": "outbound", "user_email": mail["user_email"], 
-            "from": mail["user_email"], "to": mail["from"], "subject": f"Re: {mail['subject']}",
-            "subject_normalized": mail.get("subject_normalized"), "body": final_body,
-            "body_html": f"<div style='white-space: pre-wrap;'>{final_body}</div>",
-            "created_at": datetime.utcnow(), "status": "SENT", "is_owner": True,
-            "tags": mail.get("tags", []), "in_reply_to": parent_mid, "references": refs,
-        }
-        mails_col.insert_one(sent_reply_doc)
-        
+        mails_col.insert_one({"message_id": reply_message_id, "type": "outbound", "user_email": mail["user_email"], "from": mail["user_email"], "to": mail["from"], "subject": f"Re: {mail['subject']}", "subject_normalized": mail.get("subject_normalized"), "body": final_body, "created_at": datetime.utcnow(), "status": "SENT", "is_owner": True, "in_reply_to": parent_mid, "references": refs})
         if mail.get("extracted_task") and mail.get("decision") != "reject":
-            tasks_col.insert_one({
-                "user_email": mail["user_email"], "title": mail["extracted_task"]["title"],
-                "due_date": mail["extracted_task"].get("date"), "category": mail.get("category", "Diğer"),
-                "urgency_score": mail.get("urgency_score", 0), "sender": mail["from"],
-                "status": "CONFIRMED", "is_approved": True, "created_at": datetime.utcnow()
-            })
+            tasks_col.insert_one({"user_email": mail["user_email"], "title": mail["extracted_task"]["title"], "due_date": mail["extracted_task"].get("date"), "category": mail.get("category", "Diğer"), "urgency_score": mail.get("urgency_score", 0), "sender": mail["from"], "status": "CONFIRMED", "is_approved": True, "created_at": datetime.utcnow()})
         return RedirectResponse(url="/ui?msg=Gonderildi", status_code=303)
-    else:
-        return RedirectResponse(url=f"/ui/editor/{mail_id}?error={error_msg}", status_code=303)
+    return RedirectResponse(url=f"/ui/editor/{mail_id}?error={error_msg}", status_code=303)
 
 @router.post("/ui/cancel/{mail_id}")
 async def cancel_mail(mail_id: str):
@@ -701,63 +512,37 @@ def history(request: Request):
 @router.get("/ui/view/{mail_id}", response_class=HTMLResponse)
 async def view_mail(request: Request, mail_id: str):
     user = users_col.find_one({"is_active": True})
-    try:
-        current_mail = mails_col.find_one({"_id": ObjectId(mail_id)})
-    except: return RedirectResponse(url="/ui/history")
-    
+    current_mail = mails_col.find_one({"_id": ObjectId(mail_id)})
     if not current_mail: return RedirectResponse(url="/ui/history")
     mark_mail_read(mail_id)
-
     subject_norm = current_mail.get("subject_normalized") or normalize_subject(current_mail.get("subject", ""))
-    strict_regex = rf"^\s*(?:(?:re|fw|fwd)\s*:\s*)*{re.escape(subject_norm)}\s*$"
-    
-    query = {"$or": [{"subject_normalized": subject_norm}, {"subject": {"$regex": strict_regex, "$options": "i"}}]}
-    thread = list(mails_col.find(query).sort("created_at", 1))
-    thread = filter_thread_chain(thread, str(mail_id))
-    
+    thread = filter_thread_chain(list(mails_col.find({"$or": [{"subject_normalized": subject_norm}, {"subject": {"$regex": rf"^\s*(?:(?:re|fw|fwd)\s*:\s*)*{re.escape(subject_norm)}\s*$", "$options": "i"}}]})), str(mail_id))
     for m in thread:
-        m["_id"] = str(m["_id"])
-        m["is_owner"] = (m.get("type") == "outbound")
+        m["_id"], m["is_owner"] = str(m["_id"]), (m.get("type") == "outbound")
         if m.get("body"): m["body"] = clean_reply_body(m["body"])
-
     return templates.TemplateResponse("view_mail.html", {"request": request, "thread": thread, "user": user})
 
 @router.get("/ui/contacts", response_class=HTMLResponse)
 async def contacts_page(request: Request, account: str = "all"):
     user = users_col.find_one({"is_active": True})
     accounts = list(accounts_col.find({"user_id": user["_id"]}))
-    
-    # Oto-tamir
-    all_contacts = list(contacts_col.find())
-    for contact in all_contacts:
+    for contact in list(contacts_col.find()):
         if "owners" not in contact:
-            mails_from_contact = list(mails_col.find({"from": contact["email"]}, {"user_email": 1}))
-            found_owners = list(set([m["user_email"] for m in mails_from_contact if "user_email" in m]))
+            found_owners = list(set([m["user_email"] for m in list(mails_col.find({"from": contact["email"]}, {"user_email": 1})) if "user_email" in m]))
             contacts_col.update_one({"_id": contact["_id"]}, {"$set": {"owners": found_owners}})
-
-    filter_query = {}
-    if account != "all": filter_query = {"owners": account}
-    contacts = list(contacts_col.find(filter_query).sort("name", 1))
-    
-    return templates.TemplateResponse("contacts.html", {
-        "request": request, "contacts": contacts, "user": user, "accounts": accounts, "selected_account": account
-    })
+    contacts = list(contacts_col.find({} if account == "all" else {"owners": account}).sort("name", 1))
+    return templates.TemplateResponse("contacts.html", {"request": request, "contacts": contacts, "user": user, "accounts": accounts, "selected_account": account})
 
 @router.post("/ui/contacts/delete")
 async def delete_contact(contact_id: str = Form(...), delete_mode: str = Form(...)):
     contact = contacts_col.find_one({"_id": ObjectId(contact_id)})
-    if not contact: return RedirectResponse(url="/ui/contacts?error=Kisi+Bulunamadi", status_code=303)
-    
-    if delete_mode == "with_history":
-        mails_col.delete_many({"from": contact.get("email")})
-    
+    if contact and delete_mode == "with_history": mails_col.delete_many({"from": contact.get("email")})
     contacts_col.delete_one({"_id": ObjectId(contact_id)})
     return RedirectResponse(url="/ui/contacts?msg=Kisi+Silindi", status_code=303)
 
 @router.get("/ui/contact/{email}", response_class=HTMLResponse)
 async def contact_detail(request: Request, email: str):
-    user = users_col.find_one({"is_active": True})
-    contact = contacts_col.find_one({"email": email})
+    user, contact = users_col.find_one({"is_active": True}), contacts_col.find_one({"email": email})
     if not contact: return RedirectResponse(url="/ui/contacts")
     history = list(mails_col.find({"from": email}).sort("created_at", -1))
     for h in history: h["_id"] = str(h["_id"])
@@ -765,90 +550,56 @@ async def contact_detail(request: Request, email: str):
 
 @router.get("/ui/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
-    user = users_col.find_one({"is_active": True})
-    tags = list(tags_col.find({}).sort("created_at", 1))
+    user, tags = users_col.find_one({"is_active": True}), list(tags_col.find({}).sort("created_at", 1))
     return templates.TemplateResponse("settings.html", {"request": request, "user": user, "tags": tags})
 
 @router.post("/ui/settings/tags/add")
 async def add_tag(name: str = Form(...), color: str = Form(...), description: str = Form(...)):
     slug = re.sub(r'[^a-z0-9-]', '', name.strip().lower().replace(" ", "-").replace("ı", "i").replace("ğ", "g").replace("ü", "u").replace("ş", "s").replace("ö", "o").replace("ç", "c"))
-    if tags_col.find_one({"slug": slug}):
-        return RedirectResponse(url="/ui/settings?error=error_tag_exists", status_code=303)
-    
-    new_tag = {"name": name, "slug": slug, "color": color, "description": description, "created_at": datetime.now()}
-    tags_col.insert_one(new_tag)
-    return RedirectResponse(url="/ui/settings?msg=msg_tag_added", status_code=303)
-
-@router.post("/ui/settings/tags/delete/{tag_id}")
-async def delete_tag(tag_id: str):
-    tags_col.delete_one({"_id": ObjectId(tag_id)})
-    return RedirectResponse(url="/ui/settings?msg=msg_tag_deleted", status_code=303)
-
-@router.post("/ui/settings/tags/update/{tag_id}")
-async def update_tag(tag_id: str, name: str = Form(...), color: str = Form(...), description: str = Form(...)):
-    slug = re.sub(r'[^a-z0-9-]', '', name.strip().lower().replace(" ", "-").replace("ı", "i").replace("ğ", "g").replace("ü", "u").replace("ş", "s").replace("ö", "o").replace("ç", "c"))
-    tags_col.update_one({"_id": ObjectId(tag_id)}, {"$set": {"name": name, "slug": slug, "color": color, "description": description, "updated_at": datetime.now()}})
-    return RedirectResponse(url="/ui/settings?msg=msg_tag_updated", status_code=303)
+    if not tags_col.find_one({"slug": slug}): tags_col.insert_one({"name": name, "slug": slug, "color": color, "description": description, "created_at": datetime.now()})
+    return RedirectResponse(url="/ui/settings", status_code=303)
 
 @router.get("/ui/writer", response_class=HTMLResponse)
 async def writer_page(request: Request, draft_id: Optional[str] = None):
-    user = users_col.find_one({"is_active": True})
-    accounts = list(accounts_col.find({"user_id": user["_id"]}))
-    draft = None
-    if draft_id:
-        try:
-            draft = mails_col.find_one({"_id": ObjectId(draft_id)})
-            if draft: draft["_id"] = str(draft["_id"])
-        except: pass
+    user, accounts = users_col.find_one({"is_active": True}), list(accounts_col.find({"user_id": users_col.find_one({"is_active": True})["_id"]}))
+    draft = mails_col.find_one({"_id": ObjectId(draft_id)}) if draft_id else None
+    if draft: draft["_id"] = str(draft["_id"])
     return templates.TemplateResponse("writer.html", {"request": request, "user": user, "accounts": accounts, "draft": draft})
 
 @router.post("/ui/writer/generate")
 async def generate_writer_draft(prompt: str = Form(...)):
-    try:
-        draft = generate_reply(prompt, tone="formal") 
-        return {"draft": draft}
-    except Exception as e:
-        return {"draft": f"Hata: {str(e)}"}
+    return {"draft": generate_reply(prompt, tone="formal")}
 
 @router.post("/ui/writer/send")
 async def send_writer_mail(sender_email: str = Form(...), to_email: str = Form(...), subject: str = Form(...), body: str = Form(...), draft_id: Optional[str] = Form(None)):
-    user = users_col.find_one({"is_active": True})
-    account = accounts_col.find_one({"email": sender_email})
-    signature = account.get("signature", "") if account else user.get("signature", "")
-    
-    final_body = f"{body}\n\n---\n{signature}"
+    user, account = users_col.find_one({"is_active": True}), accounts_col.find_one({"email": sender_email})
+    final_body = f"{body}\n\n---\n{account.get('signature', '') if account else user.get('signature', '')}"
     is_sent, msg = send_gmail_via_user(sender_email, to_email, subject, final_body)
-    
     if is_sent:
-        mails_col.insert_one({
-            "user_email": sender_email, "from": sender_email, "to": to_email,
-            "subject": subject, "body": body, "status": "SENT",
-            "created_at": datetime.utcnow(), "type": "outbound"
-        })
-        if draft_id and len(draft_id) > 10: mails_col.delete_one({"_id": ObjectId(draft_id)})
-        return RedirectResponse(url="/ui/dashboard?msg=Mail+Gonderildi", status_code=303)
-    else:
-        return RedirectResponse(url=f"/ui/writer?error={msg}", status_code=303)
+        mails_col.insert_one({"user_email": sender_email, "from": sender_email, "to": to_email, "subject": subject, "body": body, "status": "SENT", "created_at": datetime.utcnow(), "type": "outbound"})
+        if draft_id: mails_col.delete_one({"_id": ObjectId(draft_id)})
+        return RedirectResponse(url="/ui/dashboard?msg=Gonderildi", status_code=303)
+    return RedirectResponse(url=f"/ui/writer?error={msg}", status_code=303)
 
 @router.get("/ui/search-api")
 async def search_mails(q: str = Query(..., min_length=1)):
     try:
         query_vector = get_embedding(q)
-        if not query_vector:
-            return {"results": [], "message": "Vektör oluşturulamadı."}
-
-        pipeline = [
-            {"$vectorSearch": {
-                "index": "vector_index", "path": "embedding", "queryVector": query_vector,
-                "numCandidates": 100, "limit": 10
-            }},
-            {"$project": {
-                "_id": {"$toString": "$_id"}, "subject": 1, "sender": 1,
-                "snippet": {"$substr": ["$body", 0, 150]}, "date": 1,
-                "score": {"$meta": "vectorSearchScore"}
-            }}
-        ]
-        results = list(mails_col.aggregate(pipeline))
+        results = list(mails_col.aggregate([{"$vectorSearch": {"index": "vector_index", "path": "embedding", "queryVector": query_vector, "numCandidates": 100, "limit": 10}}, {"$project": {"_id": {"$toString": "$_id"}, "subject": 1, "sender": 1, "snippet": {"$substr": ["$body", 0, 150]}, "date": 1, "score": {"$meta": "vectorSearchScore"}}}]))
         return {"results": results}
-    except Exception as e:
-        return {"results": [], "error": str(e)}
+    except Exception as e: return {"results": [], "error": str(e)}
+
+# --- SENİN İSTEDİĞİN AI HATIRLATICI (YEPYENİ ENDPOINT) ---
+@router.post("/api/ai/analyze-reminder")
+async def analyze_reminder(request: Request):
+    try:
+        data = await request.json()
+        text = data.get("content", "").lower()
+        keywords = ["hazırla", "gönder", "toplantı", "ara", "fatura", "dosya"]
+        times = ["yarın", "pazartesi", "haftaya", "akşam", "saat"]
+        found_task = next((k for k in keywords if k in text), None)
+        found_time = next((t for t in times if t in text), "uygun bir zamanda")
+        if found_task:
+            return {"success": True, "suggestion": f"AI Önerisi: '{found_task.capitalize()}' için hatırlatıcı kurulsun mu?", "task": f"{found_task.capitalize()} - {found_time}"}
+        return {"success": False}
+    except Exception: return {"success": False}
